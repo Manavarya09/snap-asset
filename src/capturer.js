@@ -18,11 +18,18 @@ export async function captureUrl(url, options = {}) {
   const browser = await chromium.launch({ headless: true });
 
   try {
-    const context = await browser.newContext({
+    const contextOptions = {
       viewport: { width, height },
       deviceScaleFactor: scale,
       colorScheme: dark ? 'dark' : 'light',
-    });
+    };
+
+    const context = await browser.newContext(contextOptions);
+
+    // Add cookies for authenticated page captures
+    if (options.cookies && Array.isArray(options.cookies)) {
+      await context.addCookies(options.cookies);
+    }
 
     const page = await context.newPage();
 
