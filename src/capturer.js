@@ -58,6 +58,49 @@ export async function captureUrl(url, options = {}) {
 }
 
 /**
+ * Capture a URL at multiple viewport widths for responsive testing.
+ * Returns an array of { width, buffer } objects.
+ */
+export async function captureResponsive(url, widths = [375, 768, 1024, 1280, 1920], options = {}) {
+  const {
+    height = 800,
+    scale = 2,
+    fullPage = false,
+    wait = 0,
+    dark = false,
+  } = options;
+
+  const browser = await chromium.launch({ headless: true });
+  const results = [];
+
+  try {
+    for (const width of widths) {
+      const context = await browser.newContext({
+        viewport: { width, height },
+        deviceScaleFactor: scale,
+        colorScheme: dark ? 'dark' : 'light',
+      });
+
+      const page = await context.newPage();
+      await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+
+      if (wait > 0) {
+        await page.waitForTimeout(wait);
+      }
+
+      const buffer = await page.screenshot({ type: 'png', fullPage });
+      results.push({ width, buffer });
+
+      await context.close();
+    }
+
+    return results;
+  } finally {
+    await browser.close();
+  }
+}
+
+/**
  * Extract all visible images and page sections from a website.
  * Returns an array of { name, buffer, type } objects.
  */
