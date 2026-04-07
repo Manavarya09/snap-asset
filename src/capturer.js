@@ -45,10 +45,22 @@ export async function captureUrl(url, options = {}) {
         omitBackground: true,
       });
     } else {
-      buffer = await page.screenshot({
+      const screenshotOptions = {
         type: 'png',
         fullPage,
-      });
+      };
+
+      if (options.clip) {
+        screenshotOptions.clip = {
+          x: options.clip.x,
+          y: options.clip.y,
+          width: options.clip.width,
+          height: options.clip.height,
+        };
+        screenshotOptions.fullPage = false;
+      }
+
+      buffer = await page.screenshot(screenshotOptions);
     }
 
     return buffer;
