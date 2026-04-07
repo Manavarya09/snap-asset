@@ -36,6 +36,22 @@ export async function toWebp(buffer, options = {}) {
 }
 
 /**
+ * Convert a PNG buffer to JPEG.
+ */
+export async function toJpeg(buffer, options = {}) {
+  const { quality = 85, resize = null } = options;
+
+  let pipeline = sharp(buffer).jpeg({ quality, mozjpeg: true });
+
+  if (resize) {
+    const [w, h] = resize.split('x').map(Number);
+    pipeline = pipeline.resize(w, h, { fit: 'inside', withoutEnlargement: true });
+  }
+
+  return pipeline.toBuffer();
+}
+
+/**
  * Process a screenshot buffer into optimized PNG + WebP.
  * Returns { png: Buffer, webp: Buffer, pngSize: number, webpSize: number }
  */
