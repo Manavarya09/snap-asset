@@ -93,6 +93,23 @@ export function resolveOutputPaths(outDir, name, options = {}) {
 }
 
 /**
+ * Generate an HTML <picture> element with WebP and PNG sources.
+ * Provides modern format with fallback for older browsers.
+ */
+export function generatePictureHtml(name, options = {}) {
+  const { alt = '', className = '', basePath = '' } = options;
+  const prefix = basePath ? `${basePath}/` : '';
+  const classAttr = className ? ` class="${className}"` : '';
+
+  return [
+    '<picture>',
+    `  <source srcset="${prefix}${name}.webp" type="image/webp">`,
+    `  <img src="${prefix}${name}.png" alt="${alt}"${classAttr} loading="lazy">`,
+    '</picture>',
+  ].join('\n');
+}
+
+/**
  * Save buffers to disk.
  */
 export function saveAssets(paths, buffers) {
