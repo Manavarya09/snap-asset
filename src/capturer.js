@@ -13,6 +13,7 @@ export async function captureUrl(url, options = {}) {
     fullPage = false,
     wait = 0,
     dark = false,
+    timeout = 30000,
   } = options;
 
   const browser = await chromium.launch({ headless: true });
@@ -28,7 +29,7 @@ export async function captureUrl(url, options = {}) {
 
     await page.goto(url, {
       waitUntil: 'networkidle',
-      timeout: 30000,
+      timeout,
     });
 
     if (wait > 0) {
