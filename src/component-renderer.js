@@ -152,50 +152,62 @@ export async function renderComponent(componentPath, options = {}) {
     }
 
     // Start Vite dev server
-    const viteProcess = spawn('npx', ['vite', '--host', '0.0.0.0'], {
-      cwd: tempDir,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      env: { ...process.env, NODE_ENV: 'development' },
-    });
+    let viteProcess;
+    try {
+      viteProcess = spawn('npx', ['vite', '--host', '0.0.0.0'], {
+        cwd: tempDir,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        env: { ...process.env, NODE_ENV: 'development' },
+      });
 
-    // Wait for the server URL
-    const url = await new Promise((resolve, reject) => {
-      let output = '';
-      const timeout = setTimeout(() => {
-        reject(new Error('Vite dev server timed out'));
-      }, 30000);
+      // Wait for the server URL
+      const url = await new Promise((resolve, reject) => {
+        let output = '';
+        const timeout = setTimeout(() => {
+          reject(new Error('Vite dev server timed out'));
+        }, 30000);
 
-      viteProcess.stdout.on('data', (data) => {
-        output += data.toString();
-        const match = output.match(/Local:\s+(https?:\/\/[^\s]+)/);
-        if (match) {
+        viteProcess.stdout.on('data', (data) => {
+          output += data.toString();
+          const match = output.match(/Local:\s+(https?:\/\/[^\s]+)/);
+          if (match) {
+            clearTimeout(timeout);
+            resolve(match[1]);
+          }
+        });
+
+        viteProcess.stderr.on('data', (data) => {
+          output += data.toString();
+        });
+
+        viteProcess.on('error', (err) => {
           clearTimeout(timeout);
-          resolve(match[1]);
-        }
+          reject(err);
+        });
       });
 
-      viteProcess.stderr.on('data', (data) => {
-        output += data.toString();
-      });
+      const cleanup = () => {
+        try {
+          viteProcess.kill('SIGTERM');
+        } catch {}
+        try {
+          rmSync(tempDir, { recursive: true, force: true });
+        } catch {}
+      };
 
-      viteProcess.on('error', (err) => {
-        clearTimeout(timeout);
-        reject(err);
-      });
-    });
-
-    const cleanup = () => {
-      try {
-        viteProcess.kill('SIGTERM');
-      } catch {}
-      try {
-        rmSync(tempDir, { recursive: true, force: true });
-      } catch {}
-    };
-
-    return { url, cleanup };
+      return { url, cleanup };
+    } catch (err) {
+      // Ensure vite process is killed if it was started
+      if (viteProcess) {
+        try { viteProcess.kill('SIGTERM'); } catch {}
+      }
+      throw err;
+    }
   } catch (err) {
-    rmSync(tempDir, { recursive: true, force: true });
+    // Always clean up the temp directory, even on error
+    try {
+      rmSync(tempDir, { recursive: true, force: true });
+    } catch {}
     throw err;
   }
 }
