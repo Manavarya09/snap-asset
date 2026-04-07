@@ -1,0 +1,37 @@
+{
+  "name": "@masyv/snap-asset",
+  "version": "0.1.0",
+  "description": "Capture web screenshots & extract site assets as optimized PNG+WebP — CLI + Claude Code skill",
+  "type": "module",
+  "bin": {
+    "snap-asset": "./bin/snap-asset.js"
+  },
+  "main": "src/index.js",
+  "scripts": {
+    "postinstall": "npx playwright install chromium --with-deps 2>/dev/null || npx playwright install chromium",
+    "test": "node --test tests/",
+    "start": "node bin/snap-asset.js"
+  },
+  "dependencies": {
+    "playwright": "^1.42.0",
+    "sharp": "^0.33.0",
+    "commander": "^12.0.0",
+    "chalk": "^5.3.0",
+    "ora": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "claude-code",
+    "screenshot",
+    "playwright",
+    "webp",
+    "assets",
+    "plugin",
+    "scraper",
+    "component-capture"
+  ],
+  "author": "masyv",
+  "license": "MIT"
+}
