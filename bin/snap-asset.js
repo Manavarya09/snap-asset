@@ -2,7 +2,22 @@
 
 import { Command } from 'commander';
 import { resolve } from 'path';
-import { captureUrl, extractSiteAssets } from '../src/capturer.js';
+
+let captureUrl, extractSiteAssets;
+try {
+  ({ captureUrl, extractSiteAssets } = await import('../src/capturer.js'));
+} catch (err) {
+  if (err.message.includes('playwright')) {
+    console.error(
+      'Error: Playwright is not installed.\n' +
+      'Run `npm install` to install all dependencies, then try again.\n' +
+      'If the issue persists, run `npx playwright install chromium`.'
+    );
+    process.exit(1);
+  }
+  throw err;
+}
+
 import { processScreenshot } from '../src/optimizer.js';
 import {
   detectOutputDir,
