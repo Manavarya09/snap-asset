@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join, resolve, basename } from 'path';
+import sharp from 'sharp';
 
 /**
  * Auto-detect the best output directory in the project.
@@ -90,6 +91,44 @@ export function resolveOutputPaths(outDir, name, options = {}) {
   }
 
   return result;
+}
+
+/**
+ * Save a JSON metadata file alongside the image assets.
+ * Includes dimensions, format, file sizes, and capture timestamp.
+ */
+export async function saveMetadata(outDir, name, buffers) {
+  const metadata = {
+    name,
+    timestamp: new Date().toISOString(),
+    formats: {},
+  };
+
+  if (buffers.png) {
+    const info = await sharp(buffers.png).metadata();
+    metadata.formats.png = {
+      width: info.width,
+      height: info.height,
+      format: 'png',
+      sizeBytes: buffers.png.length,
+      sizeKb: Math.round(buffers.png.length / 1024 * 100) / 100,
+    };
+  }
+
+  if (buffers.webp) {
+    const info = await sharp(buffers.webp).metadata();
+    metadata.formats.webp = {
+      width: info.width,
+      height: info.height,
+      format: 'webp',
+      sizeBytes: buffers.webp.length,
+      sizeKb: Math.round(buffers.webp.length / 1024 * 100) / 100,
+    };
+  }
+
+  const jsonPath = join(outDir, `${name}.meta.json`);
+  writeFileSync(jsonPath, JSON.stringify(metadata, null, 2));
+  return jsonPath;
 }
 
 /**
