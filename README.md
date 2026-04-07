@@ -5,8 +5,8 @@
 <h1 align="center">snap-asset</h1>
 
 <p align="center">
-  <strong>Screenshot-to-asset pipeline for the modern web.</strong><br/>
-  Capture pages, extract components, optimize images — all from the terminal.
+  <strong>A Claude Code plugin that captures screenshots and extracts site assets.</strong><br/>
+  Just tell Claude "screenshot my app" — it handles capture, optimization, and placement.
 </p>
 
 <p align="center">
@@ -38,12 +38,34 @@ Building a portfolio? Showcasing app features? You've done this dance:
 5. Move to `public/` or `assets/`
 6. Repeat 20 times
 
-**snap-asset automates the entire pipeline.** One command. Pixel-perfect captures. Optimized PNG + WebP. Dropped right into your project.
+**snap-asset is a Claude Code plugin that automates the entire pipeline.** Tell Claude what to capture — it handles the rest. Also works standalone as a CLI.
+
+---
+
+## Install as Claude Code Plugin
+
+```bash
+git clone https://github.com/Manavarya09/snap-asset.git ~/.claude/plugins/snap-asset
+cd ~/.claude/plugins/snap-asset && npm install
+```
+
+Then just talk to Claude naturally:
+
+> "Screenshot my app at localhost:5173 and save it as hero"
+
+> "Extract all assets from https://competitor.com into public/"
+
+> "Capture the .feature-card element in dark mode"
+
+> "Take a screenshot of my Hero.tsx component in isolation"
+
+Or use `/snap-asset` as a slash command.
 
 ---
 
 ## Features
 
+- **Claude Code Skill** — Just describe what you want, Claude captures it
 - **URL Capture** — Screenshot any URL with Playwright's headless Chromium
 - **Element Capture** — Target specific elements with CSS selectors
 - **Site Extraction** — Scrape an entire website: sections, images, components, everything
