@@ -280,8 +280,12 @@ program
     let completed = 0;
     let failed = 0;
 
-    for (const capture of config.captures) {
-      const spin = log.spinner(`[${completed + 1}/${config.captures.length}] ${capture.name}...`);
+    const total = config.captures.length;
+
+    for (let i = 0; i < total; i++) {
+      const capture = config.captures[i];
+      const progress = `[${i + 1}/${total}]`;
+      const spin = log.spinner(`${progress} ${capture.name}...`);
 
       try {
         let buffer;
@@ -324,10 +328,10 @@ program
         });
 
         saveAssets(paths, result);
-        spin.succeed(`${capture.name} saved`);
+        spin.succeed(`${progress} ${capture.name} saved`);
         completed++;
       } catch (err) {
-        spin.fail(`${capture.name}: ${err.message}`);
+        spin.fail(`${progress} ${capture.name}: ${err.message}`);
         failed++;
       }
     }
