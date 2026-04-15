@@ -33,9 +33,9 @@ export function saved(filePath, sizeKb) {
   console.log(`  ${chalk.green('saved')}  ${chalk.white(filePath)}  ${chalk.dim(`(${size})`)}`);
 }
 
-export function savings(pngKb, webpKb) {
-  const pct = Math.round((1 - webpKb / pngKb) * 100);
-  console.log(`  ${chalk.dim(`WebP saved ${pct}% vs PNG`)}`);
+export function savings(format, pngKb, fmtKb) {
+  const pct = Math.round((1 - fmtKb / pngKb) * 100);
+  console.log(`  ${chalk.dim(`${format} saved ${pct}% vs PNG`)}`);
 }
 
 export function spinner(text) {

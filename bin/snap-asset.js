@@ -35,7 +35,7 @@ const program = new Command();
 
 program
   .name('snap-asset')
-  .description('Capture web screenshots & extract site assets as optimized PNG+WebP')
+  .description('Capture web screenshots & extract site assets as optimized PNG+WebP+AVIF')
   .version('0.1.0');
 
 // ── Default command: capture a URL ──────────────────────────────────────────
@@ -47,8 +47,8 @@ program
   .option('-w, --width <px>', 'viewport width', parseInt, 1280)
   .option('-h, --height <px>', 'viewport height', parseInt, 800)
   .option('--scale <n>', 'device scale factor', parseInt, 2)
-  .option('-f, --format <fmt>', 'output format: png, webp, both', 'both')
-  .option('-q, --quality <n>', 'WebP quality (1-100)', parseInt, 80)
+  .option('-f, --format <fmt>', 'output format: png, webp, avif, both', 'both')
+  .option('-q, --quality <n>', 'WebP/AVIF quality (1-100)', parseInt, 80)
   .option('--resize <WxH>', 'resize after capture (e.g. 800x600)')
   .option('--wait <ms>', 'wait before capture (ms)', parseInt, 0)
   .option('--dark', 'emulate dark color scheme')
@@ -103,7 +103,10 @@ program
       }
 
       if (result.pngSize && result.webpSize) {
-        log.savings(result.pngSize / 1024, result.webpSize / 1024);
+        log.savings('WebP', result.pngSize / 1024, result.webpSize / 1024);
+      }
+      if (result.pngSize && result.avifSize) {
+        log.savings('AVIF', result.pngSize / 1024, result.avifSize / 1024);
       }
 
       log.divider();
@@ -125,8 +128,8 @@ program
   .option('-w, --width <px>', 'viewport width', parseInt, 800)
   .option('-h, --height <px>', 'viewport height', parseInt, 600)
   .option('--scale <n>', 'device scale factor', parseInt, 2)
-  .option('-f, --format <fmt>', 'output format', 'both')
-  .option('-q, --quality <n>', 'WebP quality', parseInt, 80)
+  .option('-f, --format <fmt>', 'output format: png, webp, avif, both', 'both')
+  .option('-q, --quality <n>', 'WebP/AVIF quality', parseInt, 80)
   .option('--dark', 'emulate dark color scheme')
   .option('--wait <ms>', 'wait before capture', parseInt, 500)
   .option('--overwrite', 'overwrite existing files')
@@ -173,7 +176,10 @@ program
         log.saved(path, size / 1024);
       }
       if (result.pngSize && result.webpSize) {
-        log.savings(result.pngSize / 1024, result.webpSize / 1024);
+        log.savings('WebP', result.pngSize / 1024, result.webpSize / 1024);
+      }
+      if (result.pngSize && result.avifSize) {
+        log.savings('AVIF', result.pngSize / 1024, result.avifSize / 1024);
       }
       log.divider();
       log.success('Done!');

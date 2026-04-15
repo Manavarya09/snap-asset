@@ -36,6 +36,22 @@ export async function toWebp(buffer, options = {}) {
 }
 
 /**
+ * Convert a PNG buffer to AVIF.
+ */
+export async function toAvif(buffer, options = {}) {
+  const { quality = 50, resize = null } = options;
+
+  let pipeline = sharp(buffer).avif({ quality });
+
+  if (resize) {
+    const [w, h] = resize.split('x').map(Number);
+    pipeline = pipeline.resize(w, h, { fit: 'inside', withoutEnlargement: true });
+  }
+
+  return pipeline.toBuffer();
+}
+
+/**
  * Convert a PNG buffer to JPEG.
  */
 export async function toJpeg(buffer, options = {}) {
@@ -52,20 +68,23 @@ export async function toJpeg(buffer, options = {}) {
 }
 
 /**
- * Process a screenshot buffer into optimized PNG + WebP.
- * Returns { png: Buffer, webp: Buffer, pngSize: number, webpSize: number }
+ * Process a screenshot buffer into optimized PNG + WebP + AVIF.
+ * Returns { png: Buffer, webp: Buffer, avif: Buffer, pngSize: number, webpSize: number, avifSize: number }
  */
 export async function processScreenshot(buffer, options = {}) {
-  const [png, webp] = await Promise.all([
+  const [png, webp, avif] = await Promise.all([
     optimizePng(buffer, options),
     toWebp(buffer, options),
+    toAvif(buffer, options),
   ]);
 
   return {
     png,
     webp,
+    avif,
     pngSize: png.length,
     webpSize: webp.length,
+    avifSize: avif.length,
   };
 }
 

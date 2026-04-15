@@ -71,8 +71,9 @@ export function resolveOutputPaths(outDir, name, options = {}) {
       const testName = `${name}${suffix}`;
       const pngExists = existsSync(join(outDir, `${testName}.png`));
       const webpExists = existsSync(join(outDir, `${testName}.webp`));
+      const avifExists = existsSync(join(outDir, `${testName}.avif`));
 
-      if (!pngExists && !webpExists) {
+      if (!pngExists && !webpExists && !avifExists) {
         finalName = testName;
         break;
       }
@@ -87,6 +88,9 @@ export function resolveOutputPaths(outDir, name, options = {}) {
   }
   if (format === 'both' || format === 'webp') {
     result.webpPath = join(outDir, `${finalName}.webp`);
+  }
+  if (format === 'both' || format === 'avif') {
+    result.avifPath = join(outDir, `${finalName}.avif`);
   }
 
   return result;
@@ -103,6 +107,7 @@ export function generatePictureHtml(name, options = {}) {
 
   return [
     '<picture>',
+    `  <source srcset="${prefix}${name}.avif" type="image/avif">`,
     `  <source srcset="${prefix}${name}.webp" type="image/webp">`,
     `  <img src="${prefix}${name}.png" alt="${alt}"${classAttr} loading="lazy">`,
     '</picture>',
@@ -123,6 +128,11 @@ export function saveAssets(paths, buffers) {
   if (paths.webpPath && buffers.webp) {
     writeFileSync(paths.webpPath, buffers.webp);
     saved.push({ path: paths.webpPath, size: buffers.webp.length });
+  }
+
+  if (paths.avifPath && buffers.avif) {
+    writeFileSync(paths.avifPath, buffers.avif);
+    saved.push({ path: paths.avifPath, size: buffers.avif.length });
   }
 
   return saved;
