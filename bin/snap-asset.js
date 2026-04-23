@@ -55,30 +55,30 @@ program
   .description('Capture web screenshots & extract site assets as optimized PNG+WebP+AVIF')
   .version('0.1.0');
 
-// ── Default command: capture a URL ──────────────────────────────────────────
+// ── Default command: capture one or more URLs ──────────────────────────────────────────
 program
-  .argument('[url]', 'URL to capture')
+  .argument('[urls...]', 'URLs to capture')
   .option('-n, --name <name>', 'output filename (without extension)')
   .option('-o, --out <dir>', 'output directory')
   .option('-s, --selector <css>', 'capture a specific CSS element')
   .option('-w, --width <px>', 'viewport width', parseInt, 1280)
   .option('-h, --height <px>', 'viewport height', parseInt, 800)
   .option('--scale <n>', 'device scale factor', parseInt, 2)
-  .option('-f, --format <fmt>', 'output format: png, webp, avif, both', 'both')
+  .option('-f, --format <fmt>', 'output format: png, webp, avif, jpg, jpeg, both', 'both')
   .option('-q, --quality <n>', 'WebP/AVIF quality (1-100)', parseInt, 80)
   .option('--resize <WxH>', 'resize after capture (e.g. 800x600)')
   .option('--wait <ms>', 'wait before capture (ms)', parseInt, 0)
   .option('--dark', 'emulate dark color scheme')
   .option('--full-page', 'capture full scrollable page')
   .option('--overwrite', 'overwrite existing files')
-  .action(async (url, opts) => {
-    if (!url) {
+  .action(async (urls, opts) => {
+    if (!urls || urls.length === 0) {
       program.help();
       return;
     }
 
     log.banner();
-    log.info('URL', url);
+    log.info('URLs', urls.join(', '));
     log.info('Viewport', `${opts.width}x${opts.height} @${opts.scale}x`);
     if (opts.selector) log.info('Selector', opts.selector);
     if (opts.dark) log.info('Theme', 'dark');
@@ -87,47 +87,56 @@ program
     const spin = log.spinner('Launching browser...');
 
     try {
-      spin.text = 'Capturing screenshot...';
-      const buffer = await captureUrl(url, {
-        width: opts.width,
-        height: opts.height,
-        scale: opts.scale,
-        selector: opts.selector,
-        fullPage: opts.fullPage,
-        wait: opts.wait,
-        dark: opts.dark,
-      });
-
-      spin.text = 'Optimizing...';
       validateFormat(opts.format);
-      const result = await processScreenshot(buffer, {
-        quality: opts.quality,
-        resize: validateResize(opts.resize),
-      });
+      const results = [];
+      for (let index = 0; index < urls.length; index++) {
+        const url = urls[index];
+        spin.text = `Capturing screenshot for ${url}...`;
+        const buffer = await captureUrl(url, {
+          width: opts.width,
+          height: opts.height,
+          scale: opts.scale,
+          selector: opts.selector,
+          fullPage: opts.fullPage,
+          wait: opts.wait,
+          dark: opts.dark,
+        });
 
-      const outDir = opts.out || detectOutputDir();
-      const name = safeName(opts.name || nameFromUrl(url));
-      const paths = resolveOutputPaths(outDir, name, {
-        overwrite: opts.overwrite,
-        format: opts.format,
-      });
+        const result = await processScreenshot(buffer, {
+          quality: opts.quality,
+          resize: validateResize(opts.resize),
+        });
 
-      const saved = saveAssets(paths, result);
+        const outDir = opts.out || detectOutputDir();
+        const name = safeName(
+          opts.name && urls.length === 1
+            ? opts.name
+            : `${opts.name || nameFromUrl(url)}${urls.length > 1 ? `-${index + 1}` : ''}`
+        );
+        const paths = resolveOutputPaths(outDir, name, {
+          overwrite: opts.overwrite,
+          format: opts.format,
+        });
+
+        results.push({ paths, result, url });
+      }
+
       spin.stop();
 
-      log.divider();
-      for (const { path, size } of saved) {
-        log.saved(path, size / 1024);
+      for (const { paths, result, url } of results) {
+        for (const { path, size } of saveAssets(paths, result)) {
+          log.saved(path, size / 1024);
+        }
+        if (result.pngSize && result.webpSize) {
+          log.savings('WebP', result.pngSize / 1024, result.webpSize / 1024);
+        }
+        if (result.pngSize && result.avifSize) {
+          log.savings('AVIF', result.pngSize / 1024, result.avifSize / 1024);
+        }
+        log.info('Captured', url);
+        log.divider();
       }
 
-      if (result.pngSize && result.webpSize) {
-        log.savings('WebP', result.pngSize / 1024, result.webpSize / 1024);
-      }
-      if (result.pngSize && result.avifSize) {
-        log.savings('AVIF', result.pngSize / 1024, result.avifSize / 1024);
-      }
-
-      log.divider();
       log.success('Done!');
       log.divider();
     } catch (err) {
