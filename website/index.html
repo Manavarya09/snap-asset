@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>snap-asset | Screenshot Automation</title>
+  <title>snap-asset | Screenshot Automation for Developers</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
   <style>
-    * {
+    *, *::before, *::after {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
@@ -17,7 +17,11 @@
     :root {
       --black: #0a0a0a;
       --white: #ffffff;
-      --gray: #888888;
+      --gray-100: #f5f5f5;
+      --gray-200: #e5e5e5;
+      --gray-300: #d4d4d4;
+      --gray-400: #a3a3a3;
+      --gray-500: #737373;
     }
 
     html {
@@ -25,123 +29,132 @@
     }
 
     body {
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--white);
       color: var(--black);
-      line-height: 1.6;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* === HALFTONE === */
-    .halftone {
-      background-image: radial-gradient(circle, #000 1px, transparent 1px);
-      background-size: 8px 8px;
-    }
-
-    .halftone-light {
-      background-image: radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px);
-      background-size: 12px 12px;
-    }
-
-    /* === LAYOUT === */
     .container {
       max-width: 1100px;
       margin: 0 auto;
-      padding: 0 2rem;
+      padding: 0 1.5rem;
     }
 
     /* === HEADER === */
     .header {
-      min-height: 90vh;
+      min-height: 100vh;
       display: flex;
       align-items: center;
       background: var(--black);
       position: relative;
-      overflow: hidden;
     }
 
-    .header::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      right: -50px;
-      width: 400px;
-      height: 100%;
-      background: repeating-linear-gradient(
-        -80deg,
-        transparent,
-        transparent 20px,
-        rgba(255,255,255,0.03) 20px,
-        rgba(255,255,255,0.03) 40px
-      );
+    .header-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+      width: 100%;
     }
 
     .header-content {
       position: relative;
-      z-index: 1;
+      z-index: 2;
     }
 
+    .header-visual {
+      position: relative;
+      height: 500px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .code-mock {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 420px;
+      font-family: 'DM Mono', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: #e5e5e5;
+      line-height: 1.7;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    }
+
+    .code-mock-header {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 1rem;
+    }
+
+    .code-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .code-dot-red { background: #ff5f56; }
+    .code-dot-yellow { background: #ffbd2e; }
+    .code-dot-green { background: #27c93f; }
+
+    .code-line { display: block; }
+    .code-comment { color: #737373; }
+    .code-cmd { color: #e5e5e5; }
+    .code-flag { color: #a3a3a3; }
+    .code-url { color: #737373; }
+
     h1 {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(4rem, 15vw, 10rem);
+      font-family: 'Archivo Black', sans-serif;
+      font-size: clamp(3rem, 8vw, 5rem);
       color: var(--white);
-      line-height: 0.9;
-      letter-spacing: 2px;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
     }
 
     .tagline {
-      font-size: 1.5rem;
-      color: var(--gray);
+      font-size: 1.25rem;
+      color: var(--gray-400);
       margin: 1.5rem 0 2rem;
-      max-width: 500px;
-    }
-
-    .speech-box {
-      background: var(--white);
-      border-left: 6px solid var(--white);
-      padding: 1.5rem 2rem;
-      margin: 2rem 0;
-      max-width: 550px;
-      position: relative;
-    }
-
-    .speech-box::before {
-      content: '';
-      position: absolute;
-      left: -20px;
-      top: 30px;
-      border: 12px solid transparent;
-      border-right-color: var(--white);
+      max-width: 420px;
+      font-weight: 500;
     }
 
     .btn-group {
       display: flex;
       gap: 1rem;
       flex-wrap: wrap;
-      margin-top: 2rem;
     }
 
     .btn {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.3rem;
-      padding: 1rem 2.5rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 1rem 2rem;
       background: var(--white);
       color: var(--black);
       border: none;
+      border-radius: 8px;
       cursor: pointer;
-      letter-spacing: 2px;
       text-decoration: none;
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
       transition: all 0.2s;
     }
 
     .btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 0 var(--gray);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     }
 
     .btn-outline {
       background: transparent;
-      border: 2px solid var(--white);
+      border: 2px solid #333;
       color: var(--white);
     }
 
@@ -150,187 +163,254 @@
       color: var(--black);
     }
 
+    /* === SCREEN PATTERN === */
+    .screen-pattern {
+      position: absolute;
+      inset: 0;
+      opacity: 0.15;
+      background-image: 
+        linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
     /* === FEATURES === */
     .features {
-      padding: 6rem 0;
-      background: var(--white);
+      padding: 8rem 0;
+      background: var(--gray-100);
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--gray-500);
+      margin-bottom: 0.75rem;
     }
 
     .section-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 3rem;
-      text-align: center;
-      margin-bottom: 4rem;
-      letter-spacing: 4px;
+      font-family: 'Archivo Black', sans-serif;
+      font-size: clamp(2rem, 5vw, 3rem);
     }
 
     .features-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
     }
 
     .feature-card {
-      border: 3px solid var(--black);
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 16px;
       padding: 2rem;
-      position: relative;
       transition: all 0.2s;
     }
 
     .feature-card:hover {
-      background: var(--black);
-      color: var(--white);
+      border-color: var(--black);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.08);
     }
 
-    .feature-card:hover .feature-title {
-      color: var(--white);
-    }
-
-    .feature-num {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 4rem;
-      color: var(--gray);
-      position: absolute;
-      top: -10px;
-      right: 15px;
-      opacity: 0.3;
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--gray-100);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+      font-size: 1.5rem;
     }
 
     .feature-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.5rem;
-      color: var(--black);
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 1.1rem;
       margin-bottom: 0.5rem;
-      letter-spacing: 1px;
     }
 
     .feature-desc {
-      font-size: 0.95rem;
-      color: var(--gray);
+      font-size: 0.9rem;
+      color: var(--gray-500);
+      line-height: 1.6;
     }
 
-    .feature-card:hover .feature-desc {
-      color: #ccc;
-    }
-
-    /* === HOW IT WORKS === */
-    .how-it-works {
-      padding: 6rem 0;
-      background: var(--black);
-      color: var(--white);
+    /* === HOW === */
+    .how {
+      padding: 8rem 0;
+      background: var(--white);
     }
 
     .steps {
       display: flex;
-      flex-wrap: wrap;
+      gap: 2rem;
       justify-content: center;
-      gap: 1rem;
+      flex-wrap: wrap;
     }
 
     .step {
-      border: 2px solid var(--white);
-      padding: 2rem;
-      width: 280px;
+      flex: 1;
+      min-width: 280px;
+      max-width: 320px;
       text-align: center;
+      padding: 2.5rem 2rem;
       position: relative;
     }
 
     .step-num {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 3rem;
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 4rem;
+      color: var(--gray-200);
       position: absolute;
-      top: -20px;
+      top: 0;
       left: 50%;
       transform: translateX(-50%);
-      background: var(--black);
-      padding: 0 1rem;
-      color: var(--white);
+      z-index: 0;
+    }
+
+    .step-content {
+      position: relative;
+      z-index: 1;
     }
 
     .step h3 {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.5rem;
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 1.25rem;
       margin: 1rem 0 0.5rem;
-      letter-spacing: 2px;
     }
 
     .step p {
       font-size: 0.9rem;
-      color: var(--gray);
+      color: var(--gray-500);
     }
 
-    .arrow {
+    .step-arrow {
       align-self: center;
       font-size: 2rem;
-      color: var(--gray);
+      color: var(--gray-300);
     }
 
     /* === COMMANDS === */
     .commands {
-      padding: 6rem 0;
-      background: var(--white);
+      padding: 8rem 0;
+      background: var(--black);
+      color: var(--white);
+    }
+
+    .commands .section-title {
+      color: var(--white);
+    }
+
+    .commands .section-label {
+      color: var(--gray-500);
     }
 
     .code-block {
-      background: var(--black);
-      border: 3px solid var(--black);
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 12px;
       padding: 2rem;
       overflow-x: auto;
-      max-width: 800px;
+      max-width: 700px;
       margin: 0 auto;
+      font-family: 'DM Mono', 'Fira Code', monospace;
+      font-size: 0.9rem;
+      line-height: 1.8;
     }
 
-    .code-block pre {
-      font-family: 'Space Grotesk', monospace;
-      font-size: 0.95rem;
-      color: var(--white);
-      line-height: 2;
-    }
+    .code-line { display: block; }
+    .code-comment { color: #737373; }
+    .code-cmd { color: #e5e5e5; }
+    .code-flag { color: #a3a3a3; }
 
-    .code-comment { color: var(--gray); }
-    .code-cmd { color: var(--white); }
+    .cta {
+      text-align: center;
+      margin-top: 3rem;
+    }
 
     /* === FOOTER === */
     .footer {
       padding: 4rem 0;
-      background: var(--black);
-      color: var(--white);
+      background: var(--gray-100);
       text-align: center;
-      border-top: 2px solid var(--gray);
-    }
-
-    .footer a {
-      color: var(--white);
-      text-decoration: underline;
+      border-top: 1px solid var(--gray-200);
     }
 
     .footer p {
-      color: var(--gray);
-      margin-top: 1rem;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
+      color: var(--gray-500);
     }
 
-    @media (max-width: 768px) {
-      .arrow { display: none; }
-      .step { width: 100%; }
-      h1 { font-size: 4rem; }
+    .footer a {
+      color: var(--black);
+      text-decoration: underline;
+      font-weight: 700;
+    }
+
+    @media (max-width: 900px) {
+      .header-grid {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+      }
+      
+      .header-visual {
+        display: none;
+      }
+      
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .step-arrow {
+        display: none;
+      }
     }
   </style>
 </head>
 <body>
   <!-- HEADER -->
-  <header class="header" id="top">
-    <div class="container header-content halftone-light">
-      <h1>SNAP<br>ASSET</h1>
-      <p class="tagline">Screenshot automation for developers. Tell it what to capture — URL, element, component — it handles the rest.</p>
-      
-      <div class="speech-box">
-        "Just say 'screenshot my app' — I handle capture, optimization, and placement automatically."
-      </div>
-      
-      <div class="btn-group">
-        <a href="#install" class="btn">Get Started</a>
-        <a href="#features" class="btn btn-outline">Features</a>
+  <header class="header">
+    <div class="container">
+      <div class="header-grid">
+        <div class="header-content">
+          <h1>snap-asset</h1>
+          <p class="tagline">Screenshot automation for developers. URL, element, or component — tell it what to capture, it handles the rest.</p>
+          
+          <div class="btn-group">
+            <a href="#install" class="btn">Get Started</a>
+            <a href="#features" class="btn btn-outline">Features</a>
+          </div>
+        </div>
+        
+        <div class="header-visual">
+          <div class="screen-pattern"></div>
+          <div class="code-mock">
+            <div class="code-mock-header">
+              <span class="code-dot code-dot-red"></span>
+              <span class="code-dot code-dot-yellow"></span>
+              <span class="code-dot code-dot-green"></span>
+            </div>
+            <span class="code-line code-comment"># Screenshot any URL</span>
+            <span class="code-line">snap-asset https://myapp.com --name hero</span>
+            <span class="code-line"></span>
+            <span class="code-line code-comment"># Capture a specific element</span>
+            <span class="code-line">snap-asset https://myapp.com --selector ".card"</span>
+            <span class="code-line"></span>
+            <span class="code-line code-comment"># Extract entire site</span>
+            <span class="code-line">snap-asset extract https://site.com</span>
+            <span class="code-line"></span>
+            <span class="code-line code-comment"># Isolate a component</span>
+            <span class="code-line">snap-asset component ./src/Hero.tsx</span>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -338,41 +418,44 @@
   <!-- FEATURES -->
   <section class="features" id="features">
     <div class="container">
-      <h2 class="section-title">FEATURES</h2>
+      <div class="section-header">
+        <p class="section-label">What it does</p>
+        <h2 class="section-title">Capture anything</h2>
+      </div>
       
       <div class="features-grid">
         <div class="feature-card">
-          <span class="feature-num">01</span>
+          <div class="feature-icon">[1]</div>
           <h3 class="feature-title">Element Capture</h3>
           <p class="feature-desc">Target specific elements with CSS selectors. Capture just what matters.</p>
         </div>
         
         <div class="feature-card">
-          <span class="feature-num">02</span>
+          <div class="feature-icon">[2]</div>
           <h3 class="feature-title">Site Extraction</h3>
           <p class="feature-desc">Scrape entire websites: sections, images, components — everything at once.</p>
         </div>
         
         <div class="feature-card">
-          <span class="feature-num">03</span>
+          <div class="feature-icon">[3]</div>
           <h3 class="feature-title">Component Isolation</h3>
-          <p class="feature-desc">Render React, Vue, Svelte components in isolation and capture with transparency.</p>
+          <p class="feature-desc">Render React, Vue, Svelte components in isolation with transparent backgrounds.</p>
         </div>
         
         <div class="feature-card">
-          <span class="feature-num">04</span>
+          <div class="feature-icon">[4]</div>
           <h3 class="feature-title">Auto-Optimize</h3>
           <p class="feature-desc">PNG + WebP generated simultaneously. Retina ready at 2x scale.</p>
         </div>
         
         <div class="feature-card">
-          <span class="feature-num">05</span>
+          <div class="feature-icon">[5]</div>
           <h3 class="feature-title">Batch Mode</h3>
-          <p class="feature-desc">Define all captures in config file, run once. Efficiency for the win.</p>
+          <p class="feature-desc">Define all captures in config, run once. Efficiency for the win.</p>
         </div>
         
         <div class="feature-card">
-          <span class="feature-num">06</span>
+          <div class="feature-icon">[6]</div>
           <h3 class="feature-title">Dark Mode</h3>
           <p class="feature-desc">Capture in light or dark color scheme. Your screenshots, your style.</p>
         </div>
@@ -381,31 +464,40 @@
   </section>
 
   <!-- HOW IT WORKS -->
-  <section class="how-it-works">
+  <section class="how">
     <div class="container">
-      <h2 class="section-title" style="color: white;">HOW IT WORKS</h2>
+      <div class="section-header">
+        <p class="section-label">How it works</p>
+        <h2 class="section-title">Three steps</h2>
+      </div>
       
       <div class="steps">
         <div class="step">
           <span class="step-num">1</span>
-          <h3>COMMAND</h3>
-          <p>Tell snap-asset what to capture — URL, element selector, or component path.</p>
+          <div class="step-content">
+            <h3>Command</h3>
+            <p>Tell snap-asset what to capture — URL, element selector, or component path.</p>
+          </div>
         </div>
         
-        <span class="arrow">&#8594;</span>
+        <span class="step-arrow">&#8594;</span>
         
         <div class="step">
           <span class="step-num">2</span>
-          <h3>CAPTURE</h3>
-          <p>Playwright takes the screenshot, Sharp optimizes to PNG + WebP.</p>
+          <div class="step-content">
+            <h3>Capture</h3>
+            <p>Playwright takes the screenshot, Sharp optimizes to PNG + WebP.</p>
+          </div>
         </div>
         
-        <span class="arrow">&#8594;</span>
+        <span class="step-arrow">&#8594;</span>
         
         <div class="step">
           <span class="step-num">3</span>
-          <h3>SAVE</h3>
-          <p>Auto-saves to public/, assets/, or your specified output directory.</p>
+          <div class="step-content">
+            <h3>Save</h3>
+            <p>Auto-saves to public/, assets/, or your specified output directory.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -414,29 +506,32 @@
   <!-- COMMANDS -->
   <section class="commands" id="install">
     <div class="container">
-      <h2 class="section-title">COMMANDS</h2>
-      
-      <div class="code-block">
-        <pre><span class="code-comment"># Capture a URL</span>
-<span class="code-cmd">snap-asset</span> https://myapp.com --name hero
-
-<span class="code-comment"># Capture a specific element</span>
-<span class="code-cmd">snap-asset</span> https://myapp.com --selector ".card" --name feature
-
-<span class="code-comment"># Extract entire website</span>
-<span class="code-cmd">snap-asset</span> extract https://competitor.com --out public/
-
-<span class="code-comment"># Capture component in isolation</span>
-<span class="code-cmd">snap-asset</span> component ./src/Hero.tsx --name hero
-
-<span class="code-comment"># Batch capture</span>
-<span class="code-cmd">snap-asset</span> batch
-
-<span class="code-comment"># Dark mode variant</span>
-<span class="code-cmd">snap-asset</span> https://myapp.com --dark --name hero-dark</pre>
+      <div class="section-header">
+        <p class="section-label">Usage</p>
+        <h2 class="section-title">Commands</h2>
       </div>
       
-      <div style="text-align: center; margin-top: 3rem;">
+      <div class="code-block">
+        <span class="code-line code-comment"># Capture a URL</span>
+        <span class="code-line"><span class="code-cmd">snap-asset</span> https://myapp.com --name hero</span>
+        <span class="code-line"></span>
+        <span class="code-line code-comment"># Capture a specific element</span>
+        <span class="code-line"><span class="code-cmd">snap-asset</span> https://myapp.com <span class="code-flag">--selector</span> ".card" --name feature</span>
+        <span class="code-line"></span>
+        <span class="code-line code-comment"># Extract entire website</span>
+        <span class="code-line"><span class="code-cmd">snap-asset</span> extract https://competitor.com --out public/</span>
+        <span class="code-line"></span>
+        <span class="code-line code-comment"># Capture component in isolation</span>
+        <span class="code-line"><span class="code-cmd">snap-asset</span> component ./src/Hero.tsx --name hero</span>
+        <span class="code-line"></span>
+        <span class="code-line code-comment"># Batch capture</span>
+        <span class="code-line"><span class="code-cmd">snap-asset</span> batch</span>
+        <span class="code-line"></span>
+        <span class="code-line code-comment"># Dark mode variant</span>
+        <span class="code-line"><span class="code-cmd">snap-asset</span> https://myapp.com <span class="code-flag">--dark</span> --name hero-dark</span>
+      </div>
+      
+      <div class="cta">
         <a href="https://github.com/Manavarya09/snap-asset" class="btn" target="_blank">View on GitHub</a>
       </div>
     </div>
@@ -445,10 +540,8 @@
   <!-- FOOTER -->
   <footer class="footer">
     <div class="container">
-      <p style="font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 2px;">
-        Made by <a href="https://github.com/Manavarya09">Manav Arya Singh</a>
-      </p>
-      <p>MIT License &middot; Powered by Playwright & Sharp</p>
+      <p>Made by <a href="https://github.com/Manavarya09">Manav Arya Singh</a></p>
+      <p style="margin-top: 0.5rem;">MIT License · Powered by Playwright & Sharp</p>
     </div>
   </footer>
 </body>
