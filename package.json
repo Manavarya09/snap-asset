@@ -9,7 +9,7 @@
   "main": "src/index.js",
   "scripts": {
     "postinstall": "npx playwright install chromium --with-deps 2>/dev/null || npx playwright install chromium",
-    "test": "node --test tests/",
+    "test": "node --test tests/**/*.test.js",
     "start": "node bin/snap-asset.js"
   },
   "dependencies": {
