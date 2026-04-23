@@ -31,6 +31,23 @@ import { loadConfig, generateConfig } from '../src/config.js';
 import { renderComponent } from '../src/component-renderer.js';
 import * as log from '../src/logger.js';
 
+const VALID_FORMATS = ['png', 'webp', 'avif', 'both'];
+
+function validateFormat(format) {
+  if (!VALID_FORMATS.includes(format)) {
+    throw new Error(`Invalid format '${format}'. Expected one of: ${VALID_FORMATS.join(', ')}`);
+  }
+  return format;
+}
+
+function validateResize(resize) {
+  if (!resize) return null;
+  if (!/^[1-9]\d*x[1-9]\d*$/.test(resize)) {
+    throw new Error('Invalid resize value. Expected WIDTHxHEIGHT, e.g. 800x600.');
+  }
+  return resize;
+}
+
 const program = new Command();
 
 program
@@ -82,9 +99,10 @@ program
       });
 
       spin.text = 'Optimizing...';
+      validateFormat(opts.format);
       const result = await processScreenshot(buffer, {
         quality: opts.quality,
-        resize: opts.resize,
+        resize: validateResize(opts.resize),
       });
 
       const outDir = opts.out || detectOutputDir();
@@ -158,6 +176,7 @@ program
         selector: '#root > *',
       });
 
+      validateFormat(opts.format);
       spin.text = 'Optimizing...';
       const result = await processScreenshot(buffer, { quality: opts.quality });
 
