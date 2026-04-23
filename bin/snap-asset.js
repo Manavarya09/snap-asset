@@ -48,6 +48,22 @@ function validateResize(resize) {
   return resize;
 }
 
+function validateClip(clip) {
+  if (!clip) return null;
+  const parts = clip.split(',').map(Number);
+  if (parts.length !== 4 || parts.some((v) => Number.isNaN(v) || v < 0)) {
+    throw new Error('Invalid clip value. Expected x,y,width,height with non-negative integers.');
+  }
+  return {
+    x: parts[0],
+    y: parts[1],
+    width: parts[2],
+    height: parts[3],
+  };
+}
+
+export { validateClip };
+
 const program = new Command();
 
 program
@@ -67,6 +83,7 @@ program
   .option('-f, --format <fmt>', 'output format: png, webp, avif, jpg, jpeg, both', 'both')
   .option('-q, --quality <n>', 'WebP/AVIF quality (1-100)', parseInt, 80)
   .option('--resize <WxH>', 'resize after capture (e.g. 800x600)')
+  .option('--clip <x,y,width,height>', 'crop capture to a rectangular region')
   .option('--wait <ms>', 'wait before capture (ms)', parseInt, 0)
   .option('--dark', 'emulate dark color scheme')
   .option('--full-page', 'capture full scrollable page')
@@ -98,6 +115,7 @@ program
           scale: opts.scale,
           selector: opts.selector,
           fullPage: opts.fullPage,
+          clip: validateClip(opts.clip),
           wait: opts.wait,
           dark: opts.dark,
         });
@@ -155,6 +173,7 @@ program
   .option('-w, --width <px>', 'viewport width', parseInt, 800)
   .option('-h, --height <px>', 'viewport height', parseInt, 600)
   .option('--scale <n>', 'device scale factor', parseInt, 2)
+  .option('--clip <x,y,width,height>', 'crop capture to a rectangular region')
   .option('-f, --format <fmt>', 'output format: png, webp, avif, both', 'both')
   .option('-q, --quality <n>', 'WebP/AVIF quality', parseInt, 80)
   .option('--dark', 'emulate dark color scheme')
@@ -180,6 +199,7 @@ program
         width: opts.width,
         height: opts.height,
         scale: opts.scale,
+        clip: validateClip(opts.clip),
         wait: opts.wait,
         dark: opts.dark,
         selector: '#root > *',
