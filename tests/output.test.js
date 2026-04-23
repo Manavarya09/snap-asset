@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 import { safeName, nameFromUrl, resolveOutputPaths } from '../src/output.js';
-import { existsSync, rmSync } from 'fs';
+import { existsSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 const tempDir = join(process.cwd(), 'tests', 'temp-output');
@@ -31,7 +31,6 @@ test('resolveOutputPaths should create directory and avoid collision', () => {
   assert.equal(paths1.avifPath.endsWith('image.avif'), true);
 
   // Create dummy files to force collision avoidance
-  const { writeFileSync } = await import('fs');
   writeFileSync(paths1.pngPath, '');
   writeFileSync(paths1.webpPath, '');
   writeFileSync(paths1.avifPath, '');
