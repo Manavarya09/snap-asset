@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { writeFileSync, rmSync, existsSync } from 'fs';
+import { writeFileSync, rmSync, mkdirSync, existsSync } from 'fs';
 import { join } from 'path';
 import { loadConfig, validateConfig } from '../src/config.js';
 
@@ -33,6 +33,7 @@ try {
   });
 
   test('loadConfig merges defaults and captures correctly', () => {
+    mkdirSync(tempDir, { recursive: true });
     writeFileSync(configPath, JSON.stringify({
       defaults: { width: 900, height: 700, format: 'webp' },
       captures: [
