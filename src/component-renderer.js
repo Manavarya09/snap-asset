@@ -72,11 +72,19 @@ new Component({ target: document.getElementById('root') });
  * Generate a minimal Vite config for the temp project.
  */
 function generateViteConfig(framework, projectRoot) {
-  const plugins = framework === 'react'
-    ? `import react from '@vitejs/plugin-react';\n`
-    : '';
+  let plugins = '';
+  let pluginsList = '';
 
-  const pluginsList = framework === 'react' ? 'plugins: [react()],' : '';
+  if (framework === 'react') {
+    plugins = `import react from '@vitejs/plugin-react';\n`;
+    pluginsList = 'plugins: [react()],';
+  } else if (framework === 'vue') {
+    plugins = `import vue from '@vitejs/plugin-vue';\n`;
+    pluginsList = 'plugins: [vue()],';
+  } else if (framework === 'svelte') {
+    plugins = `import { svelte } from '@sveltejs/vite-plugin-svelte';\n`;
+    pluginsList = 'plugins: [svelte()],';
+  }
 
   return `
 ${plugins}import { defineConfig } from 'vite';
@@ -95,6 +103,7 @@ export default defineConfig({
 });
 `;
 }
+
 
 /**
  * Render a component in isolation using a temporary Vite project.
