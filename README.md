@@ -91,6 +91,10 @@ npm install -g .
 ```
 
 > Playwright will automatically download Chromium during `npm install`.
+>
+> Run `npm test` to execute the built-in output and optimizer test suite.
+>
+> Component isolation uses Vite and framework plugins. Those dependencies are included in the package so component rendering works out of the box.
 
 ---
 
