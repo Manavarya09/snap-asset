@@ -1,139 +1,551 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Snap Asset — Capture pages like a hero</title>
-  <meta name="description" content="Snap Asset is a comic-inspired capture tool that extracts website screenshots, component previews, and asset snapshots in a manga-style product story." />
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>snap-asset | Capture Heroes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Press+Start+2P&family=Space+Monkee&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --hero-red: #FF1744;
+      --hero-yellow: #FFD600;
+      --hero-blue: #00E5FF;
+      --hero-black: #0D0D0D;
+      --hero-white: #FAFAFA;
+      --halftone: rgba(0,0,0,0.1);
+    }
+
+    body {
+      font-family: 'Space Monke', sans-serif;
+      background: var(--hero-white);
+      color: var(--hero-black);
+      overflow-x: hidden;
+    }
+
+    /* HALFTONE PATTERN */
+    .halftone-bg {
+      background-image: radial-gradient(circle, var(--halftone) 1px, transparent 1px);
+      background-size: 8px 8px;
+    }
+
+    /* SPEED LINES */
+    .speed-lines {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .speed-lines::before {
+      content: '';
+      position: absolute;
+      width: 200%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 40px,
+        rgba(0,0,0,0.03) 40px,
+        rgba(0,0,0,0.03) 80px
+      );
+      animation: speedMove 1s linear infinite;
+    }
+
+    @keyframes speedMove {
+      from { transform: translateX(-50%); }
+      to { transform: translateX(0); }
+    }
+
+    /* HERO SECTION */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 2rem;
+      background: linear-gradient(135deg, var(--hero-yellow) 0%, #FF9800 100%);
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(0,0,0,0.1) 1px, transparent 1px);
+      background-size: 12px 12px;
+    }
+
+    .comic-panel {
+      background: var(--hero-white);
+      border: 6px solid var(--hero-black);
+      box-shadow: 12px 12px 0 var(--hero-black);
+      padding: 3rem;
+      max-width: 900px;
+      position: relative;
+      transform: rotate(-2deg);
+    }
+
+    .comic-panel::before {
+      content: 'BOOM!';
+      position: absolute;
+      top: -40px;
+      right: 20px;
+      font-family: 'Bangers', cursive;
+      font-size: 3rem;
+      color: var(--hero-red);
+      text-shadow: 3px 3px 0 var(--hero-black);
+      transform: rotate(10deg);
+    }
+
+    .comic-logo {
+      font-family: 'Bangers', cursive;
+      font-size: 5rem;
+      color: var(--hero-black);
+      text-shadow: 4px 4px 0 var(--hero-white), 8px 8px 0 var(--hero-black);
+      letter-spacing: 4px;
+      margin-bottom: 1rem;
+      animation: logoShake 0.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes logoShake {
+      from { transform: rotate(-1deg); }
+      to { transform: rotate(1deg); }
+    }
+
+    .tagline {
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 2rem;
+      color: #333;
+    }
+
+    .speech-bubble {
+      background: var(--hero-white);
+      border: 4px solid var(--hero-black);
+      border-radius: 20px;
+      padding: 1.5rem 2rem;
+      position: relative;
+      margin: 2rem 0;
+      font-size: 1.2rem;
+      font-weight: bold;
+      box-shadow: 6px 6px 0 var(--hero-black);
+    }
+
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -20px;
+      left: 40px;
+      border: 10px solid transparent;
+      border-top-color: var(--hero-black);
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+    .comic-btn {
+      font-family: 'Bangers', cursive;
+      font-size: 1.5rem;
+      padding: 1rem 2.5rem;
+      border: 4px solid var(--hero-black);
+      background: var(--hero-red);
+      color: var(--hero-white);
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      box-shadow: 6px 6px 0 var(--hero-black);
+      transition: all 0.1s ease;
+      position: relative;
+    }
+
+    .comic-btn:hover {
+      transform: translate(2px, 2px);
+      box-shadow: 4px 4px 0 var(--hero-black);
+    }
+
+    .comic-btn:active {
+      transform: translate(6px, 6px);
+      box-shadow: 0 0 0 var(--hero-black);
+    }
+
+    .comic-btn.secondary {
+      background: var(--hero-blue);
+      color: var(--hero-black);
+    }
+
+    /* FEATURES SECTION */
+    .features {
+      padding: 6rem 2rem;
+      background: var(--hero-black);
+      position: relative;
+    }
+
+    .section-title {
+      font-family: 'Bangers', cursive;
+      font-size: 4rem;
+      text-align: center;
+      color: var(--hero-white);
+      text-shadow: 4px 4px 0 var(--hero-red);
+      margin-bottom: 4rem;
+      transform: rotate(-3deg);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      background: var(--hero-white);
+      border: 4px solid var(--hero-white);
+      padding: 2rem;
+      position: relative;
+      transform: rotate(1deg);
+      transition: transform 0.3s ease;
+    }
+
+    .feature-card:nth-child(even) {
+      transform: rotate(-1deg);
+    }
+
+    .feature-card:hover {
+      transform: rotate(0deg) scale(1.05);
+      z-index: 10;
+    }
+
+    .feature-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .feature-title {
+      font-family: 'Bangers', cursive;
+      font-size: 1.8rem;
+      color: var(--hero-red);
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-desc {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: #555;
+    }
+
+    .action-burst {
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      font-family: 'Bangers', cursive;
+      font-size: 2rem;
+      color: var(--hero-yellow);
+      transform: rotate(15deg);
+    }
+
+    /* HOW IT WORKS */
+    .how-it-works {
+      padding: 6rem 2rem;
+      background: linear-gradient(180deg, var(--hero-blue) 0%, #00B8D4 100%);
+    }
+
+    .steps {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .step {
+      background: var(--hero-white);
+      border: 5px solid var(--hero-black);
+      padding: 2rem;
+      width: 280px;
+      text-align: center;
+      position: relative;
+      box-shadow: 8px 8px 0 var(--hero-black);
+    }
+
+    .step-number {
+      font-family: 'Bangers', cursive;
+      font-size: 4rem;
+      color: var(--hero-red);
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      -webkit-text-stroke: 3px var(--hero-black);
+    }
+
+    .step-arrow {
+      font-size: 3rem;
+      align-self: center;
+      color: var(--hero-white);
+      text-shadow: 2px 2px 0 var(--hero-black);
+    }
+
+    /* COMMAND SHOWCASE */
+    .commands {
+      padding: 6rem 2rem;
+      background: repeating-linear-gradient(
+        45deg,
+        var(--hero-yellow),
+        var(--hero-yellow) 20px,
+        #FFC400 20px,
+        #FFC400 40px
+      );
+    }
+
+    .code-panel {
+      background: #1a1a2e;
+      border: 6px solid var(--hero-black);
+      box-shadow: 10px 10px 0 var(--hero-black);
+      padding: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+      overflow-x: auto;
+    }
+
+    .code-panel pre {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.8rem;
+      color: var(--hero-blue);
+      line-height: 2;
+    }
+
+    .code-panel .comment { color: #6a9955; }
+    .code-panel .keyword { color: var(--hero-red); }
+    .code-panel .string { color: var(--hero-yellow); }
+    .code-panel .flag { color: var(--hero-blue); }
+
+    /* FOOTER */
+    .footer {
+      background: var(--hero-black);
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+
+    .footer-text {
+      font-family: 'Bangers', cursive;
+      font-size: 2rem;
+      color: var(--hero-white);
+    }
+
+    .footer-link {
+      color: var(--hero-blue);
+      text-decoration: none;
+    }
+
+    .footer-link:hover {
+      text-decoration: underline;
+    }
+
+    /* ANIMATIONS */
+    @keyframes zoomIn {
+      from { transform: scale(0); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .animate-zoom { animation: zoomIn 0.5s ease-out; }
+    .animate-slide { animation: slideUp 0.5s ease-out; }
+
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .comic-logo { font-size: 3rem; }
+      .section-title { font-size: 2.5rem; }
+      .comic-panel { padding: 1.5rem; }
+      .feature-card { margin-bottom: 1rem; }
+      .step-arrow { display: none; }
+    }
+  </style>
 </head>
 <body>
-  <div class="manga-shell">
-    <div class="manga-background"></div>
+  <div class="speed-lines"></div>
 
-    <header class="manga-header">
-      <div>
-        <span class="brand-mark">✦</span>
-        <a class="brand" href="#">Snap Asset</a>
+  <!-- HERO SECTION -->
+  <section class="hero halftone-bg">
+    <div class="comic-panel animate-zoom">
+      <h1 class="comic-logo">snap-asset</h1>
+      <p class="tagline">The UltimateScreenshotHero!</p>
+      
+      <div class="speech-bubble">
+        "Just say 'Screenshot my app' — I'll handle capture, optimization, and placement automatically!"
       </div>
-      <nav class="manga-nav">
-        <a href="#story">Story</a>
-        <a href="#powers">Powers</a>
-        <a href="#quest">Quest</a>
-        <a href="#launch" class="button button-primary">Launch</a>
-      </nav>
-    </header>
-
-    <main>
-      <section class="hero-panel">
-        <div class="hero-bubble">
-          <p class="bubble-title">Meet the newest hero in your toolkit.</p>
-          <h1>Snap Asset</h1>
-          <p>Capture pages, extract assets, and turn website screenshots into polished story panels — fast, visual, and fun.</p>
-          <div class="hero-actions">
-            <a class="button button-primary" href="#quest">Begin the quest</a>
-            <a class="button button-secondary" href="#powers">See powers</a>
-          </div>
-        </div>
-        <div class="hero-art">
-          <div class="hero-panel-card">
-            <span class="panel-label">Episode 1</span>
-            <h2>From browser to artwork.</h2>
-            <p>One command captures website frames, optimizes them, and exports asset-ready images with style.</p>
-          </div>
-        </div>
-      </section>
-
-      <section id="story" class="story-grid">
-        <article class="story-card">
-          <span class="story-label">Origin</span>
-          <h2>What is Snap Asset?</h2>
-          <p>It is a CLI-driven capture utility that turns web pages into usable image assets, previews, and component snapshots. Think of it as a magical scanner for your interface designs.</p>
-        </article>
-        <article class="story-card story-card-alt">
-          <span class="story-label">Why it exists</span>
-          <p>Developers and designers need fast previews, polished visuals, and reliable screenshot capture without leaving the terminal. Snap Asset makes this an everyday superpower.</p>
-        </article>
-      </section>
-
-      <section id="powers" class="powers-grid">
-        <div class="power-panel">
-          <div class="power-icon">⚡</div>
-          <h3>Fast capture</h3>
-          <p>One command grabs full pages, elements, or component renderings instantly.</p>
-        </div>
-        <div class="power-panel">
-          <div class="power-icon">🧩</div>
-          <h3>Asset extraction</h3>
-          <p>Extract images, thumbnails, and optimized formats from live pages or rendered components.</p>
-        </div>
-        <div class="power-panel">
-          <div class="power-icon">🎨</div>
-          <h3>Styled output</h3>
-          <p>Generate PNG, WebP, AVIF, and JPEG assets for your design stories and documentation.</p>
-        </div>
-        <div class="power-panel">
-          <div class="power-icon">🧪</div>
-          <h3>Project-ready</h3>
-          <p>Built for modern dev workflows with config files, component rendering, and automation-friendly output.</p>
-        </div>
-      </section>
-
-      <section id="quest" class="quest-section">
-        <div class="quest-bubble">
-          <span class="panel-label">Mission</span>
-          <h2>How to use the project</h2>
-          <p>Install the package, run the CLI, and capture website screenshots with vivid speed. This is your adventure guide to turning websites into illustrated assets.</p>
-          <pre><code>npm install
-npx snap-asset https://example.com --out ./captures</code></pre>
-        </div>
-        <div class="quest-grid">
-          <div class="quest-card">
-            <h3>Step 1</h3>
-            <p>Choose the page or component to capture.</p>
-          </div>
-          <div class="quest-card">
-            <h3>Step 2</h3>
-            <p>Pick the output style and format — PNG, WEBP, AVIF, JPG.</p>
-          </div>
-          <div class="quest-card">
-            <h3>Step 3</h3>
-            <p>Save art assets to your design library, docs, or release notes.</p>
-          </div>
-        </div>
-      </section>
-
-      <section class="scene-gallery">
-        <div class="scene-card">
-          <h3>Live builds</h3>
-          <p>Generate previews for UI components, website sections, and release snapshots.</p>
-        </div>
-        <div class="scene-card scene-card-alt">
-          <h3>Team storytelling</h3>
-          <p>Share visual progress with designers, product owners, and reviewers.</p>
-        </div>
-        <div class="scene-card">
-          <h3>Automation</h3>
-          <p>Use the CLI in scripts, GitHub Actions, and deploy pipelines for repeatable capture flow.</p>
-        </div>
-      </section>
-
-      <section class="hero-panel hero-panel-small" id="launch">
-        <div class="hero-bubble">
-          <h2>Ready to make your project speak in panels?</h2>
-          <p>Snap Asset turns routine screenshots into a comic-book workflow for design, review, and launch.</p>
-          <a class="button button-primary" href="https://github.com/Manavarya09/snap-asset">View on GitHub</a>
-        </div>
-      </section>
-    </main>
-
-    <footer class="manga-footer">
-      <div>
-        <span class="brand-mark">✦</span>
-        <span>Snap Asset</span>
+      
+      <div class="cta-buttons">
+        <a href="#install" class="comic-btn">Get Started</a>
+        <a href="#features" class="comic-btn secondary">PowerUps</a>
       </div>
-      <p>Designed as a manga-themed product story about the CLI hero that captures web assets in style.</p>
-    </footer>
-  </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features halftone-bg" id="features">
+    <h2 class="section-title animate-slide">Super Powers!</h2>
+    
+    <div class="features-grid">
+      <div class="feature-card animate-slide delay-1">
+        <span class="action-burst">POW!</span>
+        <span class="feature-icon">📸</span>
+        <h3 class="feature-title">Element Capture</h3>
+        <p class="feature-desc">Target specific elements with CSS selectors. Capture just what matters!</p>
+      </div>
+      
+      <div class="feature-card animate-slide delay-2">
+        <span class="action-burst">BAM!</span>
+        <span class="feature-icon">🌐</span>
+        <h3 class="feature-title">Site Extraction</h3>
+        <p class="feature-desc">Scrape entire websites: sections, images, components — everything at once!</p>
+      </div>
+      
+      <div class="feature-card animate-slide delay-3">
+        <span class="action-burst">ZOOM!</span>
+        <span class="feature-icon">⚛️</span>
+        <h3 class="feature-title">Component Isolation</h3>
+        <p class="feature-desc">Render React/Vue/Svelte components in isolation and capture them like a pro!</p>
+      </div>
+      
+      <div class="feature-card animate-slide delay-4">
+        <span class="action-burst">CRASH!</span>
+        <span class="feature-icon">🚀</span>
+        <h3 class="feature-title">Auto-Optimize</h3>
+        <p class="feature-desc">PNG + WebP generated simultaneously. Retina ready at 2x scale!</p>
+      </div>
+      
+      <div class="feature-card animate-slide delay-1">
+        <span class="action-burst">WHAM!</span>
+        <span class="feature-icon">🌙</span>
+        <h3 class="feature-title">Dark Mode</h3>
+        <p class="feature-desc">Capture in light or dark color scheme. Your screenshots, your style!</p>
+      </div>
+      
+      <div class="feature-card animate-slide delay-2">
+        <span class="action-burst">BOOM!</span>
+        <span class="feature-icon">🎬</span>
+        <h3 class="feature-title">Batch Mode</h3>
+        <p class="feature-desc">Define all captures in config, run once. Efficiency for the win!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how-it-works">
+    <h2 class="section-title animate-slide">How It Works</h2>
+    
+    <div class="steps">
+      <div class="step animate-slide delay-1">
+        <span class="step-number">1</span>
+        <h3>Snap!</h3>
+        <p>Tell Claude what to capture — URL, element, or component</p>
+      </div>
+      
+      <span class="step-arrow animate-slide delay-2">→</span>
+      
+      <div class="step animate-slide delay-2">
+        <span class="step-number">2</span>
+        <h3>Optimize!</h3>
+        <p>Sharp processes and converts to optimized PNG + WebP</p>
+      </div>
+      
+      <span class="step-arrow animate-slide delay-3">→</span>
+      
+      <div class="step animate-slide delay-3">
+        <span class="step-number">3</span>
+        <h3>Save!</h3>
+        <p>Auto-detects public/ or assets/ and saves with proper naming</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMMANDS -->
+  <section class="commands" id="install">
+    <h2 class="section-title animate-slide">Attack Commands!</h2>
+    
+    <div class="code-panel animate-slide delay-1">
+      <pre><span class="comment"># Capture a URL</span>
+snap-asset https://myapp.com --name hero
+
+<span class="comment"># Capture a specific element</span>
+snap-asset https://myapp.com --selector ".card" --name feature
+
+<span class="comment"># Extract entire website</span>
+snap-asset extract https://competitor.com --out public/
+
+<span class="comment"># Capture component in isolation</span>
+snap-asset component ./src/Hero.tsx --name hero
+
+<span class="comment"># Batch mode</span>
+snap-asset batch
+
+<span class="keyword"># Dark mode variant</span>
+snap-asset https://myapp.com <span class="flag">--dark</span> --name hero-dark</pre>
+    </div>
+    
+    <div class="cta-buttons" style="margin-top: 3rem;">
+      <a href="https://github.com/Manavarya09/snap-asset" class="comic-btn" target="_blank">
+        View on GitHub
+      </a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <p class="footer-text">
+      Made with ⚡ by 
+      <a href="https://github.com/Manavarya09" class="footer-link">Manav Arya Singh</a>
+    </p>
+    <p style="color: #666; margin-top: 1rem; font-size: 0.9rem;">
+      MIT License • powered by Playwright & Sharp
+    </p>
+  </footer>
+
+  <script>
+    // Intersection Observer for animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-slide');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.feature-card, .step, .code-panel').forEach(el => {
+      observer.observe(el);
+    });
+  </script>
 </body>
 </html>
