@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>snap-asset | The Ultimate Capture Tool</title>
+  <title>snap-asset | Screenshot Automation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Bowlby+One+SC&family=Koulen&family=Metal+Mania&family=Orbitron:wght@900&family=Press+Start+2P&family=Rubik+Mono+One&family=Russo+One&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -15,13 +15,9 @@
     }
 
     :root {
-      --ink: #0a0a0a;
-      --paper: #f5f0e6;
-      --blood: #e63946;
-      --fire: #ff6b35;
-      --electric: #00f5ff;
-      --acid: #c9ff2f;
-      --dark-metal: #1a1a2e;
+      --black: #0a0a0a;
+      --white: #ffffff;
+      --gray: #888888;
     }
 
     html {
@@ -29,810 +25,431 @@
     }
 
     body {
-      font-family: 'Russo One', sans-serif;
-      background: var(--paper);
-      color: var(--ink);
-      overflow-x: hidden;
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--white);
+      color: var(--black);
+      line-height: 1.6;
     }
 
-    /* === CHAOTIC SPEED LINES === */
-    .speed-demon {
-      position: fixed;
-      top: 0;
-      left: -100%;
-      width: 300%;
-      height: 100vh;
-      background: repeating-linear-gradient(
-        90deg,
-        transparent 0px,
-        transparent 20px,
-        rgba(0,0,0,0.08) 20px,
-        rgba(0,0,0,0.08) 40px
-      );
-      z-index: 9999;
-      pointer-events: none;
-      animation: zoomLine 0.3s linear infinite;
-    }
-
-    @keyframes zoomLine {
-      from { transform: translateX(-33%); }
-      to { transform: translateX(0); }
-    }
-
-    .speed-vertical {
-      position: fixed;
-      right: 5%;
-      top: 0;
-      width: 4px;
-      height: 100vh;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent 0px,
-        transparent 30px,
-        var(--blood) 30px,
-        var(--blood) 35px
-      );
-      opacity: 0.3;
-      z-index: 9998;
-      animation: vLine 0.15s linear infinite;
-    }
-
-    @keyframes vLine {
-      from { transform: translateY(-50%); }
-      to { transform: translateY(0); }
-    }
-
-    /* === HALFTONE SCREENTONE === */
+    /* === HALFTONE === */
     .halftone {
-      position: absolute;
-      inset: 0;
-      background-image: radial-gradient(circle, rgba(0,0,0,0.15) 1px, transparent 1px);
-      background-size: 6px 6px;
-      pointer-events: none;
-    }
-
-    .halftone-light {
-      background-image: radial-gradient(circle, rgba(0,0,0,0.06) 1px, transparent 1px);
+      background-image: radial-gradient(circle, #000 1px, transparent 1px);
       background-size: 8px 8px;
     }
 
-    /* === MANGA PANEL SYSTEM === */
-    .panel {
-      border: 4px solid var(--ink);
-      background: white;
-      position: relative;
-      box-shadow: 8px 8px 0 var(--ink);
+    .halftone-light {
+      background-image: radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px);
+      background-size: 12px 12px;
     }
 
-    .panel-dark {
-      background: var(--dark-metal);
-      color: white;
-      border-color: white;
-      box-shadow: 8px 8px 0 white;
+    /* === LAYOUT === */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2rem;
     }
 
-    .panel-danger {
-      border-color: var(--blood);
-      box-shadow: 8px 8px 0 var(--blood);
-    }
-
-    .panel-tilt {
-      transform: rotate(-1.5deg);
-    }
-
-    .panel-tilt-alt {
-      transform: rotate(2deg);
-    }
-
-    /* === EXPLOSIVE SOUND FX === */
-    .sfx {
-      font-family: 'Koulen', cursive;
-      font-size: 4rem;
-      color: var(--ink);
-      text-transform: uppercase;
-      letter-spacing: -2px;
-      -webkit-text-stroke: 2px var(--ink);
-      position: relative;
-      display: inline-block;
-    }
-
-    .sfx-fire {
-      color: var(--fire);
-      -webkit-text-stroke: 2px var(--fire);
-      text-shadow: 3px 3px 0 var(--blood);
-      animation: burnPulse 0.1s ease-in-out infinite alternate;
-    }
-
-    @keyframes burnPulse {
-      from { transform: scale(1) rotate(-2deg); }
-      to { transform: scale(1.05) rotate(2deg); }
-    }
-
-    .sfx-crash {
-      font-size: 6rem;
-      -webkit-text-stroke: 3px var(--blood);
-      color: var(--blood);
-      text-shadow: 4px 4px 0 var(--ink);
-      animation: crashShake 0.08s ease-in-out infinite alternate;
-    }
-
-    @keyframes crashShake {
-      from { transform: translate(-2px, -2px) rotate(-1deg); }
-      to { transform: translate(2px, 2px) rotate(1deg); }
-    }
-
-    .sfx-slash {
-      font-family: 'Metal Mania', cursive;
-      color: var(--electric);
-      -webkit-text-stroke: 2px white;
-      text-shadow: 0 0 20px var(--electric), 2px 2px 0 var(--ink);
-      animation: slashAnim 0.2s linear infinite;
-    }
-
-    @keyframes slashAnim {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-
-    .sfx-pow {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 5rem;
-      background: linear-gradient(180deg, var(--electric), var(--acid));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      filter: drop-shadow(3px 3px 0 var(--ink));
-    }
-
-    /* === IMPACT FRAMES === */
-    .impact {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      border: 8px solid var(--ink);
-      pointer-events: none;
-      animation: impactRipple 0.4s ease-out forwards;
-    }
-
-    @keyframes impactRipple {
-      0% { 
-        transform: scale(1.1); 
-        opacity: 1;
-      }
-      100% { 
-        transform: scale(1.3); 
-        opacity: 0;
-      }
-    }
-
-    .impact-white {
-      border-color: white;
-    }
-
-    /* === ACTION BURSTS === */
-    .burst {
-      position: absolute;
-      width: 100px;
-      height: 100px;
-      background: radial-gradient(circle, var(--blood) 0%, transparent 70%);
-      transform: rotate(45deg);
-      opacity: 0;
-      animation: burstAnim 0.3s ease-out forwards;
-    }
-
-    @keyframes burstAnim {
-      0% { 
-        transform: rotate(45deg) scale(0.5); 
-        opacity: 1;
-      }
-      100% { 
-        transform: rotate(45deg) scale(3); 
-        opacity: 0;
-      }
-    }
-
-    /* === MEGA HEADER === */
-    .mega-header {
-      min-height: 100vh;
+    /* === HEADER === */
+    .header {
+      min-height: 90vh;
       display: flex;
       align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #ffdd00 0%, #ff6b35 50%, #e63946 100%);
+      background: var(--black);
       position: relative;
       overflow: hidden;
-      padding: 2rem;
     }
 
-    .mega-header::before {
+    .header::before {
       content: '';
       position: absolute;
-      inset: 0;
-      background: repeating-conic-gradient(from 0deg, transparent 0deg 10deg, rgba(0,0,0,0.05) 10deg 20deg);
+      top: 0;
+      right: -50px;
+      width: 400px;
+      height: 100%;
+      background: repeating-linear-gradient(
+        -80deg,
+        transparent,
+        transparent 20px,
+        rgba(255,255,255,0.03) 20px,
+        rgba(255,255,255,0.03) 40px
+      );
     }
 
-    .hero-panel {
-      background: var(--paper);
-      border: 8px solid var(--ink);
-      box-shadow: 16px 16px 0 var(--ink);
-      padding: 4rem;
-      max-width: 1000px;
-      text-align: center;
-      transform: rotate(-2deg);
+    .header-content {
       position: relative;
+      z-index: 1;
     }
 
-    .hero-title {
-      font-family: 'Bowlby One SC', cursive;
-      font-size: clamp(3rem, 12vw, 8rem);
-      color: var(--ink);
-      text-shadow: 4px 4px 0 var(--blood);
-      line-height: 0.95;
-      margin-bottom: 1rem;
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4rem, 15vw, 10rem);
+      color: var(--white);
+      line-height: 0.9;
+      letter-spacing: 2px;
     }
 
-    .hero-subtitle {
-      font-family: 'Orbitron', sans-serif;
+    .tagline {
       font-size: 1.5rem;
-      color: var(--blood);
-      text-transform: uppercase;
-      letter-spacing: 8px;
-      margin-bottom: 2rem;
+      color: var(--gray);
+      margin: 1.5rem 0 2rem;
+      max-width: 500px;
     }
 
-    .hero-speech {
-      background: white;
-      border: 5px solid var(--ink);
-      border-radius: 30px;
-      padding: 2rem;
-      position: relative;
+    .speech-box {
+      background: var(--white);
+      border-left: 6px solid var(--white);
+      padding: 1.5rem 2rem;
       margin: 2rem 0;
-      font-size: 1.3rem;
-      line-height: 1.6;
-      box-shadow: 6px 6px 0 var(--ink);
+      max-width: 550px;
+      position: relative;
     }
 
-    .hero-speech::after {
+    .speech-box::before {
       content: '';
       position: absolute;
-      bottom: -25px;
-      left: 60px;
-      border: 15px solid transparent;
-      border-top-color: var(--ink);
+      left: -20px;
+      top: 30px;
+      border: 12px solid transparent;
+      border-right-color: var(--white);
     }
 
-    .cta-cluster {
+    .btn-group {
       display: flex;
       gap: 1rem;
       flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 3rem;
+      margin-top: 2rem;
     }
 
-    .manga-btn {
-      font-family: 'Black Ops One', cursive;
-      font-size: 1.4rem;
-      padding: 1.2rem 3rem;
+    .btn {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      padding: 1rem 2.5rem;
+      background: var(--white);
+      color: var(--black);
       border: none;
-      background: var(--blood);
-      color: white;
       cursor: pointer;
-      text-transform: uppercase;
-      letter-spacing: 3px;
-      box-shadow: 6px 6px 0 var(--ink);
-      transition: all 0.05s ease;
+      letter-spacing: 2px;
       text-decoration: none;
       display: inline-block;
+      transition: all 0.2s;
     }
 
-    .manga-btn:hover {
-      transform: translate(4px, 4px);
-      box-shadow: 2px 2px 0 var(--ink);
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 0 var(--gray);
     }
 
-    .manga-btn:active {
-      transform: translate(8px, 8px);
-      box-shadow: -2px -2px 0 var(--ink);
-    }
-
-    .manga-btn-alt {
-      background: var(--electric);
-      color: var(--ink);
-    }
-
-    .manga-btn-outline {
+    .btn-outline {
       background: transparent;
-      border: 4px solid var(--ink);
-      color: var(--ink);
+      border: 2px solid var(--white);
+      color: var(--white);
     }
 
-    /* === FEATURES GALLERY === */
-    .features-section {
-      background: var(--ink);
-      padding: 6rem 2rem;
-      position: relative;
+    .btn-outline:hover {
+      background: var(--white);
+      color: var(--black);
     }
 
-    .section-header {
-      text-align: center;
-      margin-bottom: 4rem;
+    /* === FEATURES === */
+    .features {
+      padding: 6rem 0;
+      background: var(--white);
     }
 
     .section-title {
-      font-family: 'Koulen', cursive;
-      font-size: clamp(2.5rem, 8vw, 5rem);
-      color: white;
-      text-shadow: 4px 4px 0 var(--blood);
-      transform: rotate(-3deg);
-      display: inline-block;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3rem;
+      text-align: center;
+      margin-bottom: 4rem;
+      letter-spacing: 4px;
     }
 
-    .feature-grid {
+    .features-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 2rem;
-      max-width: 1400px;
-      margin: 0 auto;
     }
 
-    .feature-box {
-      background: var(--paper);
-      border: 5px solid white;
-      padding: 2.5rem;
+    .feature-card {
+      border: 3px solid var(--black);
+      padding: 2rem;
       position: relative;
-      transform: rotate(1deg);
-      transition: all 0.3s ease;
-      overflow: hidden;
+      transition: all 0.2s;
     }
 
-    .feature-box:nth-child(even) {
-      transform: rotate(-1deg);
+    .feature-card:hover {
+      background: var(--black);
+      color: var(--white);
     }
 
-    .feature-box:hover {
-      transform: rotate(0deg) scale(1.03) translate(-5px, -5px);
-      z-index: 10;
-      box-shadow: 10px 10px 0 var(--blood);
+    .feature-card:hover .feature-title {
+      color: var(--white);
     }
 
-    .feature-label {
-      position: absolute;
-      top: -15px;
-      left: 20px;
-      font-family: 'Metal Mania', cursive;
-      font-size: 1.2rem;
-      color: var(--blood);
-      background: var(--paper);
-      padding: 0.2rem 1rem;
-      border: 3px solid var(--blood);
-    }
-
-    .feature-icon {
+    .feature-num {
+      font-family: 'Bebas Neue', sans-serif;
       font-size: 4rem;
-      margin-bottom: 1rem;
-      display: block;
+      color: var(--gray);
+      position: absolute;
+      top: -10px;
+      right: 15px;
+      opacity: 0.3;
     }
 
     .feature-title {
-      font-family: 'Rubik Mono One', sans-serif;
-      font-size: 1.8rem;
-      color: var(--ink);
-      margin-bottom: 1rem;
-      text-transform: uppercase;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      color: var(--black);
+      margin-bottom: 0.5rem;
+      letter-spacing: 1px;
     }
 
-    .feature-text {
-      font-family: 'Russo One', sans-serif;
-      font-size: 1rem;
-      color: #444;
-      line-height: 1.7;
+    .feature-desc {
+      font-size: 0.95rem;
+      color: var(--gray);
     }
 
-    /* === PROCESS FLOW === */
-    .process-section {
-      background: linear-gradient(180deg, var(--electric) 0%, #0099ff 100%);
-      padding: 6rem 2rem;
-      position: relative;
+    .feature-card:hover .feature-desc {
+      color: #ccc;
     }
 
-    .process-flow {
+    /* === HOW IT WORKS === */
+    .how-it-works {
+      padding: 6rem 0;
+      background: var(--black);
+      color: var(--white);
+    }
+
+    .steps {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      align-items: stretch;
       gap: 1rem;
-      max-width: 1200px;
-      margin: 0 auto;
     }
 
-    .process-step {
-      background: white;
-      border: 6px solid var(--ink);
-      box-shadow: 10px 10px 0 var(--ink);
-      padding: 2.5rem;
+    .step {
+      border: 2px solid var(--white);
+      padding: 2rem;
       width: 280px;
       text-align: center;
       position: relative;
     }
 
-    .process-num {
+    .step-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3rem;
       position: absolute;
-      top: -25px;
+      top: -20px;
       left: 50%;
       transform: translateX(-50%);
-      width: 50px;
-      height: 50px;
-      background: var(--blood);
-      color: white;
-      font-family: 'Orbitron', sans-serif;
+      background: var(--black);
+      padding: 0 1rem;
+      color: var(--white);
+    }
+
+    .step h3 {
+      font-family: 'Bebas Neue', sans-serif;
       font-size: 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 3px solid var(--ink);
-    }
-
-    .process-title {
-      font-family: 'Bowlby One SC', cursive;
-      font-size: 1.8rem;
-      color: var(--ink);
       margin: 1rem 0 0.5rem;
+      letter-spacing: 2px;
     }
 
-    .process-desc {
-      font-size: 0.95rem;
-      color: #555;
+    .step p {
+      font-size: 0.9rem;
+      color: var(--gray);
     }
 
-    .process-arrow {
+    .arrow {
       align-self: center;
-      font-size: 3rem;
-      color: white;
-      text-shadow: 3px 3px 0 var(--ink);
+      font-size: 2rem;
+      color: var(--gray);
     }
 
-    /* === COMMAND DROP === */
-    .command-section {
-      padding: 6rem 2rem;
-      background: repeating-linear-gradient(
-        45deg,
-        var(--paper),
-        var(--paper) 30px,
-        #f0e8d8 30px,
-        #f0e8d8 60px
-      );
-      position: relative;
+    /* === COMMANDS === */
+    .commands {
+      padding: 6rem 0;
+      background: var(--white);
     }
 
     .code-block {
-      background: #0d0d0d;
-      border: 6px solid var(--ink);
-      box-shadow: 12px 12px 0 var(--ink);
-      padding: 2.5rem;
-      max-width: 900px;
-      margin: 0 auto;
+      background: var(--black);
+      border: 3px solid var(--black);
+      padding: 2rem;
       overflow-x: auto;
+      max-width: 800px;
+      margin: 0 auto;
     }
 
     .code-block pre {
-      font-family: 'JetBrains Mono', 'Fira Code', monospace;
-      font-size: 1rem;
-      color: #00ff88;
-      line-height: 1.8;
+      font-family: 'Space Grotesk', monospace;
+      font-size: 0.95rem;
+      color: var(--white);
+      line-height: 2;
     }
 
-    .code-comment { color: #666; }
-    .code-cmd { color: var(--electric); }
-    .code-flag { color: var(--fire); }
-    .code-opt { color: var(--acid); }
+    .code-comment { color: var(--gray); }
+    .code-cmd { color: var(--white); }
 
-    /* === STATS WRECK === */
-    .stats-section {
-      background: var(--blood);
-      padding: 4rem 2rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .stats-grid {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 4rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .stat-item {
+    /* === FOOTER === */
+    .footer {
+      padding: 4rem 0;
+      background: var(--black);
+      color: var(--white);
       text-align: center;
+      border-top: 2px solid var(--gray);
     }
 
-    .stat-num {
-      font-family: 'Orbitron', sans-serif;
-      font-size: clamp(3rem, 10vw, 6rem);
-      color: white;
-      text-shadow: 4px 4px 0 var(--ink);
-      line-height: 1;
-    }
-
-    .stat-label {
-      font-family: 'Black Ops One', cursive;
-      font-size: 1.2rem;
-      color: var(--paper);
-      text-transform: uppercase;
-      letter-spacing: 4px;
-      margin-top: 0.5rem;
-    }
-
-    /* === MEGA FOOTER === */
-    .mega-footer {
-      background: var(--dark-metal);
-      padding: 5rem 2rem;
-      text-align: center;
-      border-top: 8px solid var(--electric);
-    }
-
-    .footer-title {
-      font-family: 'Metal Mania', cursive;
-      font-size: 2rem;
-      color: white;
-      margin-bottom: 1rem;
-    }
-
-    .footer-link {
-      color: var(--electric);
-      text-decoration: none;
-      font-size: 1.5rem;
-    }
-
-    .footer-link:hover {
+    .footer a {
+      color: var(--white);
       text-decoration: underline;
-      color: var(--acid);
     }
 
-    /* === FLOATING CHAOS === */
-    .floating-sfx {
-      position: absolute;
-      font-family: 'Koulen', cursive;
-      font-size: 2rem;
-      color: var(--blood);
-      opacity: 0.3;
-      pointer-events: none;
-      animation: floatChaos 3s ease-in-out infinite;
+    .footer p {
+      color: var(--gray);
+      margin-top: 1rem;
+      font-size: 0.85rem;
     }
 
-    @keyframes floatChaos {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-20px) rotate(5deg); }
-    }
-
-    /* === RESPONSIVE CHAOS === */
     @media (max-width: 768px) {
-      .hero-panel { padding: 2rem; }
-      .hero-title { font-size: 3rem; }
-      .sfx { font-size: 2.5rem; }
-      .sfx-crash { font-size: 3rem; }
-      .process-arrow { display: none; }
-      .process-step { width: 100%; }
-    }
-
-    /* === CUSTOM SCROLLBAR === */
-    ::-webkit-scrollbar {
-      width: 15px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: var(--ink);
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: var(--blood);
-      border: 3px solid var(--ink);
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--fire);
+      .arrow { display: none; }
+      .step { width: 100%; }
+      h1 { font-size: 4rem; }
     }
   </style>
 </head>
 <body>
-  <div class="speed-demon"></div>
-  <div class="speed-vertical"></div>
-
-  <!-- === MEGA HEADER === -->
-  <header class="mega-header" id="top">
-    <div class="halftone"></div>
-    
-    <div class="hero-panel">
-      <span class="sfx sfx-crash">KABOOM!</span>
+  <!-- HEADER -->
+  <header class="header" id="top">
+    <div class="container header-content halftone-light">
+      <h1>SNAP<br>ASSET</h1>
+      <p class="tagline">Screenshot automation for developers. Tell it what to capture — URL, element, component — it handles the rest.</p>
       
-      <h1 class="hero-title">SNAP<br>ASSET</h1>
-      
-      <p class="hero-subtitle">Capture Everything*</p>
-      
-      <div class="hero-speech">
-        Just tell me "screenshot this" — I handle capture, optimization, and placement like a PRO.
-        <br><br>
-        <em style="color: var(--blood);">*URLs, elements, components, entire sites — you name it.</em>
+      <div class="speech-box">
+        "Just say 'screenshot my app' — I handle capture, optimization, and placement automatically."
       </div>
       
-      <span class="sfx sfx-fire">POW!</span>
-      
-      <div class="cta-cluster">
-        <a href="#install" class="manga-btn">Let's Go</a>
-        <a href="#features" class="manga-btn manga-btn-alt">Powers</a>
+      <div class="btn-group">
+        <a href="#install" class="btn">Get Started</a>
+        <a href="#features" class="btn btn-outline">Features</a>
       </div>
     </div>
-    
-    <div class="floating-sfx" style="top: 10%; left: 5%;">ZWOOSH!</div>
-    <div class="floating-sfx" style="top: 20%; right: 10%; animation-delay: 1s;">KRACK!</div>
-    <div class="floating-sfx" style="bottom: 30%; left: 15%; animation-delay: 0.5s;">BAM!</div>
   </header>
 
-  <!-- === STATS === -->
-  <section class="stats-section">
-    <div class="stats-grid">
-      <div class="stat-item">
-        <div class="stat-num">2X</div>
-        <div class="stat-label">Retina Ready</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">PNG+WEBP</div>
-        <div class="stat-label">Auto Optimize</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">100%</div>
-        <div class="stat-label">Automated</div>
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div class="container">
+      <h2 class="section-title">FEATURES</h2>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <span class="feature-num">01</span>
+          <h3 class="feature-title">Element Capture</h3>
+          <p class="feature-desc">Target specific elements with CSS selectors. Capture just what matters.</p>
+        </div>
+        
+        <div class="feature-card">
+          <span class="feature-num">02</span>
+          <h3 class="feature-title">Site Extraction</h3>
+          <p class="feature-desc">Scrape entire websites: sections, images, components — everything at once.</p>
+        </div>
+        
+        <div class="feature-card">
+          <span class="feature-num">03</span>
+          <h3 class="feature-title">Component Isolation</h3>
+          <p class="feature-desc">Render React, Vue, Svelte components in isolation and capture with transparency.</p>
+        </div>
+        
+        <div class="feature-card">
+          <span class="feature-num">04</span>
+          <h3 class="feature-title">Auto-Optimize</h3>
+          <p class="feature-desc">PNG + WebP generated simultaneously. Retina ready at 2x scale.</p>
+        </div>
+        
+        <div class="feature-card">
+          <span class="feature-num">05</span>
+          <h3 class="feature-title">Batch Mode</h3>
+          <p class="feature-desc">Define all captures in config file, run once. Efficiency for the win.</p>
+        </div>
+        
+        <div class="feature-card">
+          <span class="feature-num">06</span>
+          <h3 class="feature-title">Dark Mode</h3>
+          <p class="feature-desc">Capture in light or dark color scheme. Your screenshots, your style.</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- === FEATURES GALLERY === -->
-  <section class="features-section" id="features">
-    <div class="section-header">
-      <span class="sfx sfx-pow">SUPER</span>
-      <h2 class="section-title">ABILLITIES</h2>
-    </div>
-    
-    <div class="feature-grid">
-      <div class="feature-box">
-        <span class="feature-label">01</span>
-        <span class="feature-icon">◼</span>
-        <h3 class="feature-title">Element Snipe</h3>
-        <p class="feature-text">CSS selectors hit dead center. Capture just the card, the button, the modal — no clutter.</p>
-      </div>
+  <!-- HOW IT WORKS -->
+  <section class="how-it-works">
+    <div class="container">
+      <h2 class="section-title" style="color: white;">HOW IT WORKS</h2>
       
-      <div class="feature-box">
-        <span class="feature-label">02</span>
-        <span class="feature-icon">∞</span>
-        <h3 class="feature-title">Site Raid</h3>
-        <p class="feature-text">Whole website extraction in one shot. Images, sections, components — absolutely everything.</p>
-      </div>
-      
-      <div class="feature-box">
-        <span class="feature-label">03</span>
-        <span class="feature-icon">⚛</span>
-        <h3 class="feature-title">Iso-Strike</h3>
-        <p class="feature-text">React, Vue, Svelte — render solo in the void, capture with clean transparency.</p>
-      </div>
-      
-      <div class="feature-box">
-        <span class="feature-label">04</span>
-        <span class="feature-icon">⚡</span>
-        <h3 class="feature-title">Bulk Barrage</h3>
-        <p class="feature-text">Config file defines the mission. One command fires everything at once.</p>
-      </div>
-      
-      <div class="feature-box">
-        <span class="feature-label">05</span>
-        <span class="feature-icon">☾</span>
-        <h3 class="feature-title">Dark Strike</h3>
-        <p class="feature-text">Light mode, dark mode — your screenshot, your rules. Both states captured.</p>
-      </div>
-      
-      <div class="feature-box">
-        <span class="feature-label">06</span>
-        <span class="feature-icon">◎</span>
-        <h3 class="feature-title">Full Page</h3>
-        <p class="feature-text">Above the fold or full scroll — long pages captured in their entirety.</p>
+      <div class="steps">
+        <div class="step">
+          <span class="step-num">1</span>
+          <h3>COMMAND</h3>
+          <p>Tell snap-asset what to capture — URL, element selector, or component path.</p>
+        </div>
+        
+        <span class="arrow">&#8594;</span>
+        
+        <div class="step">
+          <span class="step-num">2</span>
+          <h3>CAPTURE</h3>
+          <p>Playwright takes the screenshot, Sharp optimizes to PNG + WebP.</p>
+        </div>
+        
+        <span class="arrow">&#8594;</span>
+        
+        <div class="step">
+          <span class="step-num">3</span>
+          <h3>SAVE</h3>
+          <p>Auto-saves to public/, assets/, or your specified output directory.</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- === PROCESS === -->
-  <section class="process-section">
-    <div class="section-header">
-      <span class="sfx sfx-slash">MISSION</span>
-      <h2 class="section-title">PROTOCOL</h2>
-    </div>
-    
-    <div class="process-flow">
-      <div class="process-step">
-        <div class="process-num">1</div>
-        <h3 class="process-title">COMMAND</h3>
-        <p class="process-desc">Tell me WHAT to capture. URL, element, or component.</p>
-      </div>
-      
-      <span class="process-arrow">→</span>
-      
-      <div class="process-step">
-        <div class="process-num">2</div>
-        <h3 class="process-title">CAPTURE</h3>
-        <p class="process-desc">Playwright clicks, Sharp optimizes. Boom — done.</p>
-      </div>
-      
-      <span class="process-arrow">→</span>
-      
-      <div class="process-step">
-        <div class="process-num">3</div>
-        <h3 class="process-title">DELIVER</h3>
-        <p class="process-desc">Auto-saves to public/, assets/, or anywhere you say.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- === COMMANDS === -->
-  <section class="command-section" id="install">
-    <div class="section-header">
-      <span class="sfx sfx-fire">ATTACK</span>
+  <!-- COMMANDS -->
+  <section class="commands" id="install">
+    <div class="container">
       <h2 class="section-title">COMMANDS</h2>
-    </div>
-    
-    <div class="code-block">
-      <pre><span class="code-comment"># Snap a whole URL</span>
+      
+      <div class="code-block">
+        <pre><span class="code-comment"># Capture a URL</span>
 <span class="code-cmd">snap-asset</span> https://myapp.com --name hero
 
-<span class="code-comment"># Snipe a specific element</span>
-<span class="code-cmd">snap-asset</span> https://myapp.com <span class="code-flag">--selector</span> <span class="code-opt">".feature-card"</span> --name feature
+<span class="code-comment"># Capture a specific element</span>
+<span class="code-cmd">snap-asset</span> https://myapp.com --selector ".card" --name feature
 
-<span class="code-comment"># Raid an entire site</span>
+<span class="code-comment"># Extract entire website</span>
 <span class="code-cmd">snap-asset</span> extract https://competitor.com --out public/
 
-<span class="code-comment"># Isolate a component</span>
+<span class="code-comment"># Capture component in isolation</span>
 <span class="code-cmd">snap-asset</span> component ./src/Hero.tsx --name hero
 
-<span class="code-comment"># Bulk barrage</span>
+<span class="code-comment"># Batch capture</span>
 <span class="code-cmd">snap-asset</span> batch
 
-<span class="code-comment"># Night mode</span>
-<span class="code-cmd">snap-asset</span> https://myapp.com <span class="code-flag">--dark</span> --name hero-night</pre>
-    </div>
-    
-    <div class="cta-cluster" style="margin-top: 3rem;">
-      <a href="https://github.com/Manavarya09/snap-asset" class="manga-btn manga-btn-outline" target="_blank">
-        GitHub
-      </a>
+<span class="code-comment"># Dark mode variant</span>
+<span class="code-cmd">snap-asset</span> https://myapp.com --dark --name hero-dark</pre>
+      </div>
+      
+      <div style="text-align: center; margin-top: 3rem;">
+        <a href="https://github.com/Manavarya09/snap-asset" class="btn" target="_blank">View on GitHub</a>
+      </div>
     </div>
   </section>
 
-  <!-- === FOOTER === -->
-  <footer class="mega-footer">
-    <span class="sfx sfx-crash">THE END</span>
-    <p class="footer-title">Created by Manav Arya Singh</p>
-    <a href="https://github.com/Manavarya09" class="footer-link" target="_blank">
-      @Manavarya09
-    </a>
-    <p style="color: #666; margin-top: 2rem;">
-      Powered by Playwright + Sharp
-    </p>
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <p style="font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 2px;">
+        Made by <a href="https://github.com/Manavarya09">Manav Arya Singh</a>
+      </p>
+      <p>MIT License &middot; Powered by Playwright & Sharp</p>
+    </div>
   </footer>
-
-  <script>
-    // Chaotic tilt on scroll
-    let tilt = 0;
-    window.addEventListener('scroll', () => {
-      const scrolled = window.scrollY;
-      tilt = scrolled * 0.02;
-      document.body.style.transform = `rotate(${tilt}deg)`;
-    });
-
-    // Random burst creator
-    document.addEventListener('click', (e) => {
-      const burst = document.createElement('div');
-      burst.className = 'burst';
-      burst.style.left = e.clientX - 50 + 'px';
-      burst.style.top = e.clientY - 50 + 'px';
-      document.body.appendChild(burst);
-      setTimeout(() => burst.remove(), 400);
-    });
-  </script>
 </body>
 </html>
