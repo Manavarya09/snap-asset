@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="#features"><img src="https://img.shields.io/badge/Features-5+-blue?style=flat-square" alt="Features" /></a>
-  <a href="#install"><img src="https://img.shields.io/badge/node-%3E%3D18-43853D?style=flat-square&logo=node.js&logoColor=white" alt="Node >= 18" /></a>
+  <a href="#install"><img src="https://img.shields.io/badge/node-%3E%3D20-43853D?style=flat-square&logo=node.js&logoColor=white" alt="Node >= 20" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT License" /></a>
   <img src="https://img.shields.io/badge/Playwright-Chromium-2EAD33?style=flat-square&logo=playwright&logoColor=white" alt="Playwright" />
   <img src="https://img.shields.io/badge/Sharp-PNG%20%2B%20WebP-99CC00?style=flat-square&logo=sharp&logoColor=white" alt="Sharp" />
