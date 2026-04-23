@@ -40,3 +40,8 @@ test('resolveOutputPaths should create directory and avoid collision', () => {
   assert.equal(paths2.webpPath.includes('image-1.webp'), true);
   assert.equal(paths2.avifPath.includes('image-1.avif'), true);
 });
+
+test('resolveOutputPaths should support jpg output', () => {
+  const paths = resolveOutputPaths(tempDir, 'photo', { overwrite: true, format: 'jpg' });
+  assert.equal(paths.jpgPath.endsWith('photo.jpg'), true);
+});

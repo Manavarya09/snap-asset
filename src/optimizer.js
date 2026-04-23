@@ -81,19 +81,22 @@ export async function toJpeg(buffer, options = {}) {
  * Returns { png: Buffer, webp: Buffer, avif: Buffer, pngSize: number, webpSize: number, avifSize: number }
  */
 export async function processScreenshot(buffer, options = {}) {
-  const [png, webp, avif] = await Promise.all([
+  const [png, webp, avif, jpg] = await Promise.all([
     optimizePng(buffer, options),
     toWebp(buffer, options),
     toAvif(buffer, options),
+    toJpeg(buffer, options),
   ]);
 
   return {
     png,
     webp,
     avif,
+    jpg,
     pngSize: png.length,
     webpSize: webp.length,
     avifSize: avif.length,
+    jpgSize: jpg.length,
   };
 }
 
