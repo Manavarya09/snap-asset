@@ -72,8 +72,10 @@ export function resolveOutputPaths(outDir, name, options = {}) {
       const pngExists = existsSync(join(outDir, `${testName}.png`));
       const webpExists = existsSync(join(outDir, `${testName}.webp`));
       const avifExists = existsSync(join(outDir, `${testName}.avif`));
+      const jpgExists = existsSync(join(outDir, `${testName}.jpg`));
+      const jpegExists = existsSync(join(outDir, `${testName}.jpeg`));
 
-      if (!pngExists && !webpExists && !avifExists) {
+      if (!pngExists && !webpExists && !avifExists && !jpgExists && !jpegExists) {
         finalName = testName;
         break;
       }
@@ -91,6 +93,9 @@ export function resolveOutputPaths(outDir, name, options = {}) {
   }
   if (format === 'both' || format === 'avif') {
     result.avifPath = join(outDir, `${finalName}.avif`);
+  }
+  if (format === 'jpeg' || format === 'jpg') {
+    result.jpgPath = join(outDir, `${finalName}.jpg`);
   }
 
   return result;
@@ -133,6 +138,11 @@ export function saveAssets(paths, buffers) {
   if (paths.avifPath && buffers.avif) {
     writeFileSync(paths.avifPath, buffers.avif);
     saved.push({ path: paths.avifPath, size: buffers.avif.length });
+  }
+
+  if (paths.jpgPath && buffers.jpg) {
+    writeFileSync(paths.jpgPath, buffers.jpg);
+    saved.push({ path: paths.jpgPath, size: buffers.jpg.length });
   }
 
   return saved;

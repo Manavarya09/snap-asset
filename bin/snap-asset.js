@@ -31,7 +31,7 @@ import { loadConfig, generateConfig } from '../src/config.js';
 import { renderComponent } from '../src/component-renderer.js';
 import * as log from '../src/logger.js';
 
-const VALID_FORMATS = ['png', 'webp', 'avif', 'both'];
+const VALID_FORMATS = ['png', 'webp', 'avif', 'jpeg', 'jpg', 'both'];
 
 function validateFormat(format) {
   if (!VALID_FORMATS.includes(format)) {
