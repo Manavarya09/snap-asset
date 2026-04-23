@@ -4,13 +4,24 @@ on:
   push:
     branches:
       - main
+      - develop
+      - 'chore/**'
+      - 'fix/**'
+      - 'feat/**'
+      - 'test/**'
   pull_request:
     branches:
       - main
+      - develop
+      - '**'
+  workflow_dispatch: []
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    concurrency:
+      group: nodejs-ci-${{ github.ref }}
+      cancel-in-progress: true
     strategy:
       matrix:
         node-version: [20.x, 22.x]
@@ -23,8 +34,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+      - name: Install Playwright browser
+        run: npx playwright install chromium --with-deps
       - name: Run tests
         run: npm test
-      - name: Check formatting
-        run: echo "No formatting step configured yet"
+      - name: Verify package lock
+        run: git diff --exit-code package-lock.json
