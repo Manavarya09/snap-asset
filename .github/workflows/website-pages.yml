@@ -1,0 +1,24 @@
+name: Deploy Website
+
+on:
+  push:
+    branches:
+      - website
+
+jobs:
+  deploy:
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copy website assets
+        run: |
+          rm -rf public
+          cp -R website public
+      - uses: actions/configure-pages@v4
+      - uses: actions/upload-pages-artifact@v1
+        with:
+          path: public
