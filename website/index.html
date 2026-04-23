@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>snap-asset | Capture Heroes</title>
+  <title>snap-asset | The Ultimate Capture Tool</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Press+Start+2P&family=Space+Monkee&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Bowlby+One+SC&family=Koulen&family=Metal+Mania&family=Orbitron:wght@900&family=Press+Start+2P&family=Rubik+Mono+One&family=Russo+One&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -15,536 +15,823 @@
     }
 
     :root {
-      --hero-red: #FF1744;
-      --hero-yellow: #FFD600;
-      --hero-blue: #00E5FF;
-      --hero-black: #0D0D0D;
-      --hero-white: #FAFAFA;
-      --halftone: rgba(0,0,0,0.1);
+      --ink: #0a0a0a;
+      --paper: #f5f0e6;
+      --blood: #e63946;
+      --fire: #ff6b35;
+      --electric: #00f5ff;
+      --acid: #c9ff2f;
+      --dark-metal: #1a1a2e;
+    }
+
+    html {
+      scroll-behavior: smooth;
     }
 
     body {
-      font-family: 'Space Monke', sans-serif;
-      background: var(--hero-white);
-      color: var(--hero-black);
+      font-family: 'Russo One', sans-serif;
+      background: var(--paper);
+      color: var(--ink);
       overflow-x: hidden;
     }
 
-    /* HALFTONE PATTERN */
-    .halftone-bg {
-      background-image: radial-gradient(circle, var(--halftone) 1px, transparent 1px);
-      background-size: 8px 8px;
-    }
-
-    /* SPEED LINES */
-    .speed-lines {
+    /* === CHAOTIC SPEED LINES === */
+    .speed-demon {
       position: fixed;
       top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: -1;
-      overflow: hidden;
-    }
-
-    .speed-lines::before {
-      content: '';
-      position: absolute;
-      width: 200%;
-      height: 100%;
+      left: -100%;
+      width: 300%;
+      height: 100vh;
       background: repeating-linear-gradient(
         90deg,
-        transparent,
-        transparent 40px,
-        rgba(0,0,0,0.03) 40px,
-        rgba(0,0,0,0.03) 80px
+        transparent 0px,
+        transparent 20px,
+        rgba(0,0,0,0.08) 20px,
+        rgba(0,0,0,0.08) 40px
       );
-      animation: speedMove 1s linear infinite;
+      z-index: 9999;
+      pointer-events: none;
+      animation: zoomLine 0.3s linear infinite;
     }
 
-    @keyframes speedMove {
-      from { transform: translateX(-50%); }
+    @keyframes zoomLine {
+      from { transform: translateX(-33%); }
       to { transform: translateX(0); }
     }
 
-    /* HERO SECTION */
-    .hero {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      padding: 2rem;
-      background: linear-gradient(135deg, var(--hero-yellow) 0%, #FF9800 100%);
+    .speed-vertical {
+      position: fixed;
+      right: 5%;
+      top: 0;
+      width: 4px;
+      height: 100vh;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 30px,
+        var(--blood) 30px,
+        var(--blood) 35px
+      );
+      opacity: 0.3;
+      z-index: 9998;
+      animation: vLine 0.15s linear infinite;
     }
 
-    .hero::before {
+    @keyframes vLine {
+      from { transform: translateY(-50%); }
+      to { transform: translateY(0); }
+    }
+
+    /* === HALFTONE SCREENTONE === */
+    .halftone {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(0,0,0,0.15) 1px, transparent 1px);
+      background-size: 6px 6px;
+      pointer-events: none;
+    }
+
+    .halftone-light {
+      background-image: radial-gradient(circle, rgba(0,0,0,0.06) 1px, transparent 1px);
+      background-size: 8px 8px;
+    }
+
+    /* === MANGA PANEL SYSTEM === */
+    .panel {
+      border: 4px solid var(--ink);
+      background: white;
+      position: relative;
+      box-shadow: 8px 8px 0 var(--ink);
+    }
+
+    .panel-dark {
+      background: var(--dark-metal);
+      color: white;
+      border-color: white;
+      box-shadow: 8px 8px 0 white;
+    }
+
+    .panel-danger {
+      border-color: var(--blood);
+      box-shadow: 8px 8px 0 var(--blood);
+    }
+
+    .panel-tilt {
+      transform: rotate(-1.5deg);
+    }
+
+    .panel-tilt-alt {
+      transform: rotate(2deg);
+    }
+
+    /* === EXPLOSIVE SOUND FX === */
+    .sfx {
+      font-family: 'Koulen', cursive;
+      font-size: 4rem;
+      color: var(--ink);
+      text-transform: uppercase;
+      letter-spacing: -2px;
+      -webkit-text-stroke: 2px var(--ink);
+      position: relative;
+      display: inline-block;
+    }
+
+    .sfx-fire {
+      color: var(--fire);
+      -webkit-text-stroke: 2px var(--fire);
+      text-shadow: 3px 3px 0 var(--blood);
+      animation: burnPulse 0.1s ease-in-out infinite alternate;
+    }
+
+    @keyframes burnPulse {
+      from { transform: scale(1) rotate(-2deg); }
+      to { transform: scale(1.05) rotate(2deg); }
+    }
+
+    .sfx-crash {
+      font-size: 6rem;
+      -webkit-text-stroke: 3px var(--blood);
+      color: var(--blood);
+      text-shadow: 4px 4px 0 var(--ink);
+      animation: crashShake 0.08s ease-in-out infinite alternate;
+    }
+
+    @keyframes crashShake {
+      from { transform: translate(-2px, -2px) rotate(-1deg); }
+      to { transform: translate(2px, 2px) rotate(1deg); }
+    }
+
+    .sfx-slash {
+      font-family: 'Metal Mania', cursive;
+      color: var(--electric);
+      -webkit-text-stroke: 2px white;
+      text-shadow: 0 0 20px var(--electric), 2px 2px 0 var(--ink);
+      animation: slashAnim 0.2s linear infinite;
+    }
+
+    @keyframes slashAnim {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .sfx-pow {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 5rem;
+      background: linear-gradient(180deg, var(--electric), var(--acid));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(3px 3px 0 var(--ink));
+    }
+
+    /* === IMPACT FRAMES === */
+    .impact {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border: 8px solid var(--ink);
+      pointer-events: none;
+      animation: impactRipple 0.4s ease-out forwards;
+    }
+
+    @keyframes impactRipple {
+      0% { 
+        transform: scale(1.1); 
+        opacity: 1;
+      }
+      100% { 
+        transform: scale(1.3); 
+        opacity: 0;
+      }
+    }
+
+    .impact-white {
+      border-color: white;
+    }
+
+    /* === ACTION BURSTS === */
+    .burst {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle, var(--blood) 0%, transparent 70%);
+      transform: rotate(45deg);
+      opacity: 0;
+      animation: burstAnim 0.3s ease-out forwards;
+    }
+
+    @keyframes burstAnim {
+      0% { 
+        transform: rotate(45deg) scale(0.5); 
+        opacity: 1;
+      }
+      100% { 
+        transform: rotate(45deg) scale(3); 
+        opacity: 0;
+      }
+    }
+
+    /* === MEGA HEADER === */
+    .mega-header {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #ffdd00 0%, #ff6b35 50%, #e63946 100%);
+      position: relative;
+      overflow: hidden;
+      padding: 2rem;
+    }
+
+    .mega-header::before {
       content: '';
       position: absolute;
       inset: 0;
-      background-image: radial-gradient(circle, rgba(0,0,0,0.1) 1px, transparent 1px);
-      background-size: 12px 12px;
+      background: repeating-conic-gradient(from 0deg, transparent 0deg 10deg, rgba(0,0,0,0.05) 10deg 20deg);
     }
 
-    .comic-panel {
-      background: var(--hero-white);
-      border: 6px solid var(--hero-black);
-      box-shadow: 12px 12px 0 var(--hero-black);
-      padding: 3rem;
-      max-width: 900px;
-      position: relative;
+    .hero-panel {
+      background: var(--paper);
+      border: 8px solid var(--ink);
+      box-shadow: 16px 16px 0 var(--ink);
+      padding: 4rem;
+      max-width: 1000px;
+      text-align: center;
       transform: rotate(-2deg);
+      position: relative;
     }
 
-    .comic-panel::before {
-      content: 'BOOM!';
-      position: absolute;
-      top: -40px;
-      right: 20px;
-      font-family: 'Bangers', cursive;
-      font-size: 3rem;
-      color: var(--hero-red);
-      text-shadow: 3px 3px 0 var(--hero-black);
-      transform: rotate(10deg);
-    }
-
-    .comic-logo {
-      font-family: 'Bangers', cursive;
-      font-size: 5rem;
-      color: var(--hero-black);
-      text-shadow: 4px 4px 0 var(--hero-white), 8px 8px 0 var(--hero-black);
-      letter-spacing: 4px;
+    .hero-title {
+      font-family: 'Bowlby One SC', cursive;
+      font-size: clamp(3rem, 12vw, 8rem);
+      color: var(--ink);
+      text-shadow: 4px 4px 0 var(--blood);
+      line-height: 0.95;
       margin-bottom: 1rem;
-      animation: logoShake 0.5s ease-in-out infinite alternate;
     }
 
-    @keyframes logoShake {
-      from { transform: rotate(-1deg); }
-      to { transform: rotate(1deg); }
-    }
-
-    .tagline {
+    .hero-subtitle {
+      font-family: 'Orbitron', sans-serif;
       font-size: 1.5rem;
-      font-weight: bold;
+      color: var(--blood);
       text-transform: uppercase;
-      letter-spacing: 2px;
+      letter-spacing: 8px;
       margin-bottom: 2rem;
-      color: #333;
     }
 
-    .speech-bubble {
-      background: var(--hero-white);
-      border: 4px solid var(--hero-black);
-      border-radius: 20px;
-      padding: 1.5rem 2rem;
+    .hero-speech {
+      background: white;
+      border: 5px solid var(--ink);
+      border-radius: 30px;
+      padding: 2rem;
       position: relative;
       margin: 2rem 0;
-      font-size: 1.2rem;
-      font-weight: bold;
-      box-shadow: 6px 6px 0 var(--hero-black);
+      font-size: 1.3rem;
+      line-height: 1.6;
+      box-shadow: 6px 6px 0 var(--ink);
     }
 
-    .speech-bubble::after {
+    .hero-speech::after {
       content: '';
       position: absolute;
-      bottom: -20px;
-      left: 40px;
-      border: 10px solid transparent;
-      border-top-color: var(--hero-black);
+      bottom: -25px;
+      left: 60px;
+      border: 15px solid transparent;
+      border-top-color: var(--ink);
     }
 
-    .cta-buttons {
+    .cta-cluster {
       display: flex;
       gap: 1rem;
       flex-wrap: wrap;
       justify-content: center;
-      margin-top: 2rem;
+      margin-top: 3rem;
     }
 
-    .comic-btn {
-      font-family: 'Bangers', cursive;
-      font-size: 1.5rem;
-      padding: 1rem 2.5rem;
-      border: 4px solid var(--hero-black);
-      background: var(--hero-red);
-      color: var(--hero-white);
+    .manga-btn {
+      font-family: 'Black Ops One', cursive;
+      font-size: 1.4rem;
+      padding: 1.2rem 3rem;
+      border: none;
+      background: var(--blood);
+      color: white;
       cursor: pointer;
       text-transform: uppercase;
-      letter-spacing: 2px;
-      box-shadow: 6px 6px 0 var(--hero-black);
-      transition: all 0.1s ease;
-      position: relative;
+      letter-spacing: 3px;
+      box-shadow: 6px 6px 0 var(--ink);
+      transition: all 0.05s ease;
+      text-decoration: none;
+      display: inline-block;
     }
 
-    .comic-btn:hover {
-      transform: translate(2px, 2px);
-      box-shadow: 4px 4px 0 var(--hero-black);
+    .manga-btn:hover {
+      transform: translate(4px, 4px);
+      box-shadow: 2px 2px 0 var(--ink);
     }
 
-    .comic-btn:active {
-      transform: translate(6px, 6px);
-      box-shadow: 0 0 0 var(--hero-black);
+    .manga-btn:active {
+      transform: translate(8px, 8px);
+      box-shadow: -2px -2px 0 var(--ink);
     }
 
-    .comic-btn.secondary {
-      background: var(--hero-blue);
-      color: var(--hero-black);
+    .manga-btn-alt {
+      background: var(--electric);
+      color: var(--ink);
     }
 
-    /* FEATURES SECTION */
-    .features {
+    .manga-btn-outline {
+      background: transparent;
+      border: 4px solid var(--ink);
+      color: var(--ink);
+    }
+
+    /* === FEATURES GALLERY === */
+    .features-section {
+      background: var(--ink);
       padding: 6rem 2rem;
-      background: var(--hero-black);
       position: relative;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
     }
 
     .section-title {
-      font-family: 'Bangers', cursive;
-      font-size: 4rem;
-      text-align: center;
-      color: var(--hero-white);
-      text-shadow: 4px 4px 0 var(--hero-red);
-      margin-bottom: 4rem;
+      font-family: 'Koulen', cursive;
+      font-size: clamp(2.5rem, 8vw, 5rem);
+      color: white;
+      text-shadow: 4px 4px 0 var(--blood);
       transform: rotate(-3deg);
+      display: inline-block;
     }
 
-    .features-grid {
+    .feature-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 2rem;
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
     }
 
-    .feature-card {
-      background: var(--hero-white);
-      border: 4px solid var(--hero-white);
-      padding: 2rem;
+    .feature-box {
+      background: var(--paper);
+      border: 5px solid white;
+      padding: 2.5rem;
       position: relative;
       transform: rotate(1deg);
-      transition: transform 0.3s ease;
+      transition: all 0.3s ease;
+      overflow: hidden;
     }
 
-    .feature-card:nth-child(even) {
+    .feature-box:nth-child(even) {
       transform: rotate(-1deg);
     }
 
-    .feature-card:hover {
-      transform: rotate(0deg) scale(1.05);
+    .feature-box:hover {
+      transform: rotate(0deg) scale(1.03) translate(-5px, -5px);
       z-index: 10;
+      box-shadow: 10px 10px 0 var(--blood);
+    }
+
+    .feature-label {
+      position: absolute;
+      top: -15px;
+      left: 20px;
+      font-family: 'Metal Mania', cursive;
+      font-size: 1.2rem;
+      color: var(--blood);
+      background: var(--paper);
+      padding: 0.2rem 1rem;
+      border: 3px solid var(--blood);
     }
 
     .feature-icon {
-      font-size: 3rem;
+      font-size: 4rem;
       margin-bottom: 1rem;
       display: block;
     }
 
     .feature-title {
-      font-family: 'Bangers', cursive;
+      font-family: 'Rubik Mono One', sans-serif;
       font-size: 1.8rem;
-      color: var(--hero-red);
-      margin-bottom: 0.5rem;
+      color: var(--ink);
+      margin-bottom: 1rem;
+      text-transform: uppercase;
     }
 
-    .feature-desc {
+    .feature-text {
+      font-family: 'Russo One', sans-serif;
       font-size: 1rem;
-      line-height: 1.6;
-      color: #555;
+      color: #444;
+      line-height: 1.7;
     }
 
-    .action-burst {
-      position: absolute;
-      top: -20px;
-      right: -20px;
-      font-family: 'Bangers', cursive;
-      font-size: 2rem;
-      color: var(--hero-yellow);
-      transform: rotate(15deg);
-    }
-
-    /* HOW IT WORKS */
-    .how-it-works {
+    /* === PROCESS FLOW === */
+    .process-section {
+      background: linear-gradient(180deg, var(--electric) 0%, #0099ff 100%);
       padding: 6rem 2rem;
-      background: linear-gradient(180deg, var(--hero-blue) 0%, #00B8D4 100%);
+      position: relative;
     }
 
-    .steps {
+    .process-flow {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 2rem;
-      max-width: 1000px;
+      align-items: stretch;
+      gap: 1rem;
+      max-width: 1200px;
       margin: 0 auto;
     }
 
-    .step {
-      background: var(--hero-white);
-      border: 5px solid var(--hero-black);
-      padding: 2rem;
+    .process-step {
+      background: white;
+      border: 6px solid var(--ink);
+      box-shadow: 10px 10px 0 var(--ink);
+      padding: 2.5rem;
       width: 280px;
       text-align: center;
       position: relative;
-      box-shadow: 8px 8px 0 var(--hero-black);
     }
 
-    .step-number {
-      font-family: 'Bangers', cursive;
-      font-size: 4rem;
-      color: var(--hero-red);
+    .process-num {
       position: absolute;
-      top: -30px;
+      top: -25px;
       left: 50%;
       transform: translateX(-50%);
-      -webkit-text-stroke: 3px var(--hero-black);
+      width: 50px;
+      height: 50px;
+      background: var(--blood);
+      color: white;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 3px solid var(--ink);
     }
 
-    .step-arrow {
-      font-size: 3rem;
+    .process-title {
+      font-family: 'Bowlby One SC', cursive;
+      font-size: 1.8rem;
+      color: var(--ink);
+      margin: 1rem 0 0.5rem;
+    }
+
+    .process-desc {
+      font-size: 0.95rem;
+      color: #555;
+    }
+
+    .process-arrow {
       align-self: center;
-      color: var(--hero-white);
-      text-shadow: 2px 2px 0 var(--hero-black);
+      font-size: 3rem;
+      color: white;
+      text-shadow: 3px 3px 0 var(--ink);
     }
 
-    /* COMMAND SHOWCASE */
-    .commands {
+    /* === COMMAND DROP === */
+    .command-section {
       padding: 6rem 2rem;
       background: repeating-linear-gradient(
         45deg,
-        var(--hero-yellow),
-        var(--hero-yellow) 20px,
-        #FFC400 20px,
-        #FFC400 40px
+        var(--paper),
+        var(--paper) 30px,
+        #f0e8d8 30px,
+        #f0e8d8 60px
       );
+      position: relative;
     }
 
-    .code-panel {
-      background: #1a1a2e;
-      border: 6px solid var(--hero-black);
-      box-shadow: 10px 10px 0 var(--hero-black);
-      padding: 2rem;
-      max-width: 800px;
+    .code-block {
+      background: #0d0d0d;
+      border: 6px solid var(--ink);
+      box-shadow: 12px 12px 0 var(--ink);
+      padding: 2.5rem;
+      max-width: 900px;
       margin: 0 auto;
       overflow-x: auto;
     }
 
-    .code-panel pre {
-      font-family: 'Press Start 2P', cursive;
-      font-size: 0.8rem;
-      color: var(--hero-blue);
-      line-height: 2;
+    .code-block pre {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 1rem;
+      color: #00ff88;
+      line-height: 1.8;
     }
 
-    .code-panel .comment { color: #6a9955; }
-    .code-panel .keyword { color: var(--hero-red); }
-    .code-panel .string { color: var(--hero-yellow); }
-    .code-panel .flag { color: var(--hero-blue); }
+    .code-comment { color: #666; }
+    .code-cmd { color: var(--electric); }
+    .code-flag { color: var(--fire); }
+    .code-opt { color: var(--acid); }
 
-    /* FOOTER */
-    .footer {
-      background: var(--hero-black);
+    /* === STATS WRECK === */
+    .stats-section {
+      background: var(--blood);
       padding: 4rem 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stats-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .stat-item {
       text-align: center;
     }
 
-    .footer-text {
-      font-family: 'Bangers', cursive;
+    .stat-num {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(3rem, 10vw, 6rem);
+      color: white;
+      text-shadow: 4px 4px 0 var(--ink);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-family: 'Black Ops One', cursive;
+      font-size: 1.2rem;
+      color: var(--paper);
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      margin-top: 0.5rem;
+    }
+
+    /* === MEGA FOOTER === */
+    .mega-footer {
+      background: var(--dark-metal);
+      padding: 5rem 2rem;
+      text-align: center;
+      border-top: 8px solid var(--electric);
+    }
+
+    .footer-title {
+      font-family: 'Metal Mania', cursive;
       font-size: 2rem;
-      color: var(--hero-white);
+      color: white;
+      margin-bottom: 1rem;
     }
 
     .footer-link {
-      color: var(--hero-blue);
+      color: var(--electric);
       text-decoration: none;
+      font-size: 1.5rem;
     }
 
     .footer-link:hover {
       text-decoration: underline;
+      color: var(--acid);
     }
 
-    /* ANIMATIONS */
-    @keyframes zoomIn {
-      from { transform: scale(0); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+    /* === FLOATING CHAOS === */
+    .floating-sfx {
+      position: absolute;
+      font-family: 'Koulen', cursive;
+      font-size: 2rem;
+      color: var(--blood);
+      opacity: 0.3;
+      pointer-events: none;
+      animation: floatChaos 3s ease-in-out infinite;
     }
 
-    @keyframes slideUp {
-      from { transform: translateY(50px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+    @keyframes floatChaos {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(5deg); }
     }
 
-    .animate-zoom { animation: zoomIn 0.5s ease-out; }
-    .animate-slide { animation: slideUp 0.5s ease-out; }
-
-    .delay-1 { animation-delay: 0.1s; }
-    .delay-2 { animation-delay: 0.2s; }
-    .delay-3 { animation-delay: 0.3s; }
-    .delay-4 { animation-delay: 0.4s; }
-
-    /* RESPONSIVE */
+    /* === RESPONSIVE CHAOS === */
     @media (max-width: 768px) {
-      .comic-logo { font-size: 3rem; }
-      .section-title { font-size: 2.5rem; }
-      .comic-panel { padding: 1.5rem; }
-      .feature-card { margin-bottom: 1rem; }
-      .step-arrow { display: none; }
+      .hero-panel { padding: 2rem; }
+      .hero-title { font-size: 3rem; }
+      .sfx { font-size: 2.5rem; }
+      .sfx-crash { font-size: 3rem; }
+      .process-arrow { display: none; }
+      .process-step { width: 100%; }
+    }
+
+    /* === CUSTOM SCROLLBAR === */
+    ::-webkit-scrollbar {
+      width: 15px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--ink);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--blood);
+      border: 3px solid var(--ink);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--fire);
     }
   </style>
 </head>
 <body>
-  <div class="speed-lines"></div>
+  <div class="speed-demon"></div>
+  <div class="speed-vertical"></div>
 
-  <!-- HERO SECTION -->
-  <section class="hero halftone-bg">
-    <div class="comic-panel animate-zoom">
-      <h1 class="comic-logo">snap-asset</h1>
-      <p class="tagline">The UltimateScreenshotHero!</p>
+  <!-- === MEGA HEADER === -->
+  <header class="mega-header" id="top">
+    <div class="halftone"></div>
+    
+    <div class="hero-panel">
+      <span class="sfx sfx-crash">KABOOM!</span>
       
-      <div class="speech-bubble">
-        "Just say 'Screenshot my app' — I'll handle capture, optimization, and placement automatically!"
+      <h1 class="hero-title">SNAP<br>ASSET</h1>
+      
+      <p class="hero-subtitle">Capture Everything*</p>
+      
+      <div class="hero-speech">
+        Just tell me "screenshot this" — I handle capture, optimization, and placement like a PRO.
+        <br><br>
+        <em style="color: var(--blood);">*URLs, elements, components, entire sites — you name it.</em>
       </div>
       
-      <div class="cta-buttons">
-        <a href="#install" class="comic-btn">Get Started</a>
-        <a href="#features" class="comic-btn secondary">PowerUps</a>
+      <span class="sfx sfx-fire">POW!</span>
+      
+      <div class="cta-cluster">
+        <a href="#install" class="manga-btn">Let's Go</a>
+        <a href="#features" class="manga-btn manga-btn-alt">Powers</a>
+      </div>
+    </div>
+    
+    <div class="floating-sfx" style="top: 10%; left: 5%;">ZWOOSH!</div>
+    <div class="floating-sfx" style="top: 20%; right: 10%; animation-delay: 1s;">KRACK!</div>
+    <div class="floating-sfx" style="bottom: 30%; left: 15%; animation-delay: 0.5s;">BAM!</div>
+  </header>
+
+  <!-- === STATS === -->
+  <section class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-num">2X</div>
+        <div class="stat-label">Retina Ready</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">PNG+WEBP</div>
+        <div class="stat-label">Auto Optimize</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Automated</div>
       </div>
     </div>
   </section>
 
-  <!-- FEATURES -->
-  <section class="features halftone-bg" id="features">
-    <h2 class="section-title animate-slide">Super Powers!</h2>
+  <!-- === FEATURES GALLERY === -->
+  <section class="features-section" id="features">
+    <div class="section-header">
+      <span class="sfx sfx-pow">SUPER</span>
+      <h2 class="section-title">ABILLITIES</h2>
+    </div>
     
-    <div class="features-grid">
-      <div class="feature-card animate-slide delay-1">
-        <span class="action-burst">POW!</span>
-        <span class="feature-icon">📸</span>
-        <h3 class="feature-title">Element Capture</h3>
-        <p class="feature-desc">Target specific elements with CSS selectors. Capture just what matters!</p>
+    <div class="feature-grid">
+      <div class="feature-box">
+        <span class="feature-label">01</span>
+        <span class="feature-icon">◼</span>
+        <h3 class="feature-title">Element Snipe</h3>
+        <p class="feature-text">CSS selectors hit dead center. Capture just the card, the button, the modal — no clutter.</p>
       </div>
       
-      <div class="feature-card animate-slide delay-2">
-        <span class="action-burst">BAM!</span>
-        <span class="feature-icon">🌐</span>
-        <h3 class="feature-title">Site Extraction</h3>
-        <p class="feature-desc">Scrape entire websites: sections, images, components — everything at once!</p>
+      <div class="feature-box">
+        <span class="feature-label">02</span>
+        <span class="feature-icon">∞</span>
+        <h3 class="feature-title">Site Raid</h3>
+        <p class="feature-text">Whole website extraction in one shot. Images, sections, components — absolutely everything.</p>
       </div>
       
-      <div class="feature-card animate-slide delay-3">
-        <span class="action-burst">ZOOM!</span>
-        <span class="feature-icon">⚛️</span>
-        <h3 class="feature-title">Component Isolation</h3>
-        <p class="feature-desc">Render React/Vue/Svelte components in isolation and capture them like a pro!</p>
+      <div class="feature-box">
+        <span class="feature-label">03</span>
+        <span class="feature-icon">⚛</span>
+        <h3 class="feature-title">Iso-Strike</h3>
+        <p class="feature-text">React, Vue, Svelte — render solo in the void, capture with clean transparency.</p>
       </div>
       
-      <div class="feature-card animate-slide delay-4">
-        <span class="action-burst">CRASH!</span>
-        <span class="feature-icon">🚀</span>
-        <h3 class="feature-title">Auto-Optimize</h3>
-        <p class="feature-desc">PNG + WebP generated simultaneously. Retina ready at 2x scale!</p>
+      <div class="feature-box">
+        <span class="feature-label">04</span>
+        <span class="feature-icon">⚡</span>
+        <h3 class="feature-title">Bulk Barrage</h3>
+        <p class="feature-text">Config file defines the mission. One command fires everything at once.</p>
       </div>
       
-      <div class="feature-card animate-slide delay-1">
-        <span class="action-burst">WHAM!</span>
-        <span class="feature-icon">🌙</span>
-        <h3 class="feature-title">Dark Mode</h3>
-        <p class="feature-desc">Capture in light or dark color scheme. Your screenshots, your style!</p>
+      <div class="feature-box">
+        <span class="feature-label">05</span>
+        <span class="feature-icon">☾</span>
+        <h3 class="feature-title">Dark Strike</h3>
+        <p class="feature-text">Light mode, dark mode — your screenshot, your rules. Both states captured.</p>
       </div>
       
-      <div class="feature-card animate-slide delay-2">
-        <span class="action-burst">BOOM!</span>
-        <span class="feature-icon">🎬</span>
-        <h3 class="feature-title">Batch Mode</h3>
-        <p class="feature-desc">Define all captures in config, run once. Efficiency for the win!</p>
+      <div class="feature-box">
+        <span class="feature-label">06</span>
+        <span class="feature-icon">◎</span>
+        <h3 class="feature-title">Full Page</h3>
+        <p class="feature-text">Above the fold or full scroll — long pages captured in their entirety.</p>
       </div>
     </div>
   </section>
 
-  <!-- HOW IT WORKS -->
-  <section class="how-it-works">
-    <h2 class="section-title animate-slide">How It Works</h2>
+  <!-- === PROCESS === -->
+  <section class="process-section">
+    <div class="section-header">
+      <span class="sfx sfx-slash">MISSION</span>
+      <h2 class="section-title">PROTOCOL</h2>
+    </div>
     
-    <div class="steps">
-      <div class="step animate-slide delay-1">
-        <span class="step-number">1</span>
-        <h3>Snap!</h3>
-        <p>Tell Claude what to capture — URL, element, or component</p>
+    <div class="process-flow">
+      <div class="process-step">
+        <div class="process-num">1</div>
+        <h3 class="process-title">COMMAND</h3>
+        <p class="process-desc">Tell me WHAT to capture. URL, element, or component.</p>
       </div>
       
-      <span class="step-arrow animate-slide delay-2">→</span>
+      <span class="process-arrow">→</span>
       
-      <div class="step animate-slide delay-2">
-        <span class="step-number">2</span>
-        <h3>Optimize!</h3>
-        <p>Sharp processes and converts to optimized PNG + WebP</p>
+      <div class="process-step">
+        <div class="process-num">2</div>
+        <h3 class="process-title">CAPTURE</h3>
+        <p class="process-desc">Playwright clicks, Sharp optimizes. Boom — done.</p>
       </div>
       
-      <span class="step-arrow animate-slide delay-3">→</span>
+      <span class="process-arrow">→</span>
       
-      <div class="step animate-slide delay-3">
-        <span class="step-number">3</span>
-        <h3>Save!</h3>
-        <p>Auto-detects public/ or assets/ and saves with proper naming</p>
+      <div class="process-step">
+        <div class="process-num">3</div>
+        <h3 class="process-title">DELIVER</h3>
+        <p class="process-desc">Auto-saves to public/, assets/, or anywhere you say.</p>
       </div>
     </div>
   </section>
 
-  <!-- COMMANDS -->
-  <section class="commands" id="install">
-    <h2 class="section-title animate-slide">Attack Commands!</h2>
-    
-    <div class="code-panel animate-slide delay-1">
-      <pre><span class="comment"># Capture a URL</span>
-snap-asset https://myapp.com --name hero
-
-<span class="comment"># Capture a specific element</span>
-snap-asset https://myapp.com --selector ".card" --name feature
-
-<span class="comment"># Extract entire website</span>
-snap-asset extract https://competitor.com --out public/
-
-<span class="comment"># Capture component in isolation</span>
-snap-asset component ./src/Hero.tsx --name hero
-
-<span class="comment"># Batch mode</span>
-snap-asset batch
-
-<span class="keyword"># Dark mode variant</span>
-snap-asset https://myapp.com <span class="flag">--dark</span> --name hero-dark</pre>
+  <!-- === COMMANDS === -->
+  <section class="command-section" id="install">
+    <div class="section-header">
+      <span class="sfx sfx-fire">ATTACK</span>
+      <h2 class="section-title">COMMANDS</h2>
     </div>
     
-    <div class="cta-buttons" style="margin-top: 3rem;">
-      <a href="https://github.com/Manavarya09/snap-asset" class="comic-btn" target="_blank">
-        View on GitHub
+    <div class="code-block">
+      <pre><span class="code-comment"># Snap a whole URL</span>
+<span class="code-cmd">snap-asset</span> https://myapp.com --name hero
+
+<span class="code-comment"># Snipe a specific element</span>
+<span class="code-cmd">snap-asset</span> https://myapp.com <span class="code-flag">--selector</span> <span class="code-opt">".feature-card"</span> --name feature
+
+<span class="code-comment"># Raid an entire site</span>
+<span class="code-cmd">snap-asset</span> extract https://competitor.com --out public/
+
+<span class="code-comment"># Isolate a component</span>
+<span class="code-cmd">snap-asset</span> component ./src/Hero.tsx --name hero
+
+<span class="code-comment"># Bulk barrage</span>
+<span class="code-cmd">snap-asset</span> batch
+
+<span class="code-comment"># Night mode</span>
+<span class="code-cmd">snap-asset</span> https://myapp.com <span class="code-flag">--dark</span> --name hero-night</pre>
+    </div>
+    
+    <div class="cta-cluster" style="margin-top: 3rem;">
+      <a href="https://github.com/Manavarya09/snap-asset" class="manga-btn manga-btn-outline" target="_blank">
+        GitHub
       </a>
     </div>
   </section>
 
-  <!-- FOOTER -->
-  <footer class="footer">
-    <p class="footer-text">
-      Made with ⚡ by 
-      <a href="https://github.com/Manavarya09" class="footer-link">Manav Arya Singh</a>
-    </p>
-    <p style="color: #666; margin-top: 1rem; font-size: 0.9rem;">
-      MIT License • powered by Playwright & Sharp
+  <!-- === FOOTER === -->
+  <footer class="mega-footer">
+    <span class="sfx sfx-crash">THE END</span>
+    <p class="footer-title">Created by Manav Arya Singh</p>
+    <a href="https://github.com/Manavarya09" class="footer-link" target="_blank">
+      @Manavarya09
+    </a>
+    <p style="color: #666; margin-top: 2rem;">
+      Powered by Playwright + Sharp
     </p>
   </footer>
 
   <script>
-    // Intersection Observer for animations
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('animate-slide');
-        }
-      });
-    }, { threshold: 0.1 });
+    // Chaotic tilt on scroll
+    let tilt = 0;
+    window.addEventListener('scroll', () => {
+      const scrolled = window.scrollY;
+      tilt = scrolled * 0.02;
+      document.body.style.transform = `rotate(${tilt}deg)`;
+    });
 
-    document.querySelectorAll('.feature-card, .step, .code-panel').forEach(el => {
-      observer.observe(el);
+    // Random burst creator
+    document.addEventListener('click', (e) => {
+      const burst = document.createElement('div');
+      burst.className = 'burst';
+      burst.style.left = e.clientX - 50 + 'px';
+      burst.style.top = e.clientY - 50 + 'px';
+      document.body.appendChild(burst);
+      setTimeout(() => burst.remove(), 400);
     });
   </script>
 </body>
