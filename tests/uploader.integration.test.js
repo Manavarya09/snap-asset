@@ -2,9 +2,33 @@ import assert from 'node:assert';
 import { promises as fs } from 'fs';
 import { resolve } from 'path';
 
-// Resolve `src/uploader.js` relative to this test file robustly (works in CI nested checkouts)
-const uploaderPath = new URL('../src/uploader.js', import.meta.url).pathname;
-const { getUploader } = await import(uploaderPath);
+// Resolve `src/uploader.js` robustly across CI checkout layouts
+import { fileURLToPath, pathToFileURL } from 'url';
+import { access } from 'fs/promises';
+
+const candidates = [
+  fileURLToPath(new URL('../src/uploader.js', import.meta.url)),
+  fileURLToPath(new URL('../../src/uploader.js', import.meta.url)),
+  resolve(process.cwd(), 'src/uploader.js'),
+  resolve(process.cwd(), './snap-asset/src/uploader.js'),
+];
+
+let uploaderModule = null;
+for (const p of candidates) {
+  try {
+    await access(p);
+    uploaderModule = await import(pathToFileURL(p).href);
+    break;
+  } catch {
+    // try next
+  }
+}
+
+if (!uploaderModule) {
+  throw new Error('Could not resolve src/uploader.js from any candidate path: ' + candidates.join(', '));
+}
+
+const { getUploader } = uploaderModule;
 
 const RUN = process.env.RUN_UPLOADER_INTEGRATION === '1' || process.env.RUN_UPLOADER_INTEGRATION === 'true';
 
