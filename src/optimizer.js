@@ -1,5 +1,14 @@
 import sharp from 'sharp';
 
+const OPTIMIZER_DEFAULTS = {
+  pngCompressionLevel: 9,
+  webpQuality: 80,
+  avifQuality: 80,
+  jpegQuality: 85,
+  resizeKeepAspect: true,
+  webpLossless: false,
+};
+
 function parseResize(resize) {
   if (!resize) return null;
   const match = /^([1-9]\d*)x([1-9]\d*)$/.exec(resize);
@@ -32,10 +41,10 @@ export async function optimizePng(buffer, options = {}) {
  * Convert a PNG buffer to WebP.
  */
 export async function toWebp(buffer, options = {}) {
-  const { quality = 80, resize = null } = options;
+  const { quality = OPTIMIZER_DEFAULTS.webpQuality, resize = null, lossless = OPTIMIZER_DEFAULTS.webpLossless } = options;
   const dims = parseResize(resize);
 
-  let pipeline = sharp(buffer).webp({ quality });
+  let pipeline = sharp(buffer).webp({ quality, lossless });
 
   if (dims) {
     pipeline = pipeline.resize(dims, { fit: 'inside', withoutEnlargement: true });

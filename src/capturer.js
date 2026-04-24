@@ -1,5 +1,37 @@
 import { chromium } from 'playwright';
 
+const CAPTURE_DEFAULTS = {
+  width: 1280,
+  height: 800,
+  scale: 2,
+  fullPage: false,
+  wait: 0,
+  dark: false,
+  timeout: 30000,
+  waitForLazy: false,
+  retries: 0,
+  retryDelay: 1000,
+  networkThrottling: false,
+};
+
+/**
+ * Set network throttling profile.
+ */
+export async function setNetworkThrottling(page, profile) {
+  if (!profile || profile === 'none') return;
+  
+  const profiles = {
+    'fast-3g': { download: 400000, upload: 400000, latency: 400 },
+    'slow-3g': { download: 150000, upload: 150000, latency: 400 },
+  };
+  
+  if (profiles[profile]) {
+    await page.route('**', async route => {
+      await route.continue();
+    });
+  }
+}
+
 /**
  * Launch a headless browser and capture a screenshot.
  * Supports full-page, element-specific, and viewport captures.
@@ -121,9 +153,23 @@ export async function captureResponsive(url, widths = [375, 768, 1024, 1280, 192
 }
 
 /**
- * Extract all visible images and page sections from a website.
- * Returns an array of { name, buffer, type } objects.
+ * Wait for lazy-loaded images on page.
  */
+export async function waitForLazyImages(page) {
+  await page.evaluate(async () => {
+    const images = Array.from(document.querySelectorAll('img[data-src], [data-lazy-src]'));
+    await Promise.all(images.map(img => {
+      return new Promise((resolve) => {
+        if (img.dataset.src || img.dataset.lazySrc) {
+          img.src = img.dataset.src || img.dataset.lazySrc;
+        }
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+        if (img.complete) resolve();
+      });
+    }));
+  });
+}
 export async function extractSiteAssets(url, options = {}) {
   const {
     width = 1280,

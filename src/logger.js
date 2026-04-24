@@ -4,6 +4,21 @@ import ora from 'ora';
 const BRAND = chalk.hex('#FF6B35').bold('snap-asset');
 const VERSION = '0.1.0';
 
+const CONFIG = {
+  enableColor: true,
+  enableEmoji: true,
+  verbose: false,
+  quiet: false,
+};
+
+export function setConfig(options) {
+  Object.assign(CONFIG, options);
+}
+
+export function isQuiet() {
+  return CONFIG.quiet;
+}
+
 export function banner() {
   console.log();
   console.log(`  ${BRAND} ${chalk.dim(`v${VERSION}`)}`);
