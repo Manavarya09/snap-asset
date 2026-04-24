@@ -1,7 +1,10 @@
 import assert from 'node:assert';
-import { getUploader } from '../../src/uploader.js';
 import { promises as fs } from 'fs';
 import { resolve } from 'path';
+
+// Resolve `src/uploader.js` relative to this test file robustly (works in CI nested checkouts)
+const uploaderPath = new URL('../src/uploader.js', import.meta.url).pathname;
+const { getUploader } = await import(uploaderPath);
 
 const RUN = process.env.RUN_UPLOADER_INTEGRATION === '1' || process.env.RUN_UPLOADER_INTEGRATION === 'true';
 
