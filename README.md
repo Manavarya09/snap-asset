@@ -198,7 +198,7 @@ Options:
     "width": 1280,
     "height": 800,
     "scale": 2,
-    "format": "both",
+    
     "quality": 80
   },
   "captures": [
@@ -221,6 +221,53 @@ Options:
   ]
 }
 ```
+
+## Uploaders (S3 / GCS)
+
+This project includes optional uploaders for S3 and GCS. They are loaded dynamically and are not required at runtime unless you explicitly select them.
+
+Environment variables / secrets
+
+- For S3 (AWS):
+  - `AWS_REGION` — AWS region
+  - `AWS_S3_BUCKET` — target bucket name
+  - `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` — credentials (recommended to use GitHub Secrets)
+
+- For GCS:
+  - `GCS_BUCKET` — target bucket name
+  - `GOOGLE_APPLICATION_CREDENTIALS` or pass credentials object via uploader options
+
+GitHub Actions snippet (example)
+
+```yaml
+jobs:
+  upload-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+      - name: Install deps
+        run: npm ci
+      - name: Run uploader integration tests
+        env:
+          RUN_UPLOADER_INTEGRATION: '1'
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+        run: npm test -- tests/uploader.integration.test.js
+```
+
+Notes
+
+- Tests are guarded and will only run when `RUN_UPLOADER_INTEGRATION=1` is set to avoid leaking secrets in regular CI runs.
+- If you want to run uploads locally against a real provider, export the required env vars or create a credentials file for GCS and set `RUN_UPLOADER_INTEGRATION=1`.
+
 
 ---
 
