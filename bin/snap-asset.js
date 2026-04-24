@@ -87,6 +87,8 @@ program.hook('preAction', (thisCommand) => {
 // ── Default command: capture one or more URLs ──────────────────────────────────────────
 program
   .argument('[urls...]', 'URLs to capture')
+  .option('--cookies <path>', 'Path to JSON file with cookies array to add')
+  .option('--login-script <path>', 'Path to JS module that exports a default async login function (page)')
   .option('-n, --name <name>', 'output filename (without extension)')
   .option('-o, --out <dir>', 'output directory')
   .option('-s, --selector <css>', 'capture a specific CSS element')
@@ -122,6 +124,15 @@ program
       for (let index = 0; index < urls.length; index++) {
         const url = urls[index];
         spin.text = `Capturing screenshot for ${url}...`;
+        // load cookies file if provided
+        let cookies = undefined;
+        if (opts.cookies) {
+          try {
+            const txt = await import('fs').then(m => m.promises.readFile(opts.cookies, 'utf8'));
+            cookies = JSON.parse(txt);
+          } catch {}
+        }
+
         const buffer = await captureUrl(url, {
           width: opts.width,
           height: opts.height,
@@ -131,6 +142,8 @@ program
           clip: validateClip(opts.clip),
           wait: opts.wait,
           dark: opts.dark,
+          cookies,
+          loginScript: opts.loginScript,
         });
 
         const result = await processScreenshot(buffer, {
@@ -208,6 +221,14 @@ program
       cleanup = cleanupFn;
 
       spin.text = 'Capturing component...';
+      let cookies = undefined;
+      if (opts.cookies) {
+        try {
+          const txt = await import('fs').then(m => m.promises.readFile(opts.cookies, 'utf8'));
+          cookies = JSON.parse(txt);
+        } catch {}
+      }
+
       const buffer = await captureUrl(url, {
         width: opts.width,
         height: opts.height,
@@ -216,6 +237,8 @@ program
         wait: opts.wait,
         dark: opts.dark,
         selector: '#root > *',
+        cookies,
+        loginScript: opts.loginScript,
       });
 
       validateFormat(opts.format);
@@ -276,6 +299,14 @@ program
     const spin = log.spinner('Scanning website...');
 
     try {
+      let cookies = undefined;
+      if (opts.cookies) {
+        try {
+          const txt = await import('fs').then(m => m.promises.readFile(opts.cookies, 'utf8'));
+          cookies = JSON.parse(txt);
+        } catch {}
+      }
+
       const assets = await extractSiteAssets(url, {
         width: opts.width,
         height: opts.height,
@@ -283,6 +314,8 @@ program
         dark: opts.dark,
         sections: opts.sections !== false,
         images: opts.images !== false,
+        cookies,
+        loginScript: opts.loginScript,
       });
 
       spin.text = `Found ${assets.length} assets. Optimizing...`;
@@ -332,6 +365,9 @@ program
   .command('batch')
   .description('Run all captures defined in snap-asset.config.json')
   .option('-c, --config <path>', 'config file path')
+  .option('--concurrency <n>', 'max concurrent captures', parseInt)
+  .option('--cookies <path>', 'Path to JSON file with cookies array to add')
+  .option('--login-script <path>', 'Path to JS module that exports a default async login function (page)')
   .action(async (opts) => {
     log.banner();
 
