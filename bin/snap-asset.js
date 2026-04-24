@@ -30,6 +30,7 @@ import {
 import { loadConfig, generateConfig } from '../src/config.js';
 import { renderComponent } from '../src/component-renderer.js';
 import * as log from '../src/logger.js';
+import pLimit from 'p-limit';
 
 const VALID_FORMATS = ['png', 'webp', 'avif', 'jpeg', 'jpg', 'both'];
 
@@ -70,6 +71,18 @@ program
   .name('snap-asset')
   .description('Capture web screenshots & extract site assets as optimized PNG+WebP+AVIF')
   .version('0.1.0');
+
+// Global options
+program
+  .option('--json', 'Output machine-readable JSON')
+  .option('--verbose', 'Enable verbose logging')
+  .option('--quiet', 'Quiet mode (suppress spinners)');
+
+// Apply global logger config before any action runs
+program.hook('preAction', (thisCommand) => {
+  const opts = thisCommand.opts();
+  log.setConfig({ json: !!opts.json, verbose: !!opts.verbose, quiet: !!opts.quiet });
+});
 
 // ── Default command: capture one or more URLs ──────────────────────────────────────────
 program
@@ -331,13 +344,16 @@ program
     log.info('Captures', `${config.captures.length} defined`);
     log.divider();
 
+    // Concurrency: limit concurrent captures to avoid resource exhaustion.
+    const concurrency = (config.batch && config.batch.concurrency) || Number(process.env.SNAP_ASSET_CONCURRENCY) || 3;
+    const limit = pLimit(concurrency);
+
     let completed = 0;
     let failed = 0;
 
     const total = config.captures.length;
 
-    for (let i = 0; i < total; i++) {
-      const capture = config.captures[i];
+    const tasks = config.captures.map((capture, i) => limit(async () => {
       const progress = `[${i + 1}/${total}]`;
       const spin = log.spinner(`${progress} ${capture.name}...`);
 
@@ -388,7 +404,9 @@ program
         spin.fail(`${progress} ${capture.name}: ${err.message}`);
         failed++;
       }
-    }
+    }));
+
+    await Promise.all(tasks);
 
     log.divider();
     log.success(`${completed} captured, ${failed} failed`);
@@ -399,9 +417,23 @@ program
 program
   .command('init')
   .description('Generate a starter snap-asset.config.json')
-  .action(() => {
+  .action(async () => {
     log.banner();
-    const { created, path } = generateConfig();
+
+    let res;
+    try {
+      // Prefer interactive generation when available
+      if (process.stdin.isTTY && process.stdout.isTTY) {
+        res = await generateConfigInteractive();
+      } else {
+        res = generateConfig();
+      }
+    } catch (err) {
+      log.error('Failed to create config: ' + err.message);
+      process.exit(1);
+    }
+
+    const { created, path } = res;
 
     if (created) {
       log.success(`Created ${path}`);
