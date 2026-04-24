@@ -1,4 +1,7 @@
 import { chromium } from 'playwright';
+import DiskCache from './cache.js';
+import { fileURLToPath } from 'url';
+import { dirname, resolve as resolvePath } from 'path';
 
 const CAPTURE_DEFAULTS = {
   width: 1280,
@@ -37,6 +40,17 @@ export async function setNetworkThrottling(page, profile) {
  * Supports full-page, element-specific, and viewport captures.
  */
 export async function captureUrl(url, options = {}) {
+  // initialize cache lazily
+  const cache = options.cache === false ? null : new DiskCache(process.cwd(), {
+    maxEntries: options.cacheMaxEntries || 200,
+    defaultTTL: options.cacheTTL || process.env.SNAP_ASSET_CACHE_TTL ? Number(process.env.SNAP_ASSET_CACHE_TTL) : 3600,
+  });
+
+  const cacheKey = `${url}|${JSON.stringify({ width: options.width, height: options.height, scale: options.scale, selector: options.selector, fullPage: options.fullPage, dark: options.dark })}`;
+  if (cache) {
+    const cached = await cache.get(cacheKey);
+    if (cached) return cached;
+  }
   const {
     width = 1280,
     height = 800,
@@ -46,6 +60,8 @@ export async function captureUrl(url, options = {}) {
     wait = 0,
     dark = false,
     timeout = 30000,
+    headers = undefined,
+    loginScript = undefined,
   } = options;
 
   const browser = await chromium.launch({ headless: true });
@@ -64,7 +80,27 @@ export async function captureUrl(url, options = {}) {
       await context.addCookies(options.cookies);
     }
 
+    // Add extra headers if provided
+    if (headers && typeof headers === 'object') {
+      await context.setExtraHTTPHeaders(headers);
+    }
+
     const page = await context.newPage();
+
+    // Run optional login script prior to navigation if provided.
+    if (loginScript) {
+      try {
+        const scriptPath = resolvePath(process.cwd(), loginScript);
+        const mod = await import(scriptPath);
+        if (typeof mod.default === 'function') {
+          await mod.default({ page, context, playwright: { chromium } });
+        } else if (typeof mod === 'function') {
+          await mod({ page, context, playwright: { chromium } });
+        }
+      } catch (err) {
+        // don't fail capture for login script errors; log and continue to navigate
+      }
+    }
 
     await page.goto(url, {
       waitUntil: 'networkidle',
@@ -102,6 +138,8 @@ export async function captureUrl(url, options = {}) {
 
       buffer = await page.screenshot(screenshotOptions);
     }
+
+    if (cache) await cache.set(cacheKey, buffer, { ttl: options.cacheTTL });
 
     return buffer;
   } finally {

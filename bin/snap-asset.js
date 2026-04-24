@@ -30,6 +30,7 @@ import {
 import { loadConfig, generateConfig } from '../src/config.js';
 import { renderComponent } from '../src/component-renderer.js';
 import * as log from '../src/logger.js';
+import pLimit from 'p-limit';
 
 const VALID_FORMATS = ['png', 'webp', 'avif', 'jpeg', 'jpg', 'both'];
 
@@ -71,9 +72,23 @@ program
   .description('Capture web screenshots & extract site assets as optimized PNG+WebP+AVIF')
   .version('0.1.0');
 
+// Global options
+program
+  .option('--json', 'Output machine-readable JSON')
+  .option('--verbose', 'Enable verbose logging')
+  .option('--quiet', 'Quiet mode (suppress spinners)');
+
+// Apply global logger config before any action runs
+program.hook('preAction', (thisCommand) => {
+  const opts = thisCommand.opts();
+  log.setConfig({ json: !!opts.json, verbose: !!opts.verbose, quiet: !!opts.quiet });
+});
+
 // ── Default command: capture one or more URLs ──────────────────────────────────────────
 program
   .argument('[urls...]', 'URLs to capture')
+  .option('--cookies <path>', 'Path to JSON file with cookies array to add')
+  .option('--login-script <path>', 'Path to JS module that exports a default async login function (page)')
   .option('-n, --name <name>', 'output filename (without extension)')
   .option('-o, --out <dir>', 'output directory')
   .option('-s, --selector <css>', 'capture a specific CSS element')
@@ -109,6 +124,15 @@ program
       for (let index = 0; index < urls.length; index++) {
         const url = urls[index];
         spin.text = `Capturing screenshot for ${url}...`;
+        // load cookies file if provided
+        let cookies = undefined;
+        if (opts.cookies) {
+          try {
+            const txt = await import('fs').then(m => m.promises.readFile(opts.cookies, 'utf8'));
+            cookies = JSON.parse(txt);
+          } catch {}
+        }
+
         const buffer = await captureUrl(url, {
           width: opts.width,
           height: opts.height,
@@ -118,6 +142,8 @@ program
           clip: validateClip(opts.clip),
           wait: opts.wait,
           dark: opts.dark,
+          cookies,
+          loginScript: opts.loginScript,
         });
 
         const result = await processScreenshot(buffer, {
@@ -195,6 +221,14 @@ program
       cleanup = cleanupFn;
 
       spin.text = 'Capturing component...';
+      let cookies = undefined;
+      if (opts.cookies) {
+        try {
+          const txt = await import('fs').then(m => m.promises.readFile(opts.cookies, 'utf8'));
+          cookies = JSON.parse(txt);
+        } catch {}
+      }
+
       const buffer = await captureUrl(url, {
         width: opts.width,
         height: opts.height,
@@ -203,6 +237,8 @@ program
         wait: opts.wait,
         dark: opts.dark,
         selector: '#root > *',
+        cookies,
+        loginScript: opts.loginScript,
       });
 
       validateFormat(opts.format);
@@ -263,6 +299,14 @@ program
     const spin = log.spinner('Scanning website...');
 
     try {
+      let cookies = undefined;
+      if (opts.cookies) {
+        try {
+          const txt = await import('fs').then(m => m.promises.readFile(opts.cookies, 'utf8'));
+          cookies = JSON.parse(txt);
+        } catch {}
+      }
+
       const assets = await extractSiteAssets(url, {
         width: opts.width,
         height: opts.height,
@@ -270,6 +314,8 @@ program
         dark: opts.dark,
         sections: opts.sections !== false,
         images: opts.images !== false,
+        cookies,
+        loginScript: opts.loginScript,
       });
 
       spin.text = `Found ${assets.length} assets. Optimizing...`;
@@ -319,6 +365,9 @@ program
   .command('batch')
   .description('Run all captures defined in snap-asset.config.json')
   .option('-c, --config <path>', 'config file path')
+  .option('--concurrency <n>', 'max concurrent captures', parseInt)
+  .option('--cookies <path>', 'Path to JSON file with cookies array to add')
+  .option('--login-script <path>', 'Path to JS module that exports a default async login function (page)')
   .action(async (opts) => {
     log.banner();
 
@@ -331,13 +380,16 @@ program
     log.info('Captures', `${config.captures.length} defined`);
     log.divider();
 
+    // Concurrency: limit concurrent captures to avoid resource exhaustion.
+    const concurrency = (config.batch && config.batch.concurrency) || Number(process.env.SNAP_ASSET_CONCURRENCY) || 3;
+    const limit = pLimit(concurrency);
+
     let completed = 0;
     let failed = 0;
 
     const total = config.captures.length;
 
-    for (let i = 0; i < total; i++) {
-      const capture = config.captures[i];
+    const tasks = config.captures.map((capture, i) => limit(async () => {
       const progress = `[${i + 1}/${total}]`;
       const spin = log.spinner(`${progress} ${capture.name}...`);
 
@@ -388,7 +440,9 @@ program
         spin.fail(`${progress} ${capture.name}: ${err.message}`);
         failed++;
       }
-    }
+    }));
+
+    await Promise.all(tasks);
 
     log.divider();
     log.success(`${completed} captured, ${failed} failed`);
@@ -399,9 +453,23 @@ program
 program
   .command('init')
   .description('Generate a starter snap-asset.config.json')
-  .action(() => {
+  .action(async () => {
     log.banner();
-    const { created, path } = generateConfig();
+
+    let res;
+    try {
+      // Prefer interactive generation when available
+      if (process.stdin.isTTY && process.stdout.isTTY) {
+        res = await generateConfigInteractive();
+      } else {
+        res = generateConfig();
+      }
+    } catch (err) {
+      log.error('Failed to create config: ' + err.message);
+      process.exit(1);
+    }
+
+    const { created, path } = res;
 
     if (created) {
       log.success(`Created ${path}`);
