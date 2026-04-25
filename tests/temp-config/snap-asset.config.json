@@ -1,0 +1,14 @@
+{
+  "defaults": {
+    "width": 900,
+    "height": 700,
+    "format": "webp"
+  },
+  "captures": [
+    {
+      "name": "hero",
+      "url": "https://example.com",
+      "selector": ".hero"
+    }
+  ]
+}
