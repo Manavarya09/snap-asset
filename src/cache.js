@@ -8,7 +8,9 @@ const INDEX_FILE = 'index.json';
 async function ensureDir(dir) {
   try {
     await fs.mkdir(dir, { recursive: true });
-  } catch {}
+  } catch {
+    // Directory may already exist
+  }
 }
 
 function hashKey(key) {
@@ -26,7 +28,9 @@ export default class DiskCache {
   }
 
   async _loadIndex() {
-    if (this.index) return this.index;
+    if (this.index) {
+      return this.index;
+    }
     try {
       const txt = await fs.readFile(this.indexPath, 'utf8');
       this.index = JSON.parse(txt);
@@ -45,7 +49,9 @@ export default class DiskCache {
     const idx = await this._loadIndex();
     const id = hashKey(key);
     const meta = idx[id];
-    if (!meta) return null;
+    if (!meta) {
+      return null;
+    }
 
     const now = Date.now();
     if (meta.expiresAt && now > meta.expiresAt) {
@@ -91,7 +97,9 @@ export default class DiskCache {
       // sort by lastAccess ascending (oldest first)
       const sorted = ids.sort((a, b) => (idx[a].lastAccess || 0) - (idx[b].lastAccess || 0));
       const toRemove = sorted.slice(0, ids.length - this.maxEntries);
-      for (const r of toRemove) await this._removeEntry(r, idx);
+      for (const r of toRemove) {
+        await this._removeEntry(r, idx);
+      }
     }
 
     await this._saveIndex();
@@ -101,7 +109,9 @@ export default class DiskCache {
     const idx = idxRef || (await this._loadIndex());
     try {
       await fs.unlink(join(this.dir, id));
-    } catch {}
+    } catch {
+      // File may have already been deleted
+    }
     delete idx[id];
     await this._saveIndex();
   }
@@ -111,7 +121,9 @@ export default class DiskCache {
     for (const id of Object.keys(idx)) {
       try {
         await fs.unlink(join(this.dir, id));
-      } catch {}
+      } catch {
+        // File may have already been deleted
+      }
     }
     this.index = {};
     await this._saveIndex();
