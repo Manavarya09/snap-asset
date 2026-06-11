@@ -1,12 +1,6 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import {
-  safeName,
-  nameFromUrl,
-  nameFromComponent,
-  resolveOutputPaths,
-  detectOutputDir,
-} from '../src/output.js';
+import { safeName, nameFromUrl, nameFromComponent, resolveOutputPaths, detectOutputDir } from '../src/output.js';
 import { existsSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 

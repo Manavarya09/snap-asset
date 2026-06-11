@@ -53,7 +53,10 @@ test('validateConfig rejects capture without url or component', () => {
 
 test('validateConfig validates width, height, scale as positive integers', () => {
   assert.throws(() => validateConfig({ captures: [{ name: 't', url: 'https://x.com', width: 0 }] }), /width.*positive/);
-  assert.throws(() => validateConfig({ captures: [{ name: 't', url: 'https://x.com', height: -1 }] }), /height.*positive/);
+  assert.throws(
+    () => validateConfig({ captures: [{ name: 't', url: 'https://x.com', height: -1 }] }),
+    /height.*positive/,
+  );
   assert.throws(() => validateConfig({ captures: [{ name: 't', url: 'https://x.com', scale: 0 }] }), /scale.*positive/);
 });
 
