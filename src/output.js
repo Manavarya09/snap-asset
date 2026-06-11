@@ -1,13 +1,5 @@
-import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
-import { join, resolve, basename } from 'path';
-
-const OUTPUT_DEFAULTS = {
-  outputDir: 'public',
-  filenamePrefix: '',
-  filenameSuffix: '',
-  timestamp: false,
-  includeMetadata: false,
-};
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { join, basename } from 'path';
 
 /**
  * Auto-detect the best output directory in the project.
@@ -30,11 +22,13 @@ export function detectOutputDir(cwd = process.cwd()) {
  * Generate a safe filename from a name string.
  */
 export function safeName(name) {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 80) || 'screenshot';
+  return (
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 80) || 'screenshot'
+  );
 }
 
 /**
@@ -160,8 +154,10 @@ export function saveAssets(paths, buffers) {
  * Save metadata JSON for the capture.
  */
 export function saveMetadata(paths, info) {
-  if (!paths.metadataPath) return;
-  
+  if (!paths.metadataPath) {
+    return;
+  }
+
   const metadata = {
     captured: new Date().toISOString(),
     url: info.url,
@@ -170,11 +166,19 @@ export function saveMetadata(paths, info) {
     scale: info.scale,
     formats: {},
   };
-  
-  if (paths.pngPath) metadata.formats.png = { path: basename(paths.pngPath), size: info.pngSize };
-  if (paths.webpPath) metadata.formats.webp = { path: basename(paths.webpPath), size: info.webpSize };
-  if (paths.avifPath) metadata.formats.avif = { path: basename(paths.avifPath), size: info.avifSize };
-  if (paths.jpgPath) metadata.formats.jpg = { path: basename(paths.jpgPath), size: info.jpgSize };
-  
+
+  if (paths.pngPath) {
+    metadata.formats.png = { path: basename(paths.pngPath), size: info.pngSize };
+  }
+  if (paths.webpPath) {
+    metadata.formats.webp = { path: basename(paths.webpPath), size: info.webpSize };
+  }
+  if (paths.avifPath) {
+    metadata.formats.avif = { path: basename(paths.avifPath), size: info.avifSize };
+  }
+  if (paths.jpgPath) {
+    metadata.formats.jpg = { path: basename(paths.jpgPath), size: info.jpgSize };
+  }
+
   writeFileSync(paths.metadataPath, JSON.stringify(metadata, null, 2));
 }
