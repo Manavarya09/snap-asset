@@ -109,6 +109,7 @@ program
   .option('--overwrite', 'overwrite existing files')
   .option('--wait-for-lazy', 'wait for lazy-loaded images before capture')
   .option('--network-throttle <profile>', 'simulate network conditions: fast-3g, slow-3g')
+  .option('--no-cache', 'disable disk cache')
   .action(async (urls, opts) => {
     if (!urls || urls.length === 0) {
       program.help();
@@ -158,6 +159,7 @@ program
           loginScript: opts.loginScript,
           networkThrottling: opts.networkThrottle,
           waitForLazy: opts.waitForLazy,
+          cache: opts.cache,
         });
 
         const result = await processScreenshot(buffer, {
@@ -221,6 +223,7 @@ program
   .option('--overwrite', 'overwrite existing files')
   .option('--wait-for-lazy', 'wait for lazy-loaded images before capture')
   .option('--network-throttle <profile>', 'simulate network conditions: fast-3g, slow-3g')
+  .option('--no-cache', 'disable disk cache')
   .action(async (componentPath, opts) => {
     log.banner();
     log.info('Component', componentPath);
@@ -259,6 +262,7 @@ program
         loginScript: opts.loginScript,
         networkThrottling: opts.networkThrottle,
         waitForLazy: opts.waitForLazy,
+        cache: opts.cache,
       });
 
       validateFormat(opts.format);
