@@ -13,3 +13,4 @@ screenshots/
 *.swp
 *.swo
 *~
+tests/temp-*/
