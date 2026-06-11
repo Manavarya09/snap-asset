@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, 'phase/**' ]
+    branches: [main, 'phase/**']
   pull_request:
-    branches: [ main, 'phase/**' ]
+    branches: [main, 'phase/**']
 
 jobs:
   test:
@@ -43,6 +43,4 @@ jobs:
         with:
           node-version: 20.x
       - run: npm ci
-      - name: Run lint
-        run: |
-          if npm run -s lint; then echo "lint passed"; else echo "lint step skipped or failed"; fi
+      - run: npm run lint
