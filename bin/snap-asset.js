@@ -10,8 +10,8 @@ try {
   if (err.message.includes('playwright')) {
     console.error(
       'Error: Playwright is not installed.\n' +
-      'Run `npm install` to install all dependencies, then try again.\n' +
-      'If the issue persists, run `npx playwright install chromium`.'
+        'Run `npm install` to install all dependencies, then try again.\n' +
+        'If the issue persists, run `npx playwright install chromium`.',
     );
     process.exit(1);
   }
@@ -42,7 +42,9 @@ function validateFormat(format) {
 }
 
 function validateResize(resize) {
-  if (!resize) return null;
+  if (!resize) {
+    return null;
+  }
   if (!/^[1-9]\d*x[1-9]\d*$/.test(resize)) {
     throw new Error('Invalid resize value. Expected WIDTHxHEIGHT, e.g. 800x600.');
   }
@@ -50,7 +52,9 @@ function validateResize(resize) {
 }
 
 function validateClip(clip) {
-  if (!clip) return null;
+  if (!clip) {
+    return null;
+  }
   const parts = clip.split(',').map(Number);
   if (parts.length !== 4 || parts.some((v) => Number.isNaN(v) || v < 0)) {
     throw new Error('Invalid clip value. Expected x,y,width,height with non-negative integers.');
@@ -112,8 +116,12 @@ program
     log.banner();
     log.info('URLs', urls.join(', '));
     log.info('Viewport', `${opts.width}x${opts.height} @${opts.scale}x`);
-    if (opts.selector) log.info('Selector', opts.selector);
-    if (opts.dark) log.info('Theme', 'dark');
+    if (opts.selector) {
+      log.info('Selector', opts.selector);
+    }
+    if (opts.dark) {
+      log.info('Theme', 'dark');
+    }
     log.divider();
 
     const spin = log.spinner('Launching browser...');
@@ -128,9 +136,11 @@ program
         let cookies = undefined;
         if (opts.cookies) {
           try {
-            const txt = await import('fs').then(m => m.promises.readFile(opts.cookies, 'utf8'));
+            const txt = await import('fs').then((m) => m.promises.readFile(opts.cookies, 'utf8'));
             cookies = JSON.parse(txt);
-          } catch {}
+          } catch {
+            // If cookies can't be read, proceed without them
+          }
         }
 
         const buffer = await captureUrl(url, {
@@ -155,7 +165,7 @@ program
         const name = safeName(
           opts.name && urls.length === 1
             ? opts.name
-            : `${opts.name || nameFromUrl(url)}${urls.length > 1 ? `-${index + 1}` : ''}`
+            : `${opts.name || nameFromUrl(url)}${urls.length > 1 ? `-${index + 1}` : ''}`,
         );
         const paths = resolveOutputPaths(outDir, name, {
           overwrite: opts.overwrite,
@@ -224,9 +234,11 @@ program
       let cookies = undefined;
       if (opts.cookies) {
         try {
-          const txt = await import('fs').then(m => m.promises.readFile(opts.cookies, 'utf8'));
+          const txt = await import('fs').then((m) => m.promises.readFile(opts.cookies, 'utf8'));
           cookies = JSON.parse(txt);
-        } catch {}
+        } catch {
+          // If cookies can't be read, proceed without them
+        }
       }
 
       const buffer = await captureUrl(url, {
@@ -273,7 +285,9 @@ program
       log.error(err.message);
       process.exit(1);
     } finally {
-      if (cleanup) cleanup();
+      if (cleanup) {
+        cleanup();
+      }
     }
   });
 
@@ -302,9 +316,11 @@ program
       let cookies = undefined;
       if (opts.cookies) {
         try {
-          const txt = await import('fs').then(m => m.promises.readFile(opts.cookies, 'utf8'));
+          const txt = await import('fs').then((m) => m.promises.readFile(opts.cookies, 'utf8'));
           cookies = JSON.parse(txt);
-        } catch {}
+        } catch {
+          // If cookies can't be read, proceed without them
+        }
       }
 
       const assets = await extractSiteAssets(url, {
@@ -325,7 +341,9 @@ program
 
       for (const asset of assets) {
         try {
-          if (asset.type === 'image' && !asset.buffer.length) continue;
+          if (asset.type === 'image' && !asset.buffer.length) {
+            continue;
+          }
 
           const result = await processScreenshot(asset.buffer, { quality: opts.quality });
           const paths = resolveOutputPaths(outDir, safeName(asset.name), {
@@ -389,58 +407,60 @@ program
 
     const total = config.captures.length;
 
-    const tasks = config.captures.map((capture, i) => limit(async () => {
-      const progress = `[${i + 1}/${total}]`;
-      const spin = log.spinner(`${progress} ${capture.name}...`);
+    const tasks = config.captures.map((capture, i) =>
+      limit(async () => {
+        const progress = `[${i + 1}/${total}]`;
+        const spin = log.spinner(`${progress} ${capture.name}...`);
 
-      try {
-        let buffer;
+        try {
+          let buffer;
 
-        if (capture.component) {
-          const { url, cleanup } = await renderComponent(capture.component);
-          try {
-            buffer = await captureUrl(url, {
+          if (capture.component) {
+            const { url, cleanup } = await renderComponent(capture.component);
+            try {
+              buffer = await captureUrl(url, {
+                width: capture.width || 1280,
+                height: capture.height || 800,
+                scale: capture.scale || 2,
+                selector: '#root > *',
+                wait: capture.wait || 500,
+                dark: capture.dark,
+              });
+            } finally {
+              cleanup();
+            }
+          } else {
+            buffer = await captureUrl(capture.url, {
               width: capture.width || 1280,
               height: capture.height || 800,
               scale: capture.scale || 2,
-              selector: '#root > *',
-              wait: capture.wait || 500,
+              selector: capture.selector,
+              fullPage: capture.fullPage,
+              wait: capture.wait || 0,
               dark: capture.dark,
             });
-          } finally {
-            cleanup();
           }
-        } else {
-          buffer = await captureUrl(capture.url, {
-            width: capture.width || 1280,
-            height: capture.height || 800,
-            scale: capture.scale || 2,
-            selector: capture.selector,
-            fullPage: capture.fullPage,
-            wait: capture.wait || 0,
-            dark: capture.dark,
+
+          const result = await processScreenshot(buffer, {
+            quality: capture.quality || 80,
+            resize: capture.resize,
           });
+
+          const outDir = capture.out || detectOutputDir();
+          const paths = resolveOutputPaths(outDir, safeName(capture.name), {
+            overwrite: true,
+            format: capture.format || 'both',
+          });
+
+          saveAssets(paths, result);
+          spin.succeed(`${progress} ${capture.name} saved`);
+          completed++;
+        } catch (err) {
+          spin.fail(`${progress} ${capture.name}: ${err.message}`);
+          failed++;
         }
-
-        const result = await processScreenshot(buffer, {
-          quality: capture.quality || 80,
-          resize: capture.resize,
-        });
-
-        const outDir = capture.out || detectOutputDir();
-        const paths = resolveOutputPaths(outDir, safeName(capture.name), {
-          overwrite: true,
-          format: capture.format || 'both',
-        });
-
-        saveAssets(paths, result);
-        spin.succeed(`${progress} ${capture.name} saved`);
-        completed++;
-      } catch (err) {
-        spin.fail(`${progress} ${capture.name}: ${err.message}`);
-        failed++;
-      }
-    }));
+      }),
+    );
 
     await Promise.all(tasks);
 
@@ -458,12 +478,7 @@ program
 
     let res;
     try {
-      // Prefer interactive generation when available
-      if (process.stdin.isTTY && process.stdout.isTTY) {
-        res = await generateConfigInteractive();
-      } else {
-        res = generateConfig();
-      }
+      res = generateConfig();
     } catch (err) {
       log.error('Failed to create config: ' + err.message);
       process.exit(1);

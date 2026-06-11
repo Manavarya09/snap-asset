@@ -74,9 +74,15 @@ if (!RUN) {
   // cleanup local file
   try {
     const p = resolve('./tmp-uploads', key);
-    await fs.unlink(p).catch(() => {});
-    await fs.rmdir(resolve('./tmp-uploads')).catch(() => {});
-  } catch {}
+    await fs.unlink(p);
+  } catch {
+    // File may not exist
+  }
+  try {
+    await fs.rmdir(resolve('./tmp-uploads'));
+  } catch {
+    // Directory may not exist
+  }
 
   console.log('Uploader integration tests complete');
 })();

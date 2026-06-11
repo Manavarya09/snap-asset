@@ -1,7 +1,7 @@
 ---
 name: snap-asset
 description: "Claude Code plugin to capture screenshots of web pages, components, and extract site assets as optimized PNG+WebP. Trigger: 'screenshot', 'capture', 'snap', 'grab screenshot', 'extract assets', 'component screenshot', or '/snap-asset'."
-argument-hint: "<url-or-command> [options]"
+argument-hint: '<url-or-command> [options]'
 allowed-tools: Bash, Read, Glob, Write
 ---
 
@@ -40,38 +40,47 @@ Or use the slash command directly:
 ## Commands
 
 ### Capture a URL
+
 ```bash
 node "${CLAUDE_SKILL_DIR}/../../bin/snap-asset.js" <url> --name <name> [options]
 ```
 
 ### Capture a specific element
+
 ```bash
 node "${CLAUDE_SKILL_DIR}/../../bin/snap-asset.js" <url> --selector "<css>" --name <name>
 ```
 
 ### Extract all assets from a website
+
 ```bash
 node "${CLAUDE_SKILL_DIR}/../../bin/snap-asset.js" extract <url> --out public/extracted
 ```
+
 Captures: full page, viewport, sections (hero, header, footer, features, pricing), images, and component-like elements (cards, buttons, navbars).
 
 ### Capture a component in isolation
+
 ```bash
 node "${CLAUDE_SKILL_DIR}/../../bin/snap-asset.js" component ./src/components/Hero.tsx --name hero
 ```
+
 Spins up a temporary Vite server, renders the component with transparent background, captures it, then cleans up.
 
 ### Batch capture from config
+
 ```bash
 node "${CLAUDE_SKILL_DIR}/../../bin/snap-asset.js" batch
 ```
 
 ### Initialize config
+
 ```bash
 node "${CLAUDE_SKILL_DIR}/../../bin/snap-asset.js" init
 ```
 
 ## Options
+
 - `--name <name>` — output filename (auto-derived if omitted)
 - `--out <dir>` — output directory (auto-detects public/ or assets/)
 - `--selector <css>` — capture specific element
@@ -85,6 +94,7 @@ node "${CLAUDE_SKILL_DIR}/../../bin/snap-asset.js" init
 - `--wait <ms>` — wait before capture (for animations)
 
 ## Workflow for Claude
+
 1. Parse the user's request to identify: URL or component path, name, output dir, options
 2. If user mentions "dark mode", add `--dark` flag
 3. If user mentions a specific element, use `--selector`

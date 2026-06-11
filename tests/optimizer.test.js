@@ -10,7 +10,9 @@ const blankBuffer = await sharp({
     channels: 4,
     background: { r: 255, g: 0, b: 0, alpha: 1 },
   },
-}).png().toBuffer();
+})
+  .png()
+  .toBuffer();
 
 test('optimizePng should return a buffer', async () => {
   const result = await optimizePng(blankBuffer);

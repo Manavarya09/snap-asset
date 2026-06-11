@@ -4,42 +4,6 @@ import { join } from 'path';
 const CONFIG_NAME = 'snap-asset.config.json';
 const VALID_FORMATS = ['png', 'webp', 'avif', 'both'];
 
-const CONFIG_SCHEMA = {
-  defaults: {
-    type: 'object',
-    properties: ['out', 'width', 'height', 'scale', 'format', 'quality', 'dark'],
-  },
-  captures: {
-    type: 'array',
-    required: ['name'],
-  },
-  profiles: {
-    type: 'object',
-  },
-};
-
-/**
- * Load config with environment variable expansion.
- */
-function expandEnvVars(obj) {
-  if (typeof obj !== 'object' || obj === null) return obj;
-  
-  const result = Array.isArray(obj) ? [] : {};
-  
-  for (const [key, value] of Object.entries(obj)) {
-    if (typeof value === 'string' && value.startsWith('$')) {
-      const envVar = value.slice(1);
-      result[key] = process.env[envVar] || value;
-    } else if (typeof value === 'object') {
-      result[key] = expandEnvVars(value);
-    } else {
-      result[key] = value;
-    }
-  }
-  
-  return result;
-}
-
 function isPositiveInteger(value) {
   return Number.isInteger(value) && value > 0;
 }
@@ -132,7 +96,7 @@ export function loadConfig(cwd = process.cwd()) {
   validateConfig(raw);
 
   const defaults = raw.defaults || {};
-  const captures = (raw.captures || []).map(capture => ({
+  const captures = (raw.captures || []).map((capture) => ({
     ...defaults,
     ...capture,
   }));

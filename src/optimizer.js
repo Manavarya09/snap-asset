@@ -10,7 +10,9 @@ const OPTIMIZER_DEFAULTS = {
 };
 
 function parseResize(resize) {
-  if (!resize) return null;
+  if (!resize) {
+    return null;
+  }
   const match = /^([1-9]\d*)x([1-9]\d*)$/.exec(resize);
   if (!match) {
     throw new Error('Invalid resize value. Expected format WIDTHxHEIGHT, e.g. 800x600.');
@@ -41,7 +43,11 @@ export async function optimizePng(buffer, options = {}) {
  * Convert a PNG buffer to WebP.
  */
 export async function toWebp(buffer, options = {}) {
-  const { quality = OPTIMIZER_DEFAULTS.webpQuality, resize = null, lossless = OPTIMIZER_DEFAULTS.webpLossless } = options;
+  const {
+    quality = OPTIMIZER_DEFAULTS.webpQuality,
+    resize = null,
+    lossless = OPTIMIZER_DEFAULTS.webpLossless,
+  } = options;
   const dims = parseResize(resize);
 
   let pipeline = sharp(buffer).webp({ quality, lossless });

@@ -1,5 +1,5 @@
 import { mkdtempSync, writeFileSync, rmSync, existsSync, readFileSync } from 'fs';
-import { join, resolve, dirname } from 'path';
+import { join, resolve } from 'path';
 import { tmpdir } from 'os';
 import { spawn } from 'child_process';
 
@@ -9,17 +9,31 @@ import { spawn } from 'child_process';
 function detectFramework(filePath) {
   const ext = filePath.match(/\.(tsx?|jsx?|vue|svelte)$/)?.[1];
 
-  if (ext === 'vue') return 'vue';
-  if (ext === 'svelte') return 'svelte';
-  if (['tsx', 'jsx'].includes(ext)) return 'react';
+  if (ext === 'vue') {
+    return 'vue';
+  }
+  if (ext === 'svelte') {
+    return 'svelte';
+  }
+  if (['tsx', 'jsx'].includes(ext)) {
+    return 'react';
+  }
   if (ext === 'ts' || ext === 'js') {
     // Check file content for framework hints
     try {
       const content = readFileSync(filePath, 'utf-8');
-      if (content.includes('from \'react\'') || content.includes('from "react"')) return 'react';
-      if (content.includes('from \'vue\'') || content.includes('from "vue"')) return 'vue';
-      if (content.includes('from \'svelte\'') || content.includes('from "svelte"')) return 'svelte';
-    } catch {}
+      if (content.includes("from 'react'") || content.includes('from "react"')) {
+        return 'react';
+      }
+      if (content.includes("from 'vue'") || content.includes('from "vue"')) {
+        return 'vue';
+      }
+      if (content.includes("from 'svelte'") || content.includes('from "svelte"')) {
+        return 'svelte';
+      }
+    } catch {
+      // If we can't read the file, default to react
+    }
     return 'react'; // Default
   }
   return 'react';
@@ -104,7 +118,6 @@ export default defineConfig({
 `;
 }
 
-
 /**
  * Render a component in isolation using a temporary Vite project.
  * Returns { url, cleanup } where url is the dev server URL.
@@ -122,7 +135,9 @@ export async function renderComponent(componentPath, options = {}) {
 
   try {
     // Create minimal HTML
-    writeFileSync(join(tempDir, 'index.html'), `
+    writeFileSync(
+      join(tempDir, 'index.html'),
+      `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -139,7 +154,8 @@ export async function renderComponent(componentPath, options = {}) {
   <script type="module" src="./main.${framework === 'react' ? 'tsx' : 'js'}"></script>
 </body>
 </html>
-`);
+`,
+    );
 
     // Create entry file
     const entryContent = generateEntryFile(framework, componentPath, absComponentPath);
@@ -198,17 +214,25 @@ export async function renderComponent(componentPath, options = {}) {
       const cleanup = () => {
         try {
           viteProcess.kill('SIGTERM');
-        } catch {}
+        } catch {
+          // Process may already be dead
+        }
         try {
           rmSync(tempDir, { recursive: true, force: true });
-        } catch {}
+        } catch {
+          // Temp dir may already be cleaned up
+        }
       };
 
       return { url, cleanup };
     } catch (err) {
       // Ensure vite process is killed if it was started
       if (viteProcess) {
-        try { viteProcess.kill('SIGTERM'); } catch {}
+        try {
+          viteProcess.kill('SIGTERM');
+        } catch {
+          // Process may already be dead
+        }
       }
       throw err;
     }
@@ -216,7 +240,9 @@ export async function renderComponent(componentPath, options = {}) {
     // Always clean up the temp directory, even on error
     try {
       rmSync(tempDir, { recursive: true, force: true });
-    } catch {}
+    } catch {
+      // Temp dir may already be cleaned up
+    }
     throw err;
   }
 }

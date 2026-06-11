@@ -10,7 +10,9 @@
   "scripts": {
     "postinstall": "npx playwright install chromium --with-deps 2>/dev/null || npx playwright install chromium",
     "test": "node --test tests/*.test.js",
-    "start": "node bin/snap-asset.js"
+    "start": "node bin/snap-asset.js",
+    "lint": "eslint .",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
@@ -38,5 +40,12 @@
     "component-capture"
   ],
   "author": "masyv",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.4.1",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.6.0",
+    "prettier": "^3.8.4"
+  }
 }
