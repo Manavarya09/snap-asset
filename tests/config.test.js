@@ -1,13 +1,15 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { writeFileSync, rmSync, mkdirSync, existsSync } from 'fs';
+import { writeFileSync, rmSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { loadConfig, validateConfig } from '../src/config.js';
 
 const tempDir = join(process.cwd(), 'tests', 'temp-config');
 try {
   rmSync(tempDir, { recursive: true, force: true });
-} catch {}
+} catch {
+  // Directory may not exist yet
+}
 
 const configPath = join(tempDir, 'snap-asset.config.json');
 
@@ -15,9 +17,7 @@ try {
   test('validateConfig accepts valid configuration', () => {
     const validConfig = {
       defaults: { width: 800, height: 600, format: 'both' },
-      captures: [
-        { name: 'hero', url: 'https://example.com', selector: '.hero' },
-      ],
+      captures: [{ name: 'hero', url: 'https://example.com', selector: '.hero' }],
     };
     assert.doesNotThrow(() => validateConfig(validConfig));
   });
@@ -25,21 +25,24 @@ try {
   test('validateConfig rejects invalid capture entries', () => {
     const invalidConfig = {
       defaults: { width: 800 },
-      captures: [
-        { name: '', url: 'https://example.com' },
-      ],
+      captures: [{ name: '', url: 'https://example.com' }],
     };
     assert.throws(() => validateConfig(invalidConfig), /capture\[0\]\.name is required/);
   });
 
   test('loadConfig merges defaults and captures correctly', () => {
     mkdirSync(tempDir, { recursive: true });
-    writeFileSync(configPath, JSON.stringify({
-      defaults: { width: 900, height: 700, format: 'webp' },
-      captures: [
-        { name: 'hero', url: 'https://example.com', selector: '.hero' },
-      ],
-    }, null, 2));
+    writeFileSync(
+      configPath,
+      JSON.stringify(
+        {
+          defaults: { width: 900, height: 700, format: 'webp' },
+          captures: [{ name: 'hero', url: 'https://example.com', selector: '.hero' }],
+        },
+        null,
+        2,
+      ),
+    );
 
     const loaded = loadConfig(tempDir);
 
@@ -48,5 +51,9 @@ try {
     assert.equal(loaded.captures[0].format, 'webp');
   });
 } finally {
-  try { rmSync(tempDir, { recursive: true, force: true }); } catch {}
+  try {
+    rmSync(tempDir, { recursive: true, force: true });
+  } catch {
+    // Directory may not exist
+  }
 }

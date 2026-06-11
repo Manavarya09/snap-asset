@@ -8,7 +8,9 @@ const tempDir = join(process.cwd(), 'tests', 'temp-output');
 
 try {
   rmSync(tempDir, { recursive: true, force: true });
-} catch {}
+} catch {
+  // Directory may not exist yet
+}
 
 assert.ok(!existsSync(tempDir));
 
