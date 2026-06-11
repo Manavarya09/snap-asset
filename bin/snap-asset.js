@@ -107,6 +107,8 @@ program
   .option('--dark', 'emulate dark color scheme')
   .option('--full-page', 'capture full scrollable page')
   .option('--overwrite', 'overwrite existing files')
+  .option('--wait-for-lazy', 'wait for lazy-loaded images before capture')
+  .option('--network-throttle <profile>', 'simulate network conditions: fast-3g, slow-3g')
   .action(async (urls, opts) => {
     if (!urls || urls.length === 0) {
       program.help();
@@ -154,6 +156,8 @@ program
           dark: opts.dark,
           cookies,
           loginScript: opts.loginScript,
+          networkThrottling: opts.networkThrottle,
+          waitForLazy: opts.waitForLazy,
         });
 
         const result = await processScreenshot(buffer, {
@@ -215,6 +219,8 @@ program
   .option('--dark', 'emulate dark color scheme')
   .option('--wait <ms>', 'wait before capture', parseInt, 500)
   .option('--overwrite', 'overwrite existing files')
+  .option('--wait-for-lazy', 'wait for lazy-loaded images before capture')
+  .option('--network-throttle <profile>', 'simulate network conditions: fast-3g, slow-3g')
   .action(async (componentPath, opts) => {
     log.banner();
     log.info('Component', componentPath);
@@ -251,6 +257,8 @@ program
         selector: '#root > *',
         cookies,
         loginScript: opts.loginScript,
+        networkThrottling: opts.networkThrottle,
+        waitForLazy: opts.waitForLazy,
       });
 
       validateFormat(opts.format);
@@ -425,6 +433,8 @@ program
                 selector: '#root > *',
                 wait: capture.wait || 500,
                 dark: capture.dark,
+                networkThrottling: capture.networkThrottling,
+                waitForLazy: capture.waitForLazy,
               });
             } finally {
               cleanup();
@@ -438,6 +448,8 @@ program
               fullPage: capture.fullPage,
               wait: capture.wait || 0,
               dark: capture.dark,
+              networkThrottling: capture.networkThrottling,
+              waitForLazy: capture.waitForLazy,
             });
           }
 
