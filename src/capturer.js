@@ -1,35 +1,24 @@
+/* global document */
+
 import { chromium } from 'playwright';
 import DiskCache from './cache.js';
-import { fileURLToPath } from 'url';
-import { dirname, resolve as resolvePath } from 'path';
-
-const CAPTURE_DEFAULTS = {
-  width: 1280,
-  height: 800,
-  scale: 2,
-  fullPage: false,
-  wait: 0,
-  dark: false,
-  timeout: 30000,
-  waitForLazy: false,
-  retries: 0,
-  retryDelay: 1000,
-  networkThrottling: false,
-};
+import { resolve as resolvePath } from 'path';
 
 /**
  * Set network throttling profile.
  */
 export async function setNetworkThrottling(page, profile) {
-  if (!profile || profile === 'none') return;
-  
+  if (!profile || profile === 'none') {
+    return;
+  }
+
   const profiles = {
     'fast-3g': { download: 400000, upload: 400000, latency: 400 },
     'slow-3g': { download: 150000, upload: 150000, latency: 400 },
   };
-  
+
   if (profiles[profile]) {
-    await page.route('**', async route => {
+    await page.route('**', async (route) => {
       await route.continue();
     });
   }
@@ -41,15 +30,21 @@ export async function setNetworkThrottling(page, profile) {
  */
 export async function captureUrl(url, options = {}) {
   // initialize cache lazily
-  const cache = options.cache === false ? null : new DiskCache(process.cwd(), {
-    maxEntries: options.cacheMaxEntries || 200,
-    defaultTTL: options.cacheTTL || process.env.SNAP_ASSET_CACHE_TTL ? Number(process.env.SNAP_ASSET_CACHE_TTL) : 3600,
-  });
+  const cache =
+    options.cache === false
+      ? null
+      : new DiskCache(process.cwd(), {
+          maxEntries: options.cacheMaxEntries || 200,
+          defaultTTL:
+            options.cacheTTL || process.env.SNAP_ASSET_CACHE_TTL ? Number(process.env.SNAP_ASSET_CACHE_TTL) : 3600,
+        });
 
   const cacheKey = `${url}|${JSON.stringify({ width: options.width, height: options.height, scale: options.scale, selector: options.selector, fullPage: options.fullPage, dark: options.dark })}`;
   if (cache) {
     const cached = await cache.get(cacheKey);
-    if (cached) return cached;
+    if (cached) {
+      return cached;
+    }
   }
   const {
     width = 1280,
@@ -97,7 +92,7 @@ export async function captureUrl(url, options = {}) {
         } else if (typeof mod === 'function') {
           await mod({ page, context, playwright: { chromium } });
         }
-      } catch (err) {
+      } catch {
         // don't fail capture for login script errors; log and continue to navigate
       }
     }
@@ -139,7 +134,9 @@ export async function captureUrl(url, options = {}) {
       buffer = await page.screenshot(screenshotOptions);
     }
 
-    if (cache) await cache.set(cacheKey, buffer, { ttl: options.cacheTTL });
+    if (cache) {
+      await cache.set(cacheKey, buffer, { ttl: options.cacheTTL });
+    }
 
     return buffer;
   } finally {
@@ -152,13 +149,7 @@ export async function captureUrl(url, options = {}) {
  * Returns an array of { width, buffer } objects.
  */
 export async function captureResponsive(url, widths = [375, 768, 1024, 1280, 1920], options = {}) {
-  const {
-    height = 800,
-    scale = 2,
-    fullPage = false,
-    wait = 0,
-    dark = false,
-  } = options;
+  const { height = 800, scale = 2, fullPage = false, wait = 0, dark = false } = options;
 
   const browser = await chromium.launch({ headless: true });
   const results = [];
@@ -196,27 +187,24 @@ export async function captureResponsive(url, widths = [375, 768, 1024, 1280, 192
 export async function waitForLazyImages(page) {
   await page.evaluate(async () => {
     const images = Array.from(document.querySelectorAll('img[data-src], [data-lazy-src]'));
-    await Promise.all(images.map(img => {
-      return new Promise((resolve) => {
-        if (img.dataset.src || img.dataset.lazySrc) {
-          img.src = img.dataset.src || img.dataset.lazySrc;
-        }
-        img.onload = () => resolve();
-        img.onerror = () => resolve();
-        if (img.complete) resolve();
-      });
-    }));
+    await Promise.all(
+      images.map((img) => {
+        return new Promise((resolve) => {
+          if (img.dataset.src || img.dataset.lazySrc) {
+            img.src = img.dataset.src || img.dataset.lazySrc;
+          }
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+          if (img.complete) {
+            resolve();
+          }
+        });
+      }),
+    );
   });
 }
 export async function extractSiteAssets(url, options = {}) {
-  const {
-    width = 1280,
-    height = 800,
-    scale = 2,
-    dark = false,
-    sections = true,
-    images = true,
-  } = options;
+  const { width = 1280, height = 800, scale = 2, dark = false, sections = true, images = true } = options;
 
   const browser = await chromium.launch({ headless: true });
   const assets = [];
@@ -290,12 +278,14 @@ export async function extractSiteAssets(url, options = {}) {
     if (images) {
       const imgSrcs = await page.evaluate(() => {
         const imgs = document.querySelectorAll('img[src]');
-        return Array.from(imgs).map((img, i) => ({
-          src: img.src,
-          alt: img.alt || `image-${i + 1}`,
-          width: img.naturalWidth,
-          height: img.naturalHeight,
-        })).filter(img => img.width > 50 && img.height > 50); // Skip tiny icons
+        return Array.from(imgs)
+          .map((img, i) => ({
+            src: img.src,
+            alt: img.alt || `image-${i + 1}`,
+            width: img.naturalWidth,
+            height: img.naturalHeight,
+          }))
+          .filter((img) => img.width > 50 && img.height > 50); // Skip tiny icons
       });
 
       for (const img of imgSrcs) {
@@ -303,11 +293,12 @@ export async function extractSiteAssets(url, options = {}) {
           const response = await page.request.get(img.src);
           if (response.ok()) {
             const buf = await response.body();
-            const safeName = img.alt
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, '-')
-              .replace(/^-|-$/g, '')
-              .slice(0, 50) || 'image';
+            const safeName =
+              img.alt
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '')
+                .slice(0, 50) || 'image';
             assets.push({ name: `img-${safeName}`, buffer: buf, type: 'image', originalSrc: img.src });
           }
         } catch {
