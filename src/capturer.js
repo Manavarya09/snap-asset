@@ -4,24 +4,46 @@ import { chromium } from 'playwright';
 import DiskCache from './cache.js';
 import { resolve as resolvePath } from 'path';
 
+const THROTTLE_PROFILES = {
+  'fast-3g': { latency: 400, downloadThroughput: 400000, uploadThroughput: 400000 },
+  'slow-3g': { latency: 400, downloadThroughput: 150000, uploadThroughput: 150000 },
+};
+
 /**
- * Set network throttling profile.
+ * Set network throttling via CDP session.
  */
 export async function setNetworkThrottling(page, profile) {
-  if (!profile || profile === 'none') {
+  if (!profile || profile === 'none' || !THROTTLE_PROFILES[profile]) {
     return;
   }
+  const cdpSession = await page.context().newCDPSession(page);
+  await cdpSession.send('Network.emulateNetworkConditions', {
+    offline: false,
+    ...THROTTLE_PROFILES[profile],
+  });
+}
 
-  const profiles = {
-    'fast-3g': { download: 400000, upload: 400000, latency: 400 },
-    'slow-3g': { download: 150000, upload: 150000, latency: 400 },
-  };
-
-  if (profiles[profile]) {
-    await page.route('**', async (route) => {
-      await route.continue();
-    });
-  }
+/**
+ * Wait for lazy-loaded images that use data-src or data-lazy-src attributes.
+ */
+export async function waitForLazyImages(page) {
+  await page.evaluate(async () => {
+    const images = Array.from(document.querySelectorAll('img[data-src], [data-lazy-src]'));
+    await Promise.all(
+      images.map((img) => {
+        return new Promise((resolve) => {
+          if (img.dataset.src || img.dataset.lazySrc) {
+            img.src = img.dataset.src || img.dataset.lazySrc;
+          }
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+          if (img.complete) {
+            resolve();
+          }
+        });
+      }),
+    );
+  });
 }
 
 /**
@@ -39,7 +61,7 @@ export async function captureUrl(url, options = {}) {
             options.cacheTTL || process.env.SNAP_ASSET_CACHE_TTL ? Number(process.env.SNAP_ASSET_CACHE_TTL) : 3600,
         });
 
-  const cacheKey = `${url}|${JSON.stringify({ width: options.width, height: options.height, scale: options.scale, selector: options.selector, fullPage: options.fullPage, dark: options.dark })}`;
+  const cacheKey = `${url}|${JSON.stringify({ width: options.width, height: options.height, scale: options.scale, selector: options.selector, fullPage: options.fullPage, dark: options.dark, networkThrottling: options.networkThrottling })}`;
   if (cache) {
     const cached = await cache.get(cacheKey);
     if (cached) {
@@ -57,6 +79,8 @@ export async function captureUrl(url, options = {}) {
     timeout = 30000,
     headers = undefined,
     loginScript = undefined,
+    networkThrottling = undefined,
+    waitForLazy = false,
   } = options;
 
   const browser = await chromium.launch({ headless: true });
@@ -82,6 +106,14 @@ export async function captureUrl(url, options = {}) {
 
     const page = await context.newPage();
 
+    if (networkThrottling) {
+      try {
+        await setNetworkThrottling(page, networkThrottling);
+      } catch {
+        // Throttling is a best-effort optimization; continue without it
+      }
+    }
+
     // Run optional login script prior to navigation if provided.
     if (loginScript) {
       try {
@@ -93,7 +125,7 @@ export async function captureUrl(url, options = {}) {
           await mod({ page, context, playwright: { chromium } });
         }
       } catch {
-        // don't fail capture for login script errors; log and continue to navigate
+        // Login script failed; capture will proceed unauthenticated
       }
     }
 
@@ -101,6 +133,14 @@ export async function captureUrl(url, options = {}) {
       waitUntil: 'networkidle',
       timeout,
     });
+
+    if (waitForLazy) {
+      try {
+        await waitForLazyImages(page);
+      } catch {
+        // Lazy image loading is best-effort
+      }
+    }
 
     if (wait > 0) {
       await page.waitForTimeout(wait);
@@ -181,28 +221,6 @@ export async function captureResponsive(url, widths = [375, 768, 1024, 1280, 192
   }
 }
 
-/**
- * Wait for lazy-loaded images on page.
- */
-export async function waitForLazyImages(page) {
-  await page.evaluate(async () => {
-    const images = Array.from(document.querySelectorAll('img[data-src], [data-lazy-src]'));
-    await Promise.all(
-      images.map((img) => {
-        return new Promise((resolve) => {
-          if (img.dataset.src || img.dataset.lazySrc) {
-            img.src = img.dataset.src || img.dataset.lazySrc;
-          }
-          img.onload = () => resolve();
-          img.onerror = () => resolve();
-          if (img.complete) {
-            resolve();
-          }
-        });
-      }),
-    );
-  });
-}
 export async function extractSiteAssets(url, options = {}) {
   const { width = 1280, height = 800, scale = 2, dark = false, sections = true, images = true } = options;
 
