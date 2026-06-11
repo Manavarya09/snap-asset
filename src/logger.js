@@ -42,9 +42,7 @@ export function error(message) {
 }
 
 export function saved(filePath, sizeKb) {
-  const size = sizeKb < 1024
-    ? `${Math.round(sizeKb)} KB`
-    : `${(sizeKb / 1024).toFixed(1)} MB`;
+  const size = sizeKb < 1024 ? `${Math.round(sizeKb)} KB` : `${(sizeKb / 1024).toFixed(1)} MB`;
   console.log(`  ${chalk.green('saved')}  ${chalk.white(filePath)}  ${chalk.dim(`(${size})`)}`);
 }
 

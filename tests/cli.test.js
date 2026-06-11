@@ -13,11 +13,9 @@ test('validateClip should return null when input is empty', () => {
 });
 
 test('validateClip should throw on invalid clip format', async () => {
-  await assert.rejects(() => Promise.resolve(validateClip('10,20,30')),
-    { message: /Invalid clip value/ });
+  await assert.rejects(() => Promise.resolve(validateClip('10,20,30')), { message: /Invalid clip value/ });
 });
 
 test('validateClip should throw on negative values', async () => {
-  await assert.rejects(() => Promise.resolve(validateClip('-1,0,100,100')),
-    { message: /Invalid clip value/ });
+  await assert.rejects(() => Promise.resolve(validateClip('-1,0,100,100')), { message: /Invalid clip value/ });
 });

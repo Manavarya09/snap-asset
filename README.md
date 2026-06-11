@@ -132,6 +132,7 @@ snap-asset extract https://myapp.com --out public/assets
 ```
 
 This grabs:
+
 - Full page screenshot
 - Viewport (above-the-fold) screenshot
 - Sections: hero, header, footer, features, pricing, testimonials, CTA
@@ -198,7 +199,7 @@ Options:
     "width": 1280,
     "height": 800,
     "scale": 2,
-    
+
     "quality": 80
   },
   "captures": [
@@ -268,7 +269,6 @@ Notes
 - Tests are guarded and will only run when `RUN_UPLOADER_INTEGRATION=1` is set to avoid leaking secrets in regular CI runs.
 - If you want to run uploads locally against a real provider, export the required env vars or create a credentials file for GCS and set `RUN_UPLOADER_INTEGRATION=1`.
 
-
 ---
 
 ## Claude Code Integration
@@ -313,27 +313,27 @@ URL / Component Path
 
 ## Use Cases
 
-| Scenario | Command |
-|---|---|
-| Portfolio hero image | `snap-asset https://myapp.com --name hero` |
-| Feature showcase cards | `snap-asset https://myapp.com --selector ".card" --name feature` |
-| Competitor analysis | `snap-asset extract https://competitor.com` |
-| Component library docs | `snap-asset component ./src/Button.tsx` |
-| Landing page assets | `snap-asset batch` with config |
-| Dark mode variant | `snap-asset https://myapp.com --dark --name hero-dark` |
-| Mobile screenshot | `snap-asset https://myapp.com --width 375 --height 812 --name mobile` |
+| Scenario               | Command                                                               |
+| ---------------------- | --------------------------------------------------------------------- |
+| Portfolio hero image   | `snap-asset https://myapp.com --name hero`                            |
+| Feature showcase cards | `snap-asset https://myapp.com --selector ".card" --name feature`      |
+| Competitor analysis    | `snap-asset extract https://competitor.com`                           |
+| Component library docs | `snap-asset component ./src/Button.tsx`                               |
+| Landing page assets    | `snap-asset batch` with config                                        |
+| Dark mode variant      | `snap-asset https://myapp.com --dark --name hero-dark`                |
+| Mobile screenshot      | `snap-asset https://myapp.com --width 375 --height 812 --name mobile` |
 
 ---
 
 ## Tech Stack
 
-| Tool | Purpose |
-|---|---|
-| [Playwright](https://playwright.dev) | Headless browser automation |
-| [Sharp](https://sharp.pixelplumbing.com) | High-performance image processing |
-| [Commander](https://github.com/tj/commander.js) | CLI argument parsing |
-| [Chalk](https://github.com/chalk/chalk) | Terminal colors |
-| [Ora](https://github.com/sindresorhus/ora) | Terminal spinners |
+| Tool                                            | Purpose                           |
+| ----------------------------------------------- | --------------------------------- |
+| [Playwright](https://playwright.dev)            | Headless browser automation       |
+| [Sharp](https://sharp.pixelplumbing.com)        | High-performance image processing |
+| [Commander](https://github.com/tj/commander.js) | CLI argument parsing              |
+| [Chalk](https://github.com/chalk/chalk)         | Terminal colors                   |
+| [Ora](https://github.com/sindresorhus/ora)      | Terminal spinners                 |
 
 ---
 

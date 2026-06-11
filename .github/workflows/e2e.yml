@@ -3,9 +3,9 @@ name: E2E Tests
 on:
   workflow_dispatch:
   push:
-    branches: [ 'phase/**' ]
+    branches: ['phase/**']
   pull_request:
-    branches: [ 'phase/**' ]
+    branches: ['phase/**']
 
 jobs:
   e2e:
