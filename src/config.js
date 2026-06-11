@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 
 const CONFIG_NAME = 'snap-asset.config.json';
@@ -113,6 +113,8 @@ export function generateConfig(cwd = process.cwd()) {
   if (existsSync(configPath)) {
     return { created: false, path: configPath };
   }
+
+  mkdirSync(cwd, { recursive: true });
 
   const starter = {
     defaults: {

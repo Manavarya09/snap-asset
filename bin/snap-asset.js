@@ -67,7 +67,7 @@ function validateClip(clip) {
   };
 }
 
-export { validateClip };
+export { validateClip, validateFormat, validateResize };
 
 const program = new Command();
 
