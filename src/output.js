@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, rmSync } from 'fs';
 import { join, basename } from 'path';
 
 /**
@@ -239,4 +239,12 @@ export function saveMetadata(paths, info) {
   }
 
   writeFileSync(paths.metadataPath, JSON.stringify(metadata, null, 2));
+}
+
+/**
+ * Recursively remove a directory.
+ * @param {string} dirPath
+ */
+export function cleanup(dirPath) {
+  rmSync(dirPath, { recursive: true, force: true });
 }
