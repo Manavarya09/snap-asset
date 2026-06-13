@@ -9,6 +9,27 @@ const OPTIMIZER_DEFAULTS = {
   webpLossless: false,
 };
 
+/**
+ * @typedef {Object} OptimizerOptions
+ * @property {number} [quality]
+ * @property {string} [resize]
+ * @property {boolean} [lossless]
+ *
+ * @typedef {Object} ProcessResult
+ * @property {Buffer} png
+ * @property {Buffer} webp
+ * @property {Buffer} avif
+ * @property {Buffer} jpg
+ * @property {number} pngSize
+ * @property {number} webpSize
+ * @property {number} avifSize
+ * @property {number} jpgSize
+ */
+
+/**
+ * @param {string|null|undefined} resize
+ * @returns {{width:number,height:number}|null}
+ */
 function parseResize(resize) {
   if (!resize) {
     return null;
@@ -21,7 +42,9 @@ function parseResize(resize) {
 }
 
 /**
- * Optimize a PNG buffer - reduce file size without quality loss.
+ * @param {Buffer} buffer
+ * @param {OptimizerOptions} [options]
+ * @returns {Promise<Buffer>}
  */
 export async function optimizePng(buffer, options = {}) {
   const { resize = null } = options;
@@ -40,7 +63,9 @@ export async function optimizePng(buffer, options = {}) {
 }
 
 /**
- * Convert a PNG buffer to WebP.
+ * @param {Buffer} buffer
+ * @param {OptimizerOptions} [options]
+ * @returns {Promise<Buffer>}
  */
 export async function toWebp(buffer, options = {}) {
   const {
@@ -60,7 +85,9 @@ export async function toWebp(buffer, options = {}) {
 }
 
 /**
- * Convert a PNG buffer to AVIF.
+ * @param {Buffer} buffer
+ * @param {OptimizerOptions} [options]
+ * @returns {Promise<Buffer>}
  */
 export async function toAvif(buffer, options = {}) {
   const { quality = 50, resize = null } = options;
@@ -76,7 +103,9 @@ export async function toAvif(buffer, options = {}) {
 }
 
 /**
- * Convert a PNG buffer to JPEG.
+ * @param {Buffer} buffer
+ * @param {OptimizerOptions} [options]
+ * @returns {Promise<Buffer>}
  */
 export async function toJpeg(buffer, options = {}) {
   const { quality = 85, resize = null } = options;
@@ -92,8 +121,9 @@ export async function toJpeg(buffer, options = {}) {
 }
 
 /**
- * Process a screenshot buffer into optimized PNG + WebP + AVIF.
- * Returns { png: Buffer, webp: Buffer, avif: Buffer, pngSize: number, webpSize: number, avifSize: number }
+ * @param {Buffer} buffer
+ * @param {OptimizerOptions} [options]
+ * @returns {Promise<ProcessResult>}
  */
 export async function processScreenshot(buffer, options = {}) {
   const [png, webp, avif, jpg] = await Promise.all([
@@ -116,7 +146,8 @@ export async function processScreenshot(buffer, options = {}) {
 }
 
 /**
- * Get image metadata (width, height, format).
+ * @param {Buffer} buffer
+ * @returns {Promise<sharp.Metadata>}
  */
 export async function getMetadata(buffer) {
   return sharp(buffer).metadata();
