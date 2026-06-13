@@ -1,6 +1,6 @@
 /* global document */
 
-import { chromium } from 'playwright';
+import { chromium, devices } from 'playwright';
 import DiskCache from './cache.js';
 import { resolve as resolvePath } from 'path';
 
@@ -39,6 +39,16 @@ const THROTTLE_PROFILES = {
  * @property {number} [pdfScale]
  * @property {string} [proxy]
  * @property {{username:string, password:string}} [auth]
+ * @property {boolean} [recordVideo]
+ * @property {string} [css]
+ * @property {string} [waitForSelector]
+ * @property {number} [waitForTimeout]
+ * @property {Array<{type:string, selector?:string, text?:string, ms?:number}>} [beforeCapture]
+ * @property {string} [device]
+ * @property {string} [locale]
+ * @property {string} [timezone]
+ * @property {{latitude:number, longitude:number}} [geolocation]
+ * @property {'light'|'dark'|'no-preference'} [colorScheme]
  *
  * @typedef {Object} Asset
  * @property {string} name
@@ -102,7 +112,7 @@ export async function waitForLazyImages(page) {
 /**
  * @param {string} url
  * @param {CaptureOptions & {retries?: number}} [options]
- * @returns {Promise<Buffer>}
+ * @returns {Promise<{buffer: Buffer, screenshots: Buffer[]}>}
  */
 export async function captureUrl(url, options = {}) {
   const { retries = 2, ...rest } = options;
@@ -116,11 +126,34 @@ export async function captureUrl(url, options = {}) {
             rest.cacheTTL || process.env.SNAP_ASSET_CACHE_TTL ? Number(process.env.SNAP_ASSET_CACHE_TTL) : 3600,
         });
 
-  const cacheKey = `${url}|${JSON.stringify({ width: rest.width, height: rest.height, scale: rest.scale, selector: rest.selector, fullPage: rest.fullPage, dark: rest.dark, networkThrottling: rest.networkThrottling, pdf: rest.pdf, pdfFormat: rest.pdfFormat, pdfLandscape: rest.pdfLandscape, pdfMargin: rest.pdfMargin, pdfScale: rest.pdfScale })}`;
+  const captureKeyFields = {
+    width: rest.width,
+    height: rest.height,
+    scale: rest.scale,
+    selector: rest.selector,
+    fullPage: rest.fullPage,
+    dark: rest.dark,
+    networkThrottling: rest.networkThrottling,
+    pdf: rest.pdf,
+    pdfFormat: rest.pdfFormat,
+    pdfLandscape: rest.pdfLandscape,
+    pdfMargin: rest.pdfMargin,
+    pdfScale: rest.pdfScale,
+    recordVideo: rest.recordVideo,
+    css: rest.css,
+    waitForSelector: rest.waitForSelector,
+    device: rest.device,
+    locale: rest.locale,
+    timezone: rest.timezone,
+    geolocation: rest.geolocation,
+    colorScheme: rest.colorScheme,
+    beforeCapture: rest.beforeCapture,
+  };
+  const cacheKey = `${url}|${JSON.stringify(captureKeyFields)}`;
   if (cache) {
     const cached = await cache.get(cacheKey);
     if (cached) {
-      return pdf ? { pdf: cached } : cached;
+      return rest.pdf ? { pdf: cached, screenshots: [] } : { buffer: cached, screenshots: [] };
     }
   }
 
@@ -146,6 +179,16 @@ export async function captureUrl(url, options = {}) {
     pdfScale = 1,
     proxy = undefined,
     auth = undefined,
+    recordVideo = false,
+    css = undefined,
+    waitForSelector = undefined,
+    waitForTimeout = undefined,
+    beforeCapture = undefined,
+    device = undefined,
+    locale = undefined,
+    timezone = undefined,
+    geolocation = undefined,
+    colorScheme = undefined,
   } = rest;
 
   const launchOptions = { headless: true };
@@ -163,14 +206,32 @@ export async function captureUrl(url, options = {}) {
       const browser = await chromium.launch(launchOptions);
 
       try {
-        const contextOptions = {
-          viewport: { width, height },
-          deviceScaleFactor: scale,
-          colorScheme: dark ? 'dark' : 'light',
-        };
+        const contextOptions = {};
+
+        if (device && devices[device]) {
+          Object.assign(contextOptions, devices[device]);
+        }
+
+        contextOptions.viewport = { width, height };
+        contextOptions.deviceScaleFactor = scale;
+        contextOptions.colorScheme = colorScheme || (dark ? 'dark' : 'light');
 
         if (userAgent) {
           contextOptions.userAgent = userAgent;
+        }
+        if (locale) {
+          contextOptions.locale = locale;
+        }
+        if (timezone) {
+          contextOptions.timezoneId = timezone;
+        }
+        if (geolocation) {
+          contextOptions.geolocation = geolocation;
+          contextOptions.permissions = ['geolocation'];
+        }
+
+        if (recordVideo) {
+          contextOptions.recordVideo = { dir: 'videos/' };
         }
 
         const context = await browser.newContext(contextOptions);
@@ -240,6 +301,53 @@ export async function captureUrl(url, options = {}) {
           await page.waitForTimeout(wait);
         }
 
+        if (css) {
+          try {
+            await page.addStyleTag({ content: css });
+          } catch {
+            // CSS injection best-effort
+          }
+        }
+
+        if (waitForSelector) {
+          try {
+            await page.waitForSelector(waitForSelector, { timeout: 10000 });
+          } catch {
+            // waitForSelector best-effort
+          }
+        }
+
+        if (waitForTimeout > 0) {
+          await page.waitForTimeout(waitForTimeout);
+        }
+
+        const screenshots = [];
+        if (Array.isArray(beforeCapture)) {
+          for (const action of beforeCapture) {
+            try {
+              switch (action.type) {
+                case 'click':
+                  await page.click(action.selector);
+                  break;
+                case 'type':
+                  await page.fill(action.selector, action.text);
+                  break;
+                case 'hover':
+                  await page.hover(action.selector);
+                  break;
+                case 'wait':
+                  await page.waitForTimeout(action.ms);
+                  break;
+                case 'screenshot':
+                  screenshots.push(await page.screenshot({ type: 'png' }));
+                  break;
+              }
+            } catch {
+              // Action best-effort
+            }
+          }
+        }
+
         let buffer;
 
         if (pdf) {
@@ -280,7 +388,13 @@ export async function captureUrl(url, options = {}) {
           await cache.set(cacheKey, buffer, { ttl: rest.cacheTTL });
         }
 
-        return pdf ? { pdf: buffer } : buffer;
+        if (recordVideo) {
+          await context.close();
+          const videoPath = context.videoPath() || null;
+          return { buffer, videoPath, recorded: true, screenshots };
+        }
+
+        return pdf ? { pdf: buffer, screenshots } : { buffer, screenshots };
       } finally {
         await browser.close();
       }
