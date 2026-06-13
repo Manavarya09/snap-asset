@@ -19,10 +19,13 @@ try {
 }
 
 import { processScreenshot } from '../src/optimizer.js';
+import { applyWatermark } from '../src/watermark.js';
+import { sendWebhook } from '../src/webhook.js';
 import {
   detectOutputDir,
   resolveOutputPaths,
   saveAssets,
+  savePdf,
   saveMetadata,
   safeName,
   nameFromUrl,
@@ -31,7 +34,7 @@ import {
 import { loadConfig, generateConfig } from '../src/config.js';
 import { renderComponent } from '../src/component-renderer.js';
 import * as log from '../src/logger.js';
-import { validateFormat, validateResize, validateClip } from '../src/commands/validate.js';
+import { validateFormat, validateResize, validateClip, validateFile, parseUrlList } from '../src/commands/validate.js';
 import pLimit from 'p-limit';
 
 export { validateClip, validateFormat, validateResize };
@@ -58,7 +61,8 @@ program
   .option('--no-sandbox', 'disable sandbox for CI environments')
   .option('--user-agent <string>', 'override browser user agent')
   .option('--timestamp', 'append timestamp to output filename')
-  .option('--viewport <name>', 'device preset: mobile (375x812), tablet (768x1024), desktop (1280x800), wide (1920x1080)');
+  .option('--viewport <name>', 'device preset: mobile (375x812), tablet (768x1024), desktop (1280x800), wide (1920x1080)')
+  .option('--proxy <url>', 'HTTP proxy URL');
 
 // Apply global logger config before any action runs
 program.hook('preAction', (thisCommand) => {
@@ -90,7 +94,23 @@ program
   .option('--no-cache', 'disable disk cache')
   .option('--metadata', 'save JSON metadata sidecar file')
   .option('--retries <n>', 'retry count for failed captures', parseInt, 2)
+  .option('--watermark-text <text>', 'overlay text watermark on captured image')
+  .option('--webhook-url <url>', 'send capture result to webhook URL')
+  .option('--batch-file <path>', 'file with newline-separated URLs to capture')
+  .option('--cookies-file <path>', 'Path to JSON file with cookies array')
+  .option('--auth <credentials>', 'HTTP authentication (username:password)')
+  .option('--pdf', 'capture as PDF instead of screenshot')
+  .option('--pdf-format <format>', 'PDF paper format (A4, Letter, etc.)', 'A4')
+  .option('--pdf-landscape', 'PDF landscape orientation')
+  .option('--pdf-margin <margin>', 'PDF margin (e.g. 1cm)', '1cm')
+  .option('--pdf-scale <n>', 'PDF scale factor (0.1-2)', parseFloat, 1)
   .action(async (urls, opts) => {
+    if (opts.batchFile) {
+      const content = validateFile(opts.batchFile);
+      const fileContent = await import('fs').then((m) => m.promises.readFile(content, 'utf8'));
+      urls = parseUrlList(fileContent);
+    }
+
     if (!urls || urls.length === 0) {
       program.help();
       return;
@@ -118,22 +138,31 @@ program
       }
 
       validateFormat(opts.format);
-      const results = [];
-      for (let index = 0; index < urls.length; index++) {
-        const url = urls[index];
-        spin.text = `Capturing screenshot for ${url}...`;
-        // load cookies file if provided
+      async function captureOne(url, index) {
+        const usePdf = opts.pdf;
+
         let cookies = undefined;
-        if (opts.cookies) {
+        const cookiesPath = opts.cookies || opts.cookiesFile;
+        if (cookiesPath) {
           try {
-            const txt = await import('fs').then((m) => m.promises.readFile(opts.cookies, 'utf8'));
+            const txt = await import('fs').then((m) => m.promises.readFile(cookiesPath, 'utf8'));
             cookies = JSON.parse(txt);
           } catch {
             // If cookies can't be read, proceed without them
           }
         }
 
-        const buffer = await captureUrl(url, {
+        let auth = undefined;
+        if (opts.auth) {
+          const colonIdx = opts.auth.indexOf(':');
+          if (colonIdx > 0) {
+            auth = { username: opts.auth.slice(0, colonIdx), password: opts.auth.slice(colonIdx + 1) };
+          }
+        }
+
+        spin.text = usePdf ? `Generating PDF for ${url}...` : `Capturing screenshot for ${url}...`;
+
+        const captureResult = await captureUrl(url, {
           width: opts.width,
           height: opts.height,
           scale: opts.scale,
@@ -150,12 +179,42 @@ program
           noSandbox: progOpts.noSandbox,
           userAgent: progOpts.userAgent,
           retries: opts.retries,
+          pdf: usePdf,
+          pdfFormat: opts.pdfFormat,
+          pdfLandscape: opts.pdfLandscape,
+          pdfMargin: opts.pdfMargin,
+          pdfScale: opts.pdfScale,
+          proxy: progOpts.proxy,
+          auth,
         });
 
-        const result = await processScreenshot(buffer, {
+        if (usePdf) {
+          const outDir = opts.out || detectOutputDir();
+          const name = safeName(
+            opts.name && urls.length === 1
+              ? opts.name
+              : `${opts.name || nameFromUrl(url)}${urls.length > 1 ? `-${index + 1}` : ''}`,
+          );
+          const paths = resolveOutputPaths(outDir, name, {
+            overwrite: opts.overwrite,
+            format: 'pdf',
+            timestamp: progOpts.timestamp,
+          });
+          return { paths, url, pdfBuffer: captureResult.pdf };
+        }
+
+        let result = await processScreenshot(captureResult, {
           quality: opts.quality,
           resize: validateResize(opts.resize),
         });
+
+        if (opts.watermarkText) {
+          const wb = await applyWatermark(result.png, opts.watermarkText);
+          result = await processScreenshot(wb, {
+            quality: opts.quality,
+            resize: validateResize(opts.resize),
+          });
+        }
 
         const outDir = opts.out || detectOutputDir();
         const name = safeName(
@@ -170,35 +229,69 @@ program
           metadata: opts.metadata,
         });
 
-        results.push({ paths, result, url });
+        return { paths, result, url };
+      }
+
+      let results;
+      if (opts.batchFile) {
+        const limit = pLimit(3);
+        results = await Promise.all(urls.map((url, i) => limit(() => captureOne(url, i))));
+      } else {
+        results = [];
+        for (let index = 0; index < urls.length; index++) {
+          results.push(await captureOne(urls[index], index));
+        }
       }
 
       spin.stop();
 
-      for (const { paths, result, url } of results) {
-        for (const { path, size } of saveAssets(paths, result)) {
+      for (const entry of results) {
+        if (entry.pdfBuffer) {
+          const { path, size } = savePdf(entry.pdfBuffer, entry.paths.pdfPath);
           log.saved(path, size / 1024);
+          log.info('Captured PDF', entry.url);
+          log.divider();
+        } else {
+          const { paths, result, url } = entry;
+          for (const { path, size } of saveAssets(paths, result)) {
+            log.saved(path, size / 1024);
+          }
+          if (result.pngSize && result.webpSize) {
+            log.savings('WebP', result.pngSize / 1024, result.webpSize / 1024);
+          }
+          if (result.pngSize && result.avifSize) {
+            log.savings('AVIF', result.pngSize / 1024, result.avifSize / 1024);
+          }
+          if (paths.metadataPath) {
+            saveMetadata(paths, {
+              url,
+              width: opts.width,
+              height: opts.height,
+              scale: opts.scale,
+              pngSize: result.pngSize,
+              webpSize: result.webpSize,
+              avifSize: result.avifSize,
+              jpgSize: result.jpgSize,
+            });
+          }
+          log.info('Captured', url);
+          log.divider();
+
+          if (opts.webhookUrl) {
+            const formats = ['png', 'webp', 'avif', 'jpg'].filter((f) => result[f]);
+            sendWebhook(opts.webhookUrl, {
+              url,
+              timestamp: new Date().toISOString(),
+              formats,
+              size: Object.fromEntries(formats.map((f) => [f, result[`${f}Size`]])),
+              metadata: {
+                width: opts.width,
+                height: opts.height,
+                scale: opts.scale,
+              },
+            }).catch(() => {});
+          }
         }
-        if (result.pngSize && result.webpSize) {
-          log.savings('WebP', result.pngSize / 1024, result.webpSize / 1024);
-        }
-        if (result.pngSize && result.avifSize) {
-          log.savings('AVIF', result.pngSize / 1024, result.avifSize / 1024);
-        }
-        if (paths.metadataPath) {
-          saveMetadata(paths, {
-            url,
-            width: opts.width,
-            height: opts.height,
-            scale: opts.scale,
-            pngSize: result.pngSize,
-            webpSize: result.webpSize,
-            avifSize: result.avifSize,
-            jpgSize: result.jpgSize,
-          });
-        }
-        log.info('Captured', url);
-        log.divider();
       }
 
       log.success('Done!');
