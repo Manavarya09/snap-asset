@@ -103,11 +103,17 @@ export function nameFromComponent(filePath) {
  * @returns {OutputPaths}
  */
 export function resolveOutputPaths(outDir, name, options = {}) {
-  const { overwrite = false, format = 'both' } = options;
+  const { overwrite = false, format = 'both', timestamp = false, metadata = false } = options;
 
   mkdirSync(outDir, { recursive: true });
 
   let finalName = name;
+
+  if (timestamp) {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    finalName = `${finalName}-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  }
 
   if (!overwrite) {
     let counter = 0;
@@ -142,6 +148,10 @@ export function resolveOutputPaths(outDir, name, options = {}) {
   }
   if (format === 'jpeg' || format === 'jpg') {
     result.jpgPath = join(outDir, `${finalName}.jpg`);
+  }
+
+  if (metadata) {
+    result.metadataPath = join(outDir, `${finalName}.json`);
   }
 
   return result;
