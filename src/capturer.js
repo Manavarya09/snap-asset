@@ -4,13 +4,56 @@ import { chromium } from 'playwright';
 import DiskCache from './cache.js';
 import { resolve as resolvePath } from 'path';
 
+/** @type {Object<string, {latency: number, downloadThroughput: number, uploadThroughput: number}>} */
 const THROTTLE_PROFILES = {
   'fast-3g': { latency: 400, downloadThroughput: 400000, uploadThroughput: 400000 },
   'slow-3g': { latency: 400, downloadThroughput: 150000, uploadThroughput: 150000 },
 };
 
 /**
- * Set network throttling via CDP session.
+ * @typedef {Object} CaptureOptions
+ * @property {number} [width]
+ * @property {number} [height]
+ * @property {number} [scale]
+ * @property {string|null} [selector]
+ * @property {boolean} [fullPage]
+ * @property {number} [wait]
+ * @property {boolean} [dark]
+ * @property {number} [timeout]
+ * @property {Object} [headers]
+ * @property {string} [loginScript]
+ * @property {string} [networkThrottling]
+ * @property {boolean} [waitForLazy]
+ * @property {Array<{name:string,value:string,domain?:string,path?:string}>} [cookies]
+ * @property {{x:number,y:number,width:number,height:number}} [clip]
+ * @property {boolean} [cache]
+ * @property {number} [cacheMaxEntries]
+ * @property {number} [cacheTTL]
+ *
+ * @typedef {Object} Asset
+ * @property {string} name
+ * @property {Buffer} buffer
+ * @property {string} type
+ * @property {string} [originalSrc]
+ *
+ * @typedef {Object} ResponsiveResult
+ * @property {number} width
+ * @property {Buffer} buffer
+ *
+ * @typedef {Object} ExtractOptions
+ * @property {number} [width]
+ * @property {number} [height]
+ * @property {number} [scale]
+ * @property {boolean} [dark]
+ * @property {boolean} [sections]
+ * @property {boolean} [images]
+ * @property {Array<{name:string,value:string,domain?:string,path?:string}>} [cookies]
+ * @property {string} [loginScript]
+ */
+
+/**
+ * @param {import('playwright').Page} page
+ * @param {string} profile
  */
 export async function setNetworkThrottling(page, profile) {
   if (!profile || profile === 'none' || !THROTTLE_PROFILES[profile]) {
@@ -24,7 +67,7 @@ export async function setNetworkThrottling(page, profile) {
 }
 
 /**
- * Wait for lazy-loaded images that use data-src or data-lazy-src attributes.
+ * @param {import('playwright').Page} page
  */
 export async function waitForLazyImages(page) {
   await page.evaluate(async () => {
@@ -47,11 +90,11 @@ export async function waitForLazyImages(page) {
 }
 
 /**
- * Launch a headless browser and capture a screenshot.
- * Supports full-page, element-specific, and viewport captures.
+ * @param {string} url
+ * @param {CaptureOptions} [options]
+ * @returns {Promise<Buffer>}
  */
 export async function captureUrl(url, options = {}) {
-  // initialize cache lazily
   const cache =
     options.cache === false
       ? null
@@ -94,12 +137,10 @@ export async function captureUrl(url, options = {}) {
 
     const context = await browser.newContext(contextOptions);
 
-    // Add cookies for authenticated page captures
     if (options.cookies && Array.isArray(options.cookies)) {
       await context.addCookies(options.cookies);
     }
 
-    // Add extra headers if provided
     if (headers && typeof headers === 'object') {
       await context.setExtraHTTPHeaders(headers);
     }
@@ -110,11 +151,10 @@ export async function captureUrl(url, options = {}) {
       try {
         await setNetworkThrottling(page, networkThrottling);
       } catch {
-        // Throttling is a best-effort optimization; continue without it
+        // Throttling best-effort
       }
     }
 
-    // Run optional login script prior to navigation if provided.
     if (loginScript) {
       try {
         const scriptPath = resolvePath(process.cwd(), loginScript);
@@ -125,7 +165,7 @@ export async function captureUrl(url, options = {}) {
           await mod({ page, context, playwright: { chromium } });
         }
       } catch {
-        // Login script failed; capture will proceed unauthenticated
+        // Login script best-effort
       }
     }
 
@@ -138,7 +178,7 @@ export async function captureUrl(url, options = {}) {
       try {
         await waitForLazyImages(page);
       } catch {
-        // Lazy image loading is best-effort
+        // Lazy images best-effort
       }
     }
 
@@ -185,8 +225,10 @@ export async function captureUrl(url, options = {}) {
 }
 
 /**
- * Capture a URL at multiple viewport widths for responsive testing.
- * Returns an array of { width, buffer } objects.
+ * @param {string} url
+ * @param {number[]} [widths]
+ * @param {CaptureOptions} [options]
+ * @returns {Promise<ResponsiveResult[]>}
  */
 export async function captureResponsive(url, widths = [375, 768, 1024, 1280, 1920], options = {}) {
   const { height = 800, scale = 2, fullPage = false, wait = 0, dark = false } = options;
@@ -221,10 +263,16 @@ export async function captureResponsive(url, widths = [375, 768, 1024, 1280, 192
   }
 }
 
+/**
+ * @param {string} url
+ * @param {ExtractOptions} [options]
+ * @returns {Promise<Asset[]>}
+ */
 export async function extractSiteAssets(url, options = {}) {
   const { width = 1280, height = 800, scale = 2, dark = false, sections = true, images = true } = options;
 
   const browser = await chromium.launch({ headless: true });
+  /** @type {Asset[]} */
   const assets = [];
 
   try {
@@ -241,16 +289,14 @@ export async function extractSiteAssets(url, options = {}) {
       timeout: 30000,
     });
 
-    // 1. Full page screenshot
     const fullPageBuffer = await page.screenshot({ type: 'png', fullPage: true });
     assets.push({ name: 'full-page', buffer: fullPageBuffer, type: 'screenshot' });
 
-    // 2. Above-the-fold (viewport) screenshot
     const viewportBuffer = await page.screenshot({ type: 'png' });
     assets.push({ name: 'viewport', buffer: viewportBuffer, type: 'screenshot' });
 
-    // 3. Extract section screenshots
     if (sections) {
+      /** @type {Array<{sel:string, name:string}>} */
       const sectionSelectors = [
         { sel: 'header, nav, [role="banner"]', name: 'header' },
         { sel: 'main > section:first-child, .hero, [class*="hero"], #hero', name: 'hero' },
@@ -272,11 +318,10 @@ export async function extractSiteAssets(url, options = {}) {
             assets.push({ name: `section-${name}`, buffer: buf, type: 'section' });
           }
         } catch {
-          // Section not found, skip
+          // Section not found
         }
       }
 
-      // Also capture all <section> elements by index
       const sectionCount = await page.locator('section').count();
       for (let i = 0; i < Math.min(sectionCount, 10); i++) {
         try {
@@ -287,12 +332,11 @@ export async function extractSiteAssets(url, options = {}) {
             assets.push({ name: `section-${i + 1}`, buffer: buf, type: 'section' });
           }
         } catch {
-          // Skip
+          // Section not found
         }
       }
     }
 
-    // 4. Extract images from the page
     if (images) {
       const imgSrcs = await page.evaluate(() => {
         const imgs = document.querySelectorAll('img[src]');
@@ -303,7 +347,7 @@ export async function extractSiteAssets(url, options = {}) {
             width: img.naturalWidth,
             height: img.naturalHeight,
           }))
-          .filter((img) => img.width > 50 && img.height > 50); // Skip tiny icons
+          .filter((img) => img.width > 50 && img.height > 50);
       });
 
       for (const img of imgSrcs) {
@@ -311,13 +355,13 @@ export async function extractSiteAssets(url, options = {}) {
           const response = await page.request.get(img.src);
           if (response.ok()) {
             const buf = await response.body();
-            const safeName =
+            const safeNameStr =
               img.alt
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/^-|-$/g, '')
                 .slice(0, 50) || 'image';
-            assets.push({ name: `img-${safeName}`, buffer: buf, type: 'image', originalSrc: img.src });
+            assets.push({ name: `img-${safeNameStr}`, buffer: buf, type: 'image', originalSrc: img.src });
           }
         } catch {
           // Skip failed downloads
@@ -325,7 +369,7 @@ export async function extractSiteAssets(url, options = {}) {
       }
     }
 
-    // 5. Extract component-like elements (cards, buttons, etc.)
+    /** @type {Array<{sel:string, name:string}>} */
     const componentSelectors = [
       { sel: '[class*="card"], [class*="Card"]', name: 'card' },
       { sel: '[class*="button"], button:not([class*="close"])', name: 'button' },
@@ -347,7 +391,7 @@ export async function extractSiteAssets(url, options = {}) {
           }
         }
       } catch {
-        // Skip
+        // Component not found
       }
     }
 
