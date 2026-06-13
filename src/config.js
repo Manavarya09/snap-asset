@@ -22,6 +22,14 @@ const VALID_FORMATS = ['png', 'webp', 'avif', 'both'];
  * @property {string} [out]
  * @property {boolean} [waitForLazy]
  * @property {string} [networkThrottling]
+ * @property {string} [css]
+ * @property {string} [waitForSelector]
+ * @property {Array<{type:string, selector?:string, text?:string, ms?:number}>} [beforeCapture]
+ * @property {string} [device]
+ * @property {string} [locale]
+ * @property {string} [timezone]
+ * @property {{latitude:number, longitude:number}} [geolocation]
+ * @property {'light'|'dark'|'no-preference'} [colorScheme]
  *
  * @typedef {Object} DefaultsConfig
  * @property {string} [out]
@@ -114,6 +122,27 @@ function validateCapture(capture, index) {
 
   if (capture.resize !== undefined && !isResizeString(capture.resize)) {
     throw new Error(`capture[${index}].resize must be a string like 800x600`);
+  }
+
+  if (capture.css !== undefined && typeof capture.css !== 'string') {
+    throw new Error(`capture[${index}].css must be a string`);
+  }
+
+  if (capture.waitForSelector !== undefined && typeof capture.waitForSelector !== 'string') {
+    throw new Error(`capture[${index}].waitForSelector must be a string`);
+  }
+
+  if (capture.colorScheme !== undefined && !['light', 'dark', 'no-preference'].includes(capture.colorScheme)) {
+    throw new Error(`capture[${index}].colorScheme must be "light", "dark", or "no-preference"`);
+  }
+
+  if (capture.geolocation !== undefined) {
+    if (typeof capture.geolocation !== 'object' || capture.geolocation === null) {
+      throw new Error(`capture[${index}].geolocation must be an object with latitude and longitude`);
+    }
+    if (typeof capture.geolocation.latitude !== 'number' || typeof capture.geolocation.longitude !== 'number') {
+      throw new Error(`capture[${index}].geolocation must have numeric latitude and longitude fields`);
+    }
   }
 }
 
