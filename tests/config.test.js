@@ -74,6 +74,83 @@ test('validateConfig validates resize format', () => {
   assert.throws(() => validateConfig({ captures: [{ name: 't', url: 'https://x.com', resize: 'bad' }] }), /resize/);
 });
 
+test('validateConfig rejects invalid scale (0, negative, non-integer)', () => {
+  assert.throws(
+    () => validateConfig({ captures: [{ name: 't', url: 'https://x.com', scale: 0 }] }),
+    /scale.*positive/,
+  );
+  assert.throws(
+    () => validateConfig({ captures: [{ name: 't', url: 'https://x.com', scale: -1 }] }),
+    /scale.*positive/,
+  );
+  assert.throws(
+    () => validateConfig({ captures: [{ name: 't', url: 'https://x.com', scale: 1.5 }] }),
+    /scale.*positive/,
+  );
+  assert.doesNotThrow(() => validateConfig({ captures: [{ name: 't', url: 'https://x.com', scale: 1 }] }));
+  assert.doesNotThrow(() => validateConfig({ captures: [{ name: 't', url: 'https://x.com', scale: 2 }] }));
+});
+
+test('validateConfig rejects invalid quality (0, 101, string)', () => {
+  assert.throws(
+    () => validateConfig({ captures: [{ name: 't', url: 'https://x.com', quality: 0 }] }),
+    /quality/,
+  );
+  assert.throws(
+    () => validateConfig({ captures: [{ name: 't', url: 'https://x.com', quality: 101 }] }),
+    /quality/,
+  );
+  assert.throws(
+    () => validateConfig({ captures: [{ name: 't', url: 'https://x.com', quality: 'high' }] }),
+    /quality/,
+  );
+  assert.doesNotThrow(() => validateConfig({ captures: [{ name: 't', url: 'https://x.com', quality: 1 }] }));
+  assert.doesNotThrow(() => validateConfig({ captures: [{ name: 't', url: 'https://x.com', quality: 100 }] }));
+});
+
+test('validateConfig rejects invalid format with wrong case', () => {
+  assert.throws(
+    () => validateConfig({ captures: [{ name: 't', url: 'https://x.com', format: 'PNG' }] }),
+    /format/,
+  );
+  assert.throws(
+    () => validateConfig({ captures: [{ name: 't', url: 'https://x.com', format: 'WebP' }] }),
+    /format/,
+  );
+  assert.throws(
+    () => validateConfig({ captures: [{ name: 't', url: 'https://x.com', format: 'AVIF' }] }),
+    /format/,
+  );
+});
+
+test('validateConfig accepts component-only captures', () => {
+  assert.doesNotThrow(() => validateConfig({ captures: [{ name: 'btn', component: './src/Button.tsx' }] }));
+  assert.doesNotThrow(() => validateConfig({ captures: [{ name: 'card', component: 'src/Card.svelte' }] }));
+});
+
+test('validateConfig rejects captures with invalid types for url/component/selector', () => {
+  assert.throws(
+    () => validateConfig({ captures: [{ name: 't', url: 123 }] }),
+    /url must be a string/,
+  );
+  assert.throws(
+    () => validateConfig({ captures: [{ name: 't', component: 456 }] }),
+    /component must be a string/,
+  );
+  assert.throws(
+    () => validateConfig({ captures: [{ name: 't', url: 'https://x.com', selector: true }] }),
+    /selector must be a string/,
+  );
+});
+
+test('loadConfig returns null for empty directory', () => {
+  const emptyDir = join(process.cwd(), 'tests', 'temp-config-empty');
+  mkdirSync(emptyDir, { recursive: true });
+  const result = loadConfig(emptyDir);
+  assert.equal(result, null);
+  rmSync(emptyDir, { recursive: true, force: true });
+});
+
 test('validateConfig validates component path', () => {
   assert.doesNotThrow(() => validateConfig({ captures: [{ name: 't', component: './src/Button.tsx' }] }));
 });
