@@ -29,6 +29,8 @@ const THROTTLE_PROFILES = {
  * @property {boolean} [cache]
  * @property {number} [cacheMaxEntries]
  * @property {number} [cacheTTL]
+ * @property {boolean} [noSandbox]
+ * @property {string} [userAgent]
  *
  * @typedef {Object} Asset
  * @property {string} name
@@ -124,9 +126,15 @@ export async function captureUrl(url, options = {}) {
     loginScript = undefined,
     networkThrottling = undefined,
     waitForLazy = false,
+    noSandbox = false,
+    userAgent = undefined,
   } = options;
 
-  const browser = await chromium.launch({ headless: true });
+  const launchOptions = { headless: true };
+  if (noSandbox) {
+    launchOptions.args = ['--no-sandbox'];
+  }
+  const browser = await chromium.launch(launchOptions);
 
   try {
     const contextOptions = {
@@ -134,6 +142,10 @@ export async function captureUrl(url, options = {}) {
       deviceScaleFactor: scale,
       colorScheme: dark ? 'dark' : 'light',
     };
+
+    if (userAgent) {
+      contextOptions.userAgent = userAgent;
+    }
 
     const context = await browser.newContext(contextOptions);
 
