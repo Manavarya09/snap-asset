@@ -5,6 +5,9 @@ import crypto from 'crypto';
 const CACHE_DIR = '.snap-asset-cache';
 const INDEX_FILE = 'index.json';
 
+/**
+ * @param {string} dir
+ */
 async function ensureDir(dir) {
   try {
     await fs.mkdir(dir, { recursive: true });
@@ -13,20 +16,54 @@ async function ensureDir(dir) {
   }
 }
 
+/**
+ * @param {string} key
+ * @returns {string}
+ */
 function hashKey(key) {
   return crypto.createHash('sha256').update(key).digest('hex');
 }
 
+/**
+ * @typedef {Object} CacheMeta
+ * @property {string} key
+ * @property {number} size
+ * @property {number} createdAt
+ * @property {number} lastAccess
+ * @property {number|null} expiresAt
+ *
+ * @typedef {Object} CacheOptions
+ * @property {number} [maxEntries]
+ * @property {number} [defaultTTL]
+ *
+ * @typedef {Object} SetOptions
+ * @property {number} [ttl]
+ */
+
 export default class DiskCache {
+  /** @type {string} */ root;
+  /** @type {string} */ dir;
+  /** @type {string} */ indexPath;
+  /** @type {number} */ maxEntries;
+  /** @type {number} */ defaultTTL;
+  /** @type {Object<string, CacheMeta>|null} */ index;
+
+  /**
+   * @param {string} [root]
+   * @param {CacheOptions} [opts]
+   */
   constructor(root = process.cwd(), opts = {}) {
     this.root = root;
     this.dir = join(this.root, CACHE_DIR);
     this.indexPath = join(this.dir, INDEX_FILE);
     this.maxEntries = opts.maxEntries || 200;
-    this.defaultTTL = typeof opts.defaultTTL === 'number' ? opts.defaultTTL : 3600; // seconds
+    this.defaultTTL = typeof opts.defaultTTL === 'number' ? opts.defaultTTL : 3600;
     this.index = null;
   }
 
+  /**
+   * @returns {Promise<Object<string, CacheMeta>>}
+   */
   async _loadIndex() {
     if (this.index) {
       return this.index;
@@ -45,6 +82,10 @@ export default class DiskCache {
     await fs.writeFile(this.indexPath, JSON.stringify(this.index || {}, null, 2), 'utf8');
   }
 
+  /**
+   * @param {string} key
+   * @returns {Promise<Buffer|null>}
+   */
   async get(key) {
     const idx = await this._loadIndex();
     const id = hashKey(key);
@@ -61,25 +102,29 @@ export default class DiskCache {
 
     try {
       const buf = await fs.readFile(join(this.dir, id));
-      // update mtime/access for LRU
       meta.lastAccess = now;
       idx[id] = meta;
       await this._saveIndex();
       return buf;
     } catch {
-      // missing file
       delete idx[id];
       await this._saveIndex();
       return null;
     }
   }
 
+  /**
+   * @param {string} key
+   * @param {Buffer} buffer
+   * @param {SetOptions} [opts]
+   */
   async set(key, buffer, opts = {}) {
     await ensureDir(this.dir);
     const idx = await this._loadIndex();
     const id = hashKey(key);
     const now = Date.now();
     const ttl = typeof opts.ttl === 'number' ? opts.ttl : this.defaultTTL;
+    /** @type {CacheMeta} */
     const meta = {
       key,
       size: Buffer.byteLength(buffer),
@@ -91,10 +136,8 @@ export default class DiskCache {
     await fs.writeFile(join(this.dir, id), buffer);
     idx[id] = meta;
 
-    // Evict if we exceed maxEntries
     const ids = Object.keys(idx);
     if (ids.length > this.maxEntries) {
-      // sort by lastAccess ascending (oldest first)
       const sorted = ids.sort((a, b) => (idx[a].lastAccess || 0) - (idx[b].lastAccess || 0));
       const toRemove = sorted.slice(0, ids.length - this.maxEntries);
       for (const r of toRemove) {
@@ -105,6 +148,10 @@ export default class DiskCache {
     await this._saveIndex();
   }
 
+  /**
+   * @param {string} id
+   * @param {Object<string, CacheMeta>} [idxRef]
+   */
   async _removeEntry(id, idxRef) {
     const idx = idxRef || (await this._loadIndex());
     try {
