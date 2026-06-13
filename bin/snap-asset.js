@@ -30,42 +30,8 @@ import {
 import { loadConfig, generateConfig } from '../src/config.js';
 import { renderComponent } from '../src/component-renderer.js';
 import * as log from '../src/logger.js';
+import { validateFormat, validateResize, validateClip } from '../src/commands/validate.js';
 import pLimit from 'p-limit';
-
-const VALID_FORMATS = ['png', 'webp', 'avif', 'jpeg', 'jpg', 'both'];
-
-function validateFormat(format) {
-  if (!VALID_FORMATS.includes(format)) {
-    throw new Error(`Invalid format '${format}'. Expected one of: ${VALID_FORMATS.join(', ')}`);
-  }
-  return format;
-}
-
-function validateResize(resize) {
-  if (!resize) {
-    return null;
-  }
-  if (!/^[1-9]\d*x[1-9]\d*$/.test(resize)) {
-    throw new Error('Invalid resize value. Expected WIDTHxHEIGHT, e.g. 800x600.');
-  }
-  return resize;
-}
-
-function validateClip(clip) {
-  if (!clip) {
-    return null;
-  }
-  const parts = clip.split(',').map(Number);
-  if (parts.length !== 4 || parts.some((v) => Number.isNaN(v) || v < 0)) {
-    throw new Error('Invalid clip value. Expected x,y,width,height with non-negative integers.');
-  }
-  return {
-    x: parts[0],
-    y: parts[1],
-    width: parts[2],
-    height: parts[3],
-  };
-}
 
 export { validateClip, validateFormat, validateResize };
 
