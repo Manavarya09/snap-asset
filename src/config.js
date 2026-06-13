@@ -133,6 +133,15 @@ export function validateConfig(raw) {
     throw new Error('captures must be an array');
   }
 
+  if (raw.batch !== undefined) {
+    if (typeof raw.batch !== 'object' || raw.batch === null) {
+      throw new Error('batch must be an object');
+    }
+    if (raw.batch.concurrency !== undefined && !isPositiveInteger(raw.batch.concurrency)) {
+      throw new Error('batch.concurrency must be a positive integer');
+    }
+  }
+
   raw.captures.forEach((capture, index) => validateCapture(capture, index));
 }
 
