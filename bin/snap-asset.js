@@ -89,6 +89,7 @@ program
   .option('--network-throttle <profile>', 'simulate network conditions: fast-3g, slow-3g')
   .option('--no-cache', 'disable disk cache')
   .option('--metadata', 'save JSON metadata sidecar file')
+  .option('--retries <n>', 'retry count for failed captures', parseInt, 2)
   .action(async (urls, opts) => {
     if (!urls || urls.length === 0) {
       program.help();
@@ -148,6 +149,7 @@ program
           cache: opts.cache,
           noSandbox: progOpts.noSandbox,
           userAgent: progOpts.userAgent,
+          retries: opts.retries,
         });
 
         const result = await processScreenshot(buffer, {
@@ -227,6 +229,7 @@ program
   .option('--network-throttle <profile>', 'simulate network conditions: fast-3g, slow-3g')
   .option('--no-cache', 'disable disk cache')
   .option('--metadata', 'save JSON metadata sidecar file')
+  .option('--retries <n>', 'retry count for failed captures', parseInt, 2)
   .action(async (componentPath, opts) => {
     const progOpts = program.opts();
     log.banner();
@@ -275,6 +278,7 @@ program
         cache: opts.cache,
         noSandbox: progOpts.noSandbox,
         userAgent: progOpts.userAgent,
+        retries: opts.retries,
       });
 
       validateFormat(opts.format);
@@ -424,6 +428,7 @@ program
   .option('--concurrency <n>', 'max concurrent captures', parseInt)
   .option('--cookies <path>', 'Path to JSON file with cookies array to add')
   .option('--login-script <path>', 'Path to JS module that exports a default async login function (page)')
+  .option('--retries <n>', 'retry count for failed captures', parseInt, 2)
   .action(async (opts) => {
     const progOpts = program.opts();
     log.banner();
@@ -468,6 +473,7 @@ program
                 waitForLazy: capture.waitForLazy,
                 noSandbox: progOpts.noSandbox,
                 userAgent: progOpts.userAgent,
+                retries: opts.retries,
               });
             } finally {
               cleanup();
@@ -485,6 +491,7 @@ program
               waitForLazy: capture.waitForLazy,
               noSandbox: progOpts.noSandbox,
               userAgent: progOpts.userAgent,
+              retries: opts.retries,
             });
           }
 
