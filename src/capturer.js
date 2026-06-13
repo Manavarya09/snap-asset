@@ -32,6 +32,13 @@ const THROTTLE_PROFILES = {
  * @property {boolean} [noSandbox]
  * @property {string} [userAgent]
  * @property {number} [retries]
+ * @property {boolean} [pdf]
+ * @property {string} [pdfFormat]
+ * @property {boolean} [pdfLandscape]
+ * @property {string} [pdfMargin]
+ * @property {number} [pdfScale]
+ * @property {string} [proxy]
+ * @property {{username:string, password:string}} [auth]
  *
  * @typedef {Object} Asset
  * @property {string} name
@@ -109,11 +116,11 @@ export async function captureUrl(url, options = {}) {
             rest.cacheTTL || process.env.SNAP_ASSET_CACHE_TTL ? Number(process.env.SNAP_ASSET_CACHE_TTL) : 3600,
         });
 
-  const cacheKey = `${url}|${JSON.stringify({ width: rest.width, height: rest.height, scale: rest.scale, selector: rest.selector, fullPage: rest.fullPage, dark: rest.dark, networkThrottling: rest.networkThrottling })}`;
+  const cacheKey = `${url}|${JSON.stringify({ width: rest.width, height: rest.height, scale: rest.scale, selector: rest.selector, fullPage: rest.fullPage, dark: rest.dark, networkThrottling: rest.networkThrottling, pdf: rest.pdf, pdfFormat: rest.pdfFormat, pdfLandscape: rest.pdfLandscape, pdfMargin: rest.pdfMargin, pdfScale: rest.pdfScale })}`;
   if (cache) {
     const cached = await cache.get(cacheKey);
     if (cached) {
-      return cached;
+      return pdf ? { pdf: cached } : cached;
     }
   }
 
@@ -132,11 +139,21 @@ export async function captureUrl(url, options = {}) {
     waitForLazy = false,
     noSandbox = false,
     userAgent = undefined,
+    pdf = false,
+    pdfFormat = 'A4',
+    pdfLandscape = false,
+    pdfMargin = '1cm',
+    pdfScale = 1,
+    proxy = undefined,
+    auth = undefined,
   } = rest;
 
   const launchOptions = { headless: true };
   if (noSandbox) {
     launchOptions.args = ['--no-sandbox'];
+  }
+  if (proxy) {
+    launchOptions.proxy = { server: proxy };
   }
 
   let lastError;
@@ -190,10 +207,26 @@ export async function captureUrl(url, options = {}) {
           }
         }
 
+        if (auth && auth.username && auth.password) {
+          try {
+            await page.authenticate(auth);
+          } catch {
+            // Auth best-effort
+          }
+        }
+
         await page.goto(url, {
           waitUntil: 'networkidle',
           timeout,
         });
+
+        if (rest.cookies && Array.isArray(rest.cookies)) {
+          try {
+            await page.context().addCookies(rest.cookies);
+          } catch {
+            // Cookies best-effort
+          }
+        }
 
         if (waitForLazy) {
           try {
@@ -209,7 +242,15 @@ export async function captureUrl(url, options = {}) {
 
         let buffer;
 
-        if (selector) {
+        if (pdf) {
+          buffer = await page.pdf({
+            format: pdfFormat,
+            landscape: pdfLandscape,
+            margin: { top: pdfMargin, right: pdfMargin, bottom: pdfMargin, left: pdfMargin },
+            scale: pdfScale,
+            printBackground: true,
+          });
+        } else if (selector) {
           const element = page.locator(selector).first();
           await element.waitFor({ state: 'visible', timeout: 10000 });
           buffer = await element.screenshot({
@@ -239,7 +280,7 @@ export async function captureUrl(url, options = {}) {
           await cache.set(cacheKey, buffer, { ttl: rest.cacheTTL });
         }
 
-        return buffer;
+        return pdf ? { pdf: buffer } : buffer;
       } finally {
         await browser.close();
       }
