@@ -31,6 +31,7 @@ const THROTTLE_PROFILES = {
  * @property {number} [cacheTTL]
  * @property {boolean} [noSandbox]
  * @property {string} [userAgent]
+ * @property {number} [retries]
  *
  * @typedef {Object} Asset
  * @property {string} name
@@ -93,26 +94,29 @@ export async function waitForLazyImages(page) {
 
 /**
  * @param {string} url
- * @param {CaptureOptions} [options]
+ * @param {CaptureOptions & {retries?: number}} [options]
  * @returns {Promise<Buffer>}
  */
 export async function captureUrl(url, options = {}) {
+  const { retries = 2, ...rest } = options;
+
   const cache =
-    options.cache === false
+    rest.cache === false
       ? null
       : new DiskCache(process.cwd(), {
-          maxEntries: options.cacheMaxEntries || 200,
+          maxEntries: rest.cacheMaxEntries || 200,
           defaultTTL:
-            options.cacheTTL || process.env.SNAP_ASSET_CACHE_TTL ? Number(process.env.SNAP_ASSET_CACHE_TTL) : 3600,
+            rest.cacheTTL || process.env.SNAP_ASSET_CACHE_TTL ? Number(process.env.SNAP_ASSET_CACHE_TTL) : 3600,
         });
 
-  const cacheKey = `${url}|${JSON.stringify({ width: options.width, height: options.height, scale: options.scale, selector: options.selector, fullPage: options.fullPage, dark: options.dark, networkThrottling: options.networkThrottling })}`;
+  const cacheKey = `${url}|${JSON.stringify({ width: rest.width, height: rest.height, scale: rest.scale, selector: rest.selector, fullPage: rest.fullPage, dark: rest.dark, networkThrottling: rest.networkThrottling })}`;
   if (cache) {
     const cached = await cache.get(cacheKey);
     if (cached) {
       return cached;
     }
   }
+
   const {
     width = 1280,
     height = 800,
@@ -128,112 +132,127 @@ export async function captureUrl(url, options = {}) {
     waitForLazy = false,
     noSandbox = false,
     userAgent = undefined,
-  } = options;
+  } = rest;
 
   const launchOptions = { headless: true };
   if (noSandbox) {
     launchOptions.args = ['--no-sandbox'];
   }
-  const browser = await chromium.launch(launchOptions);
 
-  try {
-    const contextOptions = {
-      viewport: { width, height },
-      deviceScaleFactor: scale,
-      colorScheme: dark ? 'dark' : 'light',
-    };
+  let lastError;
 
-    if (userAgent) {
-      contextOptions.userAgent = userAgent;
-    }
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const browser = await chromium.launch(launchOptions);
 
-    const context = await browser.newContext(contextOptions);
-
-    if (options.cookies && Array.isArray(options.cookies)) {
-      await context.addCookies(options.cookies);
-    }
-
-    if (headers && typeof headers === 'object') {
-      await context.setExtraHTTPHeaders(headers);
-    }
-
-    const page = await context.newPage();
-
-    if (networkThrottling) {
       try {
-        await setNetworkThrottling(page, networkThrottling);
-      } catch {
-        // Throttling best-effort
-      }
-    }
-
-    if (loginScript) {
-      try {
-        const scriptPath = resolvePath(process.cwd(), loginScript);
-        const mod = await import(scriptPath);
-        if (typeof mod.default === 'function') {
-          await mod.default({ page, context, playwright: { chromium } });
-        } else if (typeof mod === 'function') {
-          await mod({ page, context, playwright: { chromium } });
-        }
-      } catch {
-        // Login script best-effort
-      }
-    }
-
-    await page.goto(url, {
-      waitUntil: 'networkidle',
-      timeout,
-    });
-
-    if (waitForLazy) {
-      try {
-        await waitForLazyImages(page);
-      } catch {
-        // Lazy images best-effort
-      }
-    }
-
-    if (wait > 0) {
-      await page.waitForTimeout(wait);
-    }
-
-    let buffer;
-
-    if (selector) {
-      const element = page.locator(selector).first();
-      await element.waitFor({ state: 'visible', timeout: 10000 });
-      buffer = await element.screenshot({
-        type: 'png',
-        omitBackground: true,
-      });
-    } else {
-      const screenshotOptions = {
-        type: 'png',
-        fullPage,
-      };
-
-      if (options.clip) {
-        screenshotOptions.clip = {
-          x: options.clip.x,
-          y: options.clip.y,
-          width: options.clip.width,
-          height: options.clip.height,
+        const contextOptions = {
+          viewport: { width, height },
+          deviceScaleFactor: scale,
+          colorScheme: dark ? 'dark' : 'light',
         };
-        screenshotOptions.fullPage = false;
+
+        if (userAgent) {
+          contextOptions.userAgent = userAgent;
+        }
+
+        const context = await browser.newContext(contextOptions);
+
+        if (rest.cookies && Array.isArray(rest.cookies)) {
+          await context.addCookies(rest.cookies);
+        }
+
+        if (headers && typeof headers === 'object') {
+          await context.setExtraHTTPHeaders(headers);
+        }
+
+        const page = await context.newPage();
+
+        if (networkThrottling) {
+          try {
+            await setNetworkThrottling(page, networkThrottling);
+          } catch {
+            // Throttling best-effort
+          }
+        }
+
+        if (loginScript) {
+          try {
+            const scriptPath = resolvePath(process.cwd(), loginScript);
+            const mod = await import(scriptPath);
+            if (typeof mod.default === 'function') {
+              await mod.default({ page, context, playwright: { chromium } });
+            } else if (typeof mod === 'function') {
+              await mod({ page, context, playwright: { chromium } });
+            }
+          } catch {
+            // Login script best-effort
+          }
+        }
+
+        await page.goto(url, {
+          waitUntil: 'networkidle',
+          timeout,
+        });
+
+        if (waitForLazy) {
+          try {
+            await waitForLazyImages(page);
+          } catch {
+            // Lazy images best-effort
+          }
+        }
+
+        if (wait > 0) {
+          await page.waitForTimeout(wait);
+        }
+
+        let buffer;
+
+        if (selector) {
+          const element = page.locator(selector).first();
+          await element.waitFor({ state: 'visible', timeout: 10000 });
+          buffer = await element.screenshot({
+            type: 'png',
+            omitBackground: true,
+          });
+        } else {
+          const screenshotOptions = {
+            type: 'png',
+            fullPage,
+          };
+
+          if (rest.clip) {
+            screenshotOptions.clip = {
+              x: rest.clip.x,
+              y: rest.clip.y,
+              width: rest.clip.width,
+              height: rest.clip.height,
+            };
+            screenshotOptions.fullPage = false;
+          }
+
+          buffer = await page.screenshot(screenshotOptions);
+        }
+
+        if (cache) {
+          await cache.set(cacheKey, buffer, { ttl: rest.cacheTTL });
+        }
+
+        return buffer;
+      } finally {
+        await browser.close();
       }
-
-      buffer = await page.screenshot(screenshotOptions);
+    } catch (err) {
+      lastError = err;
+      if (attempt < retries) {
+        const delay = Math.pow(2, attempt) * 1000;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
     }
-
-    if (cache) {
-      await cache.set(cacheKey, buffer, { ttl: options.cacheTTL });
-    }
-
-    return buffer;
-  } finally {
-    await browser.close();
   }
+
+  throw lastError;
 }
 
 /**
