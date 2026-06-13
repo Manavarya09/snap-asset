@@ -118,6 +118,9 @@ program
   .option('--timezone <timezone>', 'browser timezone (e.g. America/New_York)')
   .option('--geolocation <lat,lon>', 'geolocation coordinates (e.g. "40.7128,-74.0060")')
   .option('--color-scheme <scheme>', 'color scheme: light, dark, no-preference')
+  .option('--capture-console', 'capture console log messages')
+  .option('--collect-metrics', 'collect performance metrics')
+  .option('--accessibility', 'capture accessibility snapshot')
   .action(async (urls, opts) => {
     if (opts.batchFile) {
       const content = validateFile(opts.batchFile);
@@ -211,6 +214,9 @@ program
             ? ((parts) => ({ latitude: parts[0], longitude: parts[1] }))(opts.geolocation.split(',').map(Number))
             : undefined,
           colorScheme: opts.colorScheme,
+          captureConsole: opts.captureConsole,
+          collectMetrics: opts.collectMetrics,
+          accessibility: opts.accessibility,
         });
 
         if (usePdf) {
