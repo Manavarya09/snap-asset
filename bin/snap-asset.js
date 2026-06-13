@@ -46,6 +46,10 @@ const VIEWPORT_PRESETS = {
   wide: { width: 1920, height: 1080 },
 };
 
+function collectPlugins(value, previous) {
+  return previous.concat([value]);
+}
+
 const program = new Command();
 
 program
@@ -62,7 +66,8 @@ program
   .option('--user-agent <string>', 'override browser user agent')
   .option('--timestamp', 'append timestamp to output filename')
   .option('--viewport <name>', 'device preset: mobile (375x812), tablet (768x1024), desktop (1280x800), wide (1920x1080)')
-  .option('--proxy <url>', 'HTTP proxy URL');
+  .option('--proxy <url>', 'HTTP proxy URL')
+  .option('--plugin <path>', 'path to a plugin JS file (repeatable)', collectPlugins, []);
 
 // Apply global logger config before any action runs
 program.hook('preAction', (thisCommand) => {
@@ -104,6 +109,15 @@ program
   .option('--pdf-landscape', 'PDF landscape orientation')
   .option('--pdf-margin <margin>', 'PDF margin (e.g. 1cm)', '1cm')
   .option('--pdf-scale <n>', 'PDF scale factor (0.1-2)', parseFloat, 1)
+  .option('--record-video', 'record a video of the page capture')
+  .option('--css <code>', 'inject CSS into the page')
+  .option('--wait-for-selector <selector>', 'wait for a CSS selector before capture')
+  .option('--before-capture <json>', 'JSON array of interaction actions (click, type, hover, wait, screenshot)')
+  .option('--device <name>', 'Playwright device name (e.g. "iPhone 15", "Pixel 7")')
+  .option('--locale <locale>', 'browser locale (e.g. en-US, fr-FR)')
+  .option('--timezone <timezone>', 'browser timezone (e.g. America/New_York)')
+  .option('--geolocation <lat,lon>', 'geolocation coordinates (e.g. "40.7128,-74.0060")')
+  .option('--color-scheme <scheme>', 'color scheme: light, dark, no-preference')
   .action(async (urls, opts) => {
     if (opts.batchFile) {
       const content = validateFile(opts.batchFile);
@@ -186,6 +200,17 @@ program
           pdfScale: opts.pdfScale,
           proxy: progOpts.proxy,
           auth,
+          recordVideo: opts.recordVideo,
+          css: opts.css,
+          waitForSelector: opts.waitForSelector,
+          beforeCapture: opts.beforeCapture ? JSON.parse(opts.beforeCapture) : undefined,
+          device: opts.device,
+          locale: opts.locale,
+          timezone: opts.timezone,
+          geolocation: opts.geolocation
+            ? ((parts) => ({ latitude: parts[0], longitude: parts[1] }))(opts.geolocation.split(',').map(Number))
+            : undefined,
+          colorScheme: opts.colorScheme,
         });
 
         if (usePdf) {
@@ -203,7 +228,7 @@ program
           return { paths, url, pdfBuffer: captureResult.pdf };
         }
 
-        let result = await processScreenshot(captureResult, {
+        let result = await processScreenshot(captureResult.buffer, {
           quality: opts.quality,
           resize: validateResize(opts.resize),
         });
@@ -303,6 +328,53 @@ program
     }
   });
 
+// ── Serve command: start HTTP server ─────────────────────────────────────────
+program
+  .command('serve')
+  .description('Start an HTTP server for interactive capture')
+  .option('--port <n>', 'port to listen on', parseInt, 3000)
+  .option('--host <host>', 'host to bind to', '0.0.0.0')
+  .action(async (opts) => {
+    const { startServer } = await import('../src/serve.js');
+    const progOpts = program.opts();
+
+    const plugins = [];
+    if (progOpts.plugin && progOpts.plugin.length > 0) {
+      const { PluginManager } = await import('../src/plugin.js');
+      const pm = new PluginManager();
+      for (const pluginPath of progOpts.plugin) {
+        const mod = await import(resolve(process.cwd(), pluginPath));
+        const plugin = mod.default || mod;
+        pm.registerPlugin(plugin);
+        plugins.push(plugin);
+      }
+      log.info('Plugins', plugins.map((p) => p.name).join(', '));
+    }
+
+    log.banner();
+    log.info('Starting server', `http://${opts.host}:${opts.port}`);
+    log.divider();
+
+    try {
+      const { server, close } = await startServer({ port: opts.port, host: opts.host });
+      log.success(`Server listening on http://${opts.host}:${opts.port}`);
+
+      process.on('SIGINT', async () => {
+        log.info('Shutting down...');
+        await close();
+        process.exit(0);
+      });
+      process.on('SIGTERM', async () => {
+        log.info('Shutting down...');
+        await close();
+        process.exit(0);
+      });
+    } catch (err) {
+      log.error(err.message);
+      process.exit(1);
+    }
+  });
+
 // ── Component command: render + capture a component in isolation ─────────────
 program
   .command('component <path>')
@@ -323,6 +395,14 @@ program
   .option('--no-cache', 'disable disk cache')
   .option('--metadata', 'save JSON metadata sidecar file')
   .option('--retries <n>', 'retry count for failed captures', parseInt, 2)
+  .option('--css <code>', 'inject CSS into the page')
+  .option('--wait-for-selector <selector>', 'wait for a CSS selector before capture')
+  .option('--before-capture <json>', 'JSON array of interaction actions before capture')
+  .option('--device <name>', 'Playwright device name (e.g. "iPhone 15", "Pixel 7")')
+  .option('--locale <locale>', 'browser locale (e.g. en-US, fr-FR)')
+  .option('--timezone <timezone>', 'browser timezone (e.g. America/New_York)')
+  .option('--geolocation <lat,lon>', 'geolocation coordinates (e.g. "40.7128,-74.0060")')
+  .option('--color-scheme <scheme>', 'color scheme: light, dark, no-preference')
   .action(async (componentPath, opts) => {
     const progOpts = program.opts();
     log.banner();
@@ -356,7 +436,7 @@ program
         }
       }
 
-      const buffer = await captureUrl(url, {
+      const captureResult = await captureUrl(url, {
         width: opts.width,
         height: opts.height,
         scale: opts.scale,
@@ -372,11 +452,21 @@ program
         noSandbox: progOpts.noSandbox,
         userAgent: progOpts.userAgent,
         retries: opts.retries,
+        css: opts.css,
+        waitForSelector: opts.waitForSelector,
+        beforeCapture: opts.beforeCapture ? JSON.parse(opts.beforeCapture) : undefined,
+        device: opts.device,
+        locale: opts.locale,
+        timezone: opts.timezone,
+        geolocation: opts.geolocation
+          ? ((parts) => ({ latitude: parts[0], longitude: parts[1] }))(opts.geolocation.split(',').map(Number))
+          : undefined,
+        colorScheme: opts.colorScheme,
       });
 
       validateFormat(opts.format);
       spin.text = 'Optimizing...';
-      const result = await processScreenshot(buffer, { quality: opts.quality });
+      const result = await processScreenshot(captureResult.buffer, { quality: opts.quality });
 
       const outDir = opts.out || detectOutputDir();
       const name = safeName(opts.name || nameFromComponent(componentPath));
@@ -550,12 +640,12 @@ program
         const spin = log.spinner(`${progress} ${capture.name}...`);
 
         try {
-          let buffer;
+          let captureResult;
 
           if (capture.component) {
             const { url, cleanup } = await renderComponent(capture.component);
             try {
-              buffer = await captureUrl(url, {
+              captureResult = await captureUrl(url, {
                 width: capture.width || 1280,
                 height: capture.height || 800,
                 scale: capture.scale || 2,
@@ -567,12 +657,20 @@ program
                 noSandbox: progOpts.noSandbox,
                 userAgent: progOpts.userAgent,
                 retries: opts.retries,
+                css: capture.css,
+                waitForSelector: capture.waitForSelector,
+                beforeCapture: capture.beforeCapture,
+                device: capture.device,
+                locale: capture.locale,
+                timezone: capture.timezone,
+                geolocation: capture.geolocation,
+                colorScheme: capture.colorScheme,
               });
             } finally {
               cleanup();
             }
           } else {
-            buffer = await captureUrl(capture.url, {
+            captureResult = await captureUrl(capture.url, {
               width: capture.width || 1280,
               height: capture.height || 800,
               scale: capture.scale || 2,
@@ -585,10 +683,18 @@ program
               noSandbox: progOpts.noSandbox,
               userAgent: progOpts.userAgent,
               retries: opts.retries,
+              css: capture.css,
+              waitForSelector: capture.waitForSelector,
+              beforeCapture: capture.beforeCapture,
+              device: capture.device,
+              locale: capture.locale,
+              timezone: capture.timezone,
+              geolocation: capture.geolocation,
+              colorScheme: capture.colorScheme,
             });
           }
 
-          const result = await processScreenshot(buffer, {
+          const result = await processScreenshot(captureResult.buffer, {
             quality: capture.quality || 80,
             resize: capture.resize,
           });
