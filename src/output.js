@@ -12,6 +12,7 @@ import { join, basename } from 'path';
  * @property {string} [avifPath]
  * @property {string} [jpgPath]
  * @property {string} [metadataPath]
+ * @property {string} [pdfPath]
  *
  * @typedef {Object} BuffersMap
  * @property {Buffer} [png]
@@ -125,8 +126,9 @@ export function resolveOutputPaths(outDir, name, options = {}) {
       const avifExists = existsSync(join(outDir, `${testName}.avif`));
       const jpgExists = existsSync(join(outDir, `${testName}.jpg`));
       const jpegExists = existsSync(join(outDir, `${testName}.jpeg`));
+      const pdfExists = existsSync(join(outDir, `${testName}.pdf`));
 
-      if (!pngExists && !webpExists && !avifExists && !jpgExists && !jpegExists) {
+      if (!pngExists && !webpExists && !avifExists && !jpgExists && !jpegExists && !pdfExists) {
         finalName = testName;
         break;
       }
@@ -148,6 +150,9 @@ export function resolveOutputPaths(outDir, name, options = {}) {
   }
   if (format === 'jpeg' || format === 'jpg') {
     result.jpgPath = join(outDir, `${finalName}.jpg`);
+  }
+  if (format === 'pdf') {
+    result.pdfPath = join(outDir, `${finalName}.pdf`);
   }
 
   if (metadata) {
@@ -239,6 +244,16 @@ export function saveMetadata(paths, info) {
   }
 
   writeFileSync(paths.metadataPath, JSON.stringify(metadata, null, 2));
+}
+
+/**
+ * @param {Buffer} buffer
+ * @param {string} filePath
+ * @returns {{path: string, size: number}}
+ */
+export function savePdf(buffer, filePath) {
+  writeFileSync(filePath, buffer);
+  return { path: filePath, size: buffer.length };
 }
 
 /**
