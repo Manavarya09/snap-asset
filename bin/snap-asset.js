@@ -23,6 +23,7 @@ import {
   detectOutputDir,
   resolveOutputPaths,
   saveAssets,
+  saveMetadata,
   safeName,
   nameFromUrl,
   nameFromComponent,
@@ -35,18 +36,29 @@ import pLimit from 'p-limit';
 
 export { validateClip, validateFormat, validateResize };
 
+const VIEWPORT_PRESETS = {
+  mobile: { width: 375, height: 812 },
+  tablet: { width: 768, height: 1024 },
+  desktop: { width: 1280, height: 800 },
+  wide: { width: 1920, height: 1080 },
+};
+
 const program = new Command();
 
 program
   .name('snap-asset')
   .description('Capture web screenshots & extract site assets as optimized PNG+WebP+AVIF')
-  .version('0.1.0');
+  .version('0.2.0');
 
 // Global options
 program
   .option('--json', 'Output machine-readable JSON')
   .option('--verbose', 'Enable verbose logging')
-  .option('--quiet', 'Quiet mode (suppress spinners)');
+  .option('--quiet', 'Quiet mode (suppress spinners)')
+  .option('--no-sandbox', 'disable sandbox for CI environments')
+  .option('--user-agent <string>', 'override browser user agent')
+  .option('--timestamp', 'append timestamp to output filename')
+  .option('--viewport <name>', 'device preset: mobile (375x812), tablet (768x1024), desktop (1280x800), wide (1920x1080)');
 
 // Apply global logger config before any action runs
 program.hook('preAction', (thisCommand) => {
@@ -76,6 +88,7 @@ program
   .option('--wait-for-lazy', 'wait for lazy-loaded images before capture')
   .option('--network-throttle <profile>', 'simulate network conditions: fast-3g, slow-3g')
   .option('--no-cache', 'disable disk cache')
+  .option('--metadata', 'save JSON metadata sidecar file')
   .action(async (urls, opts) => {
     if (!urls || urls.length === 0) {
       program.help();
@@ -96,6 +109,13 @@ program
     const spin = log.spinner('Launching browser...');
 
     try {
+      const progOpts = program.opts();
+
+      if (progOpts.viewport && VIEWPORT_PRESETS[progOpts.viewport]) {
+        opts.width = VIEWPORT_PRESETS[progOpts.viewport].width;
+        opts.height = VIEWPORT_PRESETS[progOpts.viewport].height;
+      }
+
       validateFormat(opts.format);
       const results = [];
       for (let index = 0; index < urls.length; index++) {
@@ -126,6 +146,8 @@ program
           networkThrottling: opts.networkThrottle,
           waitForLazy: opts.waitForLazy,
           cache: opts.cache,
+          noSandbox: progOpts.noSandbox,
+          userAgent: progOpts.userAgent,
         });
 
         const result = await processScreenshot(buffer, {
@@ -142,6 +164,8 @@ program
         const paths = resolveOutputPaths(outDir, name, {
           overwrite: opts.overwrite,
           format: opts.format,
+          timestamp: progOpts.timestamp,
+          metadata: opts.metadata,
         });
 
         results.push({ paths, result, url });
@@ -158,6 +182,18 @@ program
         }
         if (result.pngSize && result.avifSize) {
           log.savings('AVIF', result.pngSize / 1024, result.avifSize / 1024);
+        }
+        if (paths.metadataPath) {
+          saveMetadata(paths, {
+            url,
+            width: opts.width,
+            height: opts.height,
+            scale: opts.scale,
+            pngSize: result.pngSize,
+            webpSize: result.webpSize,
+            avifSize: result.avifSize,
+            jpgSize: result.jpgSize,
+          });
         }
         log.info('Captured', url);
         log.divider();
@@ -190,8 +226,16 @@ program
   .option('--wait-for-lazy', 'wait for lazy-loaded images before capture')
   .option('--network-throttle <profile>', 'simulate network conditions: fast-3g, slow-3g')
   .option('--no-cache', 'disable disk cache')
+  .option('--metadata', 'save JSON metadata sidecar file')
   .action(async (componentPath, opts) => {
+    const progOpts = program.opts();
     log.banner();
+
+    if (progOpts.viewport && VIEWPORT_PRESETS[progOpts.viewport]) {
+      opts.width = VIEWPORT_PRESETS[progOpts.viewport].width;
+      opts.height = VIEWPORT_PRESETS[progOpts.viewport].height;
+    }
+
     log.info('Component', componentPath);
     log.info('Viewport', `${opts.width}x${opts.height} @${opts.scale}x`);
     log.divider();
@@ -229,6 +273,8 @@ program
         networkThrottling: opts.networkThrottle,
         waitForLazy: opts.waitForLazy,
         cache: opts.cache,
+        noSandbox: progOpts.noSandbox,
+        userAgent: progOpts.userAgent,
       });
 
       validateFormat(opts.format);
@@ -240,6 +286,8 @@ program
       const paths = resolveOutputPaths(outDir, name, {
         overwrite: opts.overwrite,
         format: opts.format,
+        timestamp: progOpts.timestamp,
+        metadata: opts.metadata,
       });
 
       const saved = saveAssets(paths, result);
@@ -254,6 +302,18 @@ program
       }
       if (result.pngSize && result.avifSize) {
         log.savings('AVIF', result.pngSize / 1024, result.avifSize / 1024);
+      }
+      if (paths.metadataPath) {
+        saveMetadata(paths, {
+          url: url,
+          width: opts.width,
+          height: opts.height,
+          scale: opts.scale,
+          pngSize: result.pngSize,
+          webpSize: result.webpSize,
+          avifSize: result.avifSize,
+          jpgSize: result.jpgSize,
+        });
       }
       log.divider();
       log.success('Done!');
@@ -365,6 +425,7 @@ program
   .option('--cookies <path>', 'Path to JSON file with cookies array to add')
   .option('--login-script <path>', 'Path to JS module that exports a default async login function (page)')
   .action(async (opts) => {
+    const progOpts = program.opts();
     log.banner();
 
     const config = loadConfig(opts.config ? resolve(opts.config, '..') : undefined);
@@ -405,6 +466,8 @@ program
                 dark: capture.dark,
                 networkThrottling: capture.networkThrottling,
                 waitForLazy: capture.waitForLazy,
+                noSandbox: progOpts.noSandbox,
+                userAgent: progOpts.userAgent,
               });
             } finally {
               cleanup();
@@ -420,6 +483,8 @@ program
               dark: capture.dark,
               networkThrottling: capture.networkThrottling,
               waitForLazy: capture.waitForLazy,
+              noSandbox: progOpts.noSandbox,
+              userAgent: progOpts.userAgent,
             });
           }
 
