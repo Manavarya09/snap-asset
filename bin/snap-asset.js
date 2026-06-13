@@ -2,6 +2,9 @@
 
 import { Command } from 'commander';
 import { resolve } from 'path';
+import chalk from 'chalk';
+import { readFileSync } from 'fs';
+const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 
 let captureUrl, extractSiteAssets;
 try {
@@ -55,7 +58,7 @@ const program = new Command();
 program
   .name('snap-asset')
   .description('Capture web screenshots & extract site assets as optimized PNG+WebP+AVIF')
-  .version('0.2.0');
+  .version(pkg.version);
 
 // Global options
 program
@@ -67,12 +70,13 @@ program
   .option('--timestamp', 'append timestamp to output filename')
   .option('--viewport <name>', 'device preset: mobile (375x812), tablet (768x1024), desktop (1280x800), wide (1920x1080)')
   .option('--proxy <url>', 'HTTP proxy URL')
-  .option('--plugin <path>', 'path to a plugin JS file (repeatable)', collectPlugins, []);
+  .option('--plugin <path>', 'path to a plugin JS file (repeatable)', collectPlugins, [])
+  .option('--debug', 'Enable debug output with timing and stack traces');
 
 // Apply global logger config before any action runs
 program.hook('preAction', (thisCommand) => {
   const opts = thisCommand.opts();
-  log.setConfig({ json: !!opts.json, verbose: !!opts.verbose, quiet: !!opts.quiet });
+  log.setConfig({ json: !!opts.json, verbose: !!opts.verbose, quiet: !!opts.quiet, debug: !!opts.debug });
 });
 
 // ── Default command: capture one or more URLs ──────────────────────────────────────────
@@ -148,6 +152,7 @@ program
 
     try {
       const progOpts = program.opts();
+      const debug = !!progOpts.debug;
 
       if (progOpts.viewport && VIEWPORT_PRESETS[progOpts.viewport]) {
         opts.width = VIEWPORT_PRESETS[progOpts.viewport].width;
@@ -179,6 +184,48 @@ program
 
         spin.text = usePdf ? `Generating PDF for ${url}...` : `Capturing screenshot for ${url}...`;
 
+        if (debug) {
+          log.debug('captureUrl options: ' + JSON.stringify({
+            url,
+            width: opts.width,
+            height: opts.height,
+            scale: opts.scale,
+            selector: opts.selector,
+            fullPage: opts.fullPage,
+            clip: validateClip(opts.clip),
+            wait: opts.wait,
+            dark: opts.dark,
+            cookies: cookies ? '<set>' : undefined,
+            loginScript: opts.loginScript,
+            networkThrottling: opts.networkThrottle,
+            waitForLazy: opts.waitForLazy,
+            cache: opts.cache,
+            noSandbox: progOpts.noSandbox,
+            userAgent: progOpts.userAgent,
+            retries: opts.retries,
+            pdf: usePdf,
+            pdfFormat: opts.pdfFormat,
+            pdfLandscape: opts.pdfLandscape,
+            pdfMargin: opts.pdfMargin,
+            pdfScale: opts.pdfScale,
+            proxy: progOpts.proxy,
+            auth: auth ? '<set>' : undefined,
+            recordVideo: opts.recordVideo,
+            css: opts.css,
+            waitForSelector: opts.waitForSelector,
+            beforeCapture: opts.beforeCapture,
+            device: opts.device,
+            locale: opts.locale,
+            timezone: opts.timezone,
+            geolocation: opts.geolocation,
+            colorScheme: opts.colorScheme,
+            captureConsole: opts.captureConsole,
+            collectMetrics: opts.collectMetrics,
+            accessibility: opts.accessibility,
+          }, null, 2));
+        }
+
+        const tCapture = Date.now();
         const captureResult = await captureUrl(url, {
           width: opts.width,
           height: opts.height,
@@ -218,6 +265,7 @@ program
           collectMetrics: opts.collectMetrics,
           accessibility: opts.accessibility,
         });
+        if (debug) log.debug(`captureUrl: ${Date.now() - tCapture}ms`);
 
         if (usePdf) {
           const outDir = opts.out || detectOutputDir();
@@ -234,17 +282,21 @@ program
           return { paths, url, pdfBuffer: captureResult.pdf };
         }
 
+        const tProcess = Date.now();
         let result = await processScreenshot(captureResult.buffer, {
           quality: opts.quality,
           resize: validateResize(opts.resize),
         });
+        if (debug) log.debug(`processScreenshot: ${Date.now() - tProcess}ms`);
 
         if (opts.watermarkText) {
+          const tWatermark = Date.now();
           const wb = await applyWatermark(result.png, opts.watermarkText);
           result = await processScreenshot(wb, {
             quality: opts.quality,
             resize: validateResize(opts.resize),
           });
+          if (debug) log.debug(`watermark: ${Date.now() - tWatermark}ms`);
         }
 
         const outDir = opts.out || detectOutputDir();
@@ -329,7 +381,13 @@ program
       log.divider();
     } catch (err) {
       spin.stop();
-      log.error(err.message);
+      const progOpts = program.opts();
+      if (progOpts.debug) log.debug(err.stack);
+      if (err.message && err.message.includes('browserType.launch')) {
+        log.error('Browser not found. Run `npx playwright install chromium` to install Playwright browsers.');
+      } else {
+        log.error(err.message);
+      }
       process.exit(1);
     }
   });
@@ -343,16 +401,25 @@ program
   .action(async (opts) => {
     const { startServer } = await import('../src/serve.js');
     const progOpts = program.opts();
+    const debug = !!progOpts.debug;
 
     const plugins = [];
     if (progOpts.plugin && progOpts.plugin.length > 0) {
       const { PluginManager } = await import('../src/plugin.js');
       const pm = new PluginManager();
       for (const pluginPath of progOpts.plugin) {
-        const mod = await import(resolve(process.cwd(), pluginPath));
-        const plugin = mod.default || mod;
-        pm.registerPlugin(plugin);
-        plugins.push(plugin);
+        try {
+          const mod = await import(resolve(process.cwd(), pluginPath));
+          const plugin = mod.default || mod;
+          pm.registerPlugin(plugin);
+          plugins.push(plugin);
+        } catch (err) {
+          if (err.code === 'ENOENT') {
+            log.error(`Plugin not found: ${pluginPath}`);
+            process.exit(1);
+          }
+          throw err;
+        }
       }
       log.info('Plugins', plugins.map((p) => p.name).join(', '));
     }
@@ -362,7 +429,9 @@ program
     log.divider();
 
     try {
+      const tStart = Date.now();
       const { server, close } = await startServer({ port: opts.port, host: opts.host });
+      if (debug) log.debug(`server startup: ${Date.now() - tStart}ms`);
       log.success(`Server listening on http://${opts.host}:${opts.port}`);
 
       process.on('SIGINT', async () => {
@@ -376,6 +445,7 @@ program
         process.exit(0);
       });
     } catch (err) {
+      if (debug) log.debug(err.stack);
       log.error(err.message);
       process.exit(1);
     }
@@ -411,6 +481,7 @@ program
   .option('--color-scheme <scheme>', 'color scheme: light, dark, no-preference')
   .action(async (componentPath, opts) => {
     const progOpts = program.opts();
+    const debug = !!progOpts.debug;
     log.banner();
 
     if (progOpts.viewport && VIEWPORT_PRESETS[progOpts.viewport]) {
@@ -442,6 +513,34 @@ program
         }
       }
 
+      if (debug) {
+        log.debug('captureUrl options: ' + JSON.stringify({
+          url,
+          width: opts.width,
+          height: opts.height,
+          scale: opts.scale,
+          clip: validateClip(opts.clip),
+          wait: opts.wait,
+          dark: opts.dark,
+          selector: '#root > *',
+          cookies: cookies ? '<set>' : undefined,
+          networkThrottling: opts.networkThrottle,
+          waitForLazy: opts.waitForLazy,
+          noSandbox: progOpts.noSandbox,
+          userAgent: progOpts.userAgent,
+          retries: opts.retries,
+          css: opts.css,
+          waitForSelector: opts.waitForSelector,
+          beforeCapture: opts.beforeCapture,
+          device: opts.device,
+          locale: opts.locale,
+          timezone: opts.timezone,
+          geolocation: opts.geolocation,
+          colorScheme: opts.colorScheme,
+        }, null, 2));
+      }
+
+      const tCapture = Date.now();
       const captureResult = await captureUrl(url, {
         width: opts.width,
         height: opts.height,
@@ -469,10 +568,13 @@ program
           : undefined,
         colorScheme: opts.colorScheme,
       });
+      if (debug) log.debug(`captureUrl: ${Date.now() - tCapture}ms`);
 
       validateFormat(opts.format);
       spin.text = 'Optimizing...';
+      const tProcess = Date.now();
       const result = await processScreenshot(captureResult.buffer, { quality: opts.quality });
+      if (debug) log.debug(`processScreenshot: ${Date.now() - tProcess}ms`);
 
       const outDir = opts.out || detectOutputDir();
       const name = safeName(opts.name || nameFromComponent(componentPath));
@@ -513,7 +615,12 @@ program
       log.divider();
     } catch (err) {
       spin.stop();
-      log.error(err.message);
+      if (debug) log.debug(err.stack);
+      if (err.message && err.message.includes('browserType.launch')) {
+        log.error('Browser not found. Run `npx playwright install chromium` to install Playwright browsers.');
+      } else {
+        log.error(err.message);
+      }
       process.exit(1);
     } finally {
       if (cleanup) {
@@ -536,6 +643,8 @@ program
   .option('--no-images', 'skip image extraction')
   .option('--overwrite', 'overwrite existing files')
   .action(async (url, opts) => {
+    const progOpts = program.opts();
+    const debug = !!progOpts.debug;
     log.banner();
     log.info('Extract', url);
     log.info('Viewport', `${opts.width}x${opts.height} @${opts.scale}x`);
@@ -554,6 +663,19 @@ program
         }
       }
 
+      if (debug) {
+        log.debug('extractSiteAssets options: ' + JSON.stringify({
+          url,
+          width: opts.width,
+          height: opts.height,
+          scale: opts.scale,
+          dark: opts.dark,
+          sections: opts.sections !== false,
+          images: opts.images !== false,
+        }, null, 2));
+      }
+
+      const tExtract = Date.now();
       const assets = await extractSiteAssets(url, {
         width: opts.width,
         height: opts.height,
@@ -564,6 +686,7 @@ program
         cookies,
         loginScript: opts.loginScript,
       });
+      if (debug) log.debug(`extractSiteAssets: ${Date.now() - tExtract}ms`);
 
       spin.text = `Found ${assets.length} assets. Optimizing...`;
 
@@ -576,7 +699,9 @@ program
             continue;
           }
 
+          const tOpt = Date.now();
           const result = await processScreenshot(asset.buffer, { quality: opts.quality });
+          if (debug) log.debug(`optimize ${asset.name}: ${Date.now() - tOpt}ms`);
           const paths = resolveOutputPaths(outDir, safeName(asset.name), {
             overwrite: opts.overwrite,
             format: 'both',
@@ -604,7 +729,12 @@ program
       log.divider();
     } catch (err) {
       spin.stop();
-      log.error(err.message);
+      if (debug) log.debug(err.stack);
+      if (err.message && err.message.includes('browserType.launch')) {
+        log.error('Browser not found. Run `npx playwright install chromium` to install Playwright browsers.');
+      } else {
+        log.error(err.message);
+      }
       process.exit(1);
     }
   });
