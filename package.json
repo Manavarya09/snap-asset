@@ -1,6 +1,6 @@
 {
   "name": "@masyv/snap-asset",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Capture web screenshots & extract site assets as optimized PNG+WebP — CLI + Claude Code skill",
   "type": "module",
   "bin": {

@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 
 const BRAND = chalk.hex('#FF6B35').bold('snap-asset');
-const VERSION = '0.1.0';
+const VERSION = '0.2.0';
 
 /** @type {{ enableColor: boolean, verbose: boolean, quiet: boolean }} */
 const CONFIG = {
