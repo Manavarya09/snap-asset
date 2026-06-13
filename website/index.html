@@ -2,150 +2,201 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>snap-asset</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>snap-asset v0.3.0</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{background:#fff;color:#000;font-family:'Courier New',Courier,monospace;font-size:14px;line-height:1;margin:0;padding:0;-webkit-text-size-adjust:100%}
-pre,code{font-family:'Courier New',Courier,monospace;font-size:14px;line-height:1}
-pre{margin:0;padding:0}
-code{background:transparent}
-a{color:#000;text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:2px;font-weight:700}
-a:visited{color:#000}
-table{width:100%;border-collapse:collapse;margin:0}
-td,th{border:3px solid #000;padding:3px 6px;text-align:left;vertical-align:top;font-family:'Courier New',Courier,monospace;font-size:14px;line-height:1.15;font-weight:400}
-th{font-weight:700;text-align:center;border-bottom-width:4px}
-.s{display:block;width:100%;background:#000;color:#fff;font-family:'Courier New',Courier,monospace;font-size:14px;line-height:1.15;overflow:hidden;white-space:nowrap;letter-spacing:0}
-.bw{background:#fff;color:#000}
-.bb{background:#000;color:#fff}
-.bb a{color:#fff}
-.bb td,.bb th{border-color:#fff}
-.bt{border-top:4px solid #000}
-.bbt{border-top:4px solid #fff}
-.sec{width:100%}
-.sec table{margin:0}
+html,body{background:#000;color:#fff;font-family:'Courier New',Courier,monospace;font-size:13px;line-height:1.15;margin:0;padding:0}
+pre,code{font-family:'Courier New',Courier,monospace;font-size:13px;line-height:1.15}
+a{color:#fff;text-decoration:underline}
+a:visited{color:#fff}
+table{width:100%;border-collapse:collapse}
+td,th{border:1px solid #fff;padding:2px 4px;text-align:left;vertical-align:top;font-family:'Courier New',Courier,monospace;font-size:13px;line-height:1.15;font-weight:400}
+th{font-weight:700;text-align:center;border-bottom:3px solid #fff}
+.s{background:#fff;color:#000;white-space:nowrap;overflow:hidden;letter-spacing:0;line-height:1}
 </style>
 </head>
 <body>
 
-<div class="bb" style="border-bottom:4px solid #fff">
 <pre style="background:#000;color:#fff;line-height:1.15;overflow-x:auto">
 +----------------------------------------------------------------------------+
-|                      S N A P - A S S E T                                    |
-|                      v1.0.0                                                  |
-|  capture web screenshots and extract site assets                            |
-|  as optimized png+webp -- cli + claude code skill                           |
-|  > https://github.com/Manavarya09/snap-asset <                              |
+|                                                                              |
+|        .oooooo.   oooo        ooooo oooooooooooo ooooooooo.                 |
+|       d8P'  `Y8b  `888        `888' `888'     `8 `888   `Y88.               |
+|      888      888  888         888   888          888   .d88'               |
+|      888      888  888         888   888oooo8     888ooo88P'                |
+|      888      888  888         888   888    "     888`88b.                  |
+|      `88b    d88'  888         888   888       o  888  `88b.                |
+|       `Y8bood8P'  o888o       o888o o888ooooood8 o888o  o888o               |
+|                                                                              |
+|         snap-asset v0.3.0  --  64 features                                  |
+|         capture web screenshots + extract site assets                        |
+|         png + webp + avif  --  cli + library                                |
+|                                                                              |
+|         > https://github.com/Manavarya09/snap-asset <                      |
+|                                                                              |
 +----------------------------------------------------------------------------+
 </pre>
-</div>
 
-<div class="s">===========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================</div>
+<div class="s">================================================================================</div>
 
-<div class="bw sec" style="border-bottom:4px solid #000">
-<pre style="background:#fff;color:#000;line-height:1.15;overflow-x:auto;padding:8px 0 4px 0;font-weight:700">
-FEATURES
+<pre style="background:#000;color:#fff;line-height:1.15;overflow-x:auto;font-weight:700">
+COMMANDS
 </pre>
 <table>
-<tr><th style="width:25%">FEATURE</th><th>DESCRIPTION</th></tr>
-<tr><td>Element Capture</td><td>target specific DOM elements via CSS selector. captures exactly the element at native resolution with transparent or solid background.</td></tr>
-<tr><td>Site Extraction</td><td>crawl and capture entire website -- sections, images, and components in one pass. outputs organized directory with manifest file.</td></tr>
-<tr><td>Component Isolation</td><td>render react/vue/svelte components in isolation with transparent backgrounds at any viewport size. no page chrome.</td></tr>
-<tr><td>Auto-Optimize</td><td>generates png (lossless) + webp (lossy) formats simultaneously at retina 2x resolution. balances quality vs file size.</td></tr>
-<tr><td>Batch Mode</td><td>define multiple captures in snap-asset.config.json. run all with a single command. supports multiple selectors per page.</td></tr>
-<tr><td>Dark Mode</td><td>capture with prefers-color-scheme:dark. ideal for dark-themed portfolio screenshots and documentation pages.</td></tr>
+<tr><th style="width:35%">COMMAND</th><th>DESCRIPTION</th></tr>
+<tr><td>snap-asset &lt;url&gt;</td><td>capture URL screenshot (default command)</td></tr>
+<tr><td>snap-asset extract &lt;url&gt;</td><td>extract all site assets recursively</td></tr>
+<tr><td>snap-asset component &lt;file&gt;</td><td>render and capture component in isolation</td></tr>
+<tr><td>snap-asset batch</td><td>run all captures from snap-asset.config.json</td></tr>
+<tr><td>snap-asset serve</td><td>start HTTP server for interactive capture</td></tr>
+<tr><td>snap-asset init</td><td>generate starter snap-asset.config.json</td></tr>
 </table>
-</div>
 
-<div class="s">===========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================</div>
+<div class="s">================================================================================</div>
 
-<div class="bb sec" style="border-bottom:4px solid #fff">
-<pre style="background:#000;color:#fff;line-height:1.15;overflow-x:auto;padding:8px 0 4px 0;font-weight:700">
-INSTALLATION
+<pre style="background:#000;color:#fff;line-height:1.15;overflow-x:auto;font-weight:700">
+CAPTURE (21)
 </pre>
-<pre style="background:#000;color:#fff;line-height:1.15;overflow-x:auto;padding:0 0 8px 0">  $ git clone https://github.com/Manavarya09/snap-asset.git
-  $ cd snap-asset
-  $ npm install
-  $ npx snap-asset --help</pre>
-</div>
-
-<div class="s">===========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================</div>
-
-<div class="bw sec" style="border-bottom:4px solid #000">
-<pre style="background:#fff;color:#000;line-height:1.15;overflow-x:auto;padding:8px 0 4px 0;font-weight:700">
-USAGE EXAMPLES
-</pre>
-<pre style="background:#fff;color:#000;line-height:1.15;overflow-x:auto;padding:0 0 4px 0">  $ snap-asset https://example.com --name homepage
-  > saved: assets/homepage.png (1200x800)
-  > saved: assets/homepage.webp (1200x800)
-</pre>
-<pre style="background:#fff;color:#000;line-height:1.15;overflow-x:auto;padding:0 0 4px 0">  $ snap-asset https://example.com --selector ".hero-section" --name hero
-  > saved: assets/hero.png (900x400)
-  > saved: assets/hero.webp (900x400)
-</pre>
-<pre style="background:#fff;color:#000;line-height:1.15;overflow-x:auto;padding:0 0 4px 0">  $ snap-asset extract https://docsite.com --out public/assets
-  > manifest: public/assets/manifest.json
-  > extracted: 47 assets across 12 pages
-</pre>
-<pre style="background:#fff;color:#000;line-height:1.15;overflow-x:auto;padding:0 0 4px 0">  $ snap-asset component ./src/components/Button.tsx --name button
-  > saved: assets/button.png (200x48)
-  > saved: assets/button.webp (200x48)
-</pre>
-<pre style="background:#fff;color:#000;line-height:1.15;overflow-x:auto;padding:0 0 8px 0">  $ snap-asset batch
-  > config: snap-asset.config.json
-  > batch complete: 12/12 captures successful</pre>
-</div>
-
-<div class="s">===========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================</div>
-
-<div class="bb sec" style="border-bottom:4px solid #fff">
-<pre style="background:#000;color:#fff;line-height:1.15;overflow-x:auto;padding:8px 0 4px 0;font-weight:700">
-CLI REFERENCE
-</pre>
-<table class="bb">
-<tr><th style="width:40%">COMMAND/FLAG</th><th>DESCRIPTION</th></tr>
-<tr><td>snap-asset &lt;url&gt;</td><td>capture full-page screenshot of the given URL</td></tr>
-<tr><td>--name &lt;string&gt;</td><td>output filename (without extension)</td></tr>
-<tr><td>--selector &lt;css&gt;</td><td>capture element matching CSS selector</td></tr>
-<tr><td>--dark</td><td>enable dark color scheme (prefers-color-scheme:dark)</td></tr>
-<tr><td>--width &lt;px&gt;</td><td>viewport width (default: 1920)</td></tr>
-<tr><td>--height &lt;px&gt;</td><td>viewport height (default: 1080)</td></tr>
-<tr><td>snap-asset extract &lt;url&gt;</td><td>extract all site assets from URL recursively</td></tr>
-<tr><td>--out &lt;dir&gt;</td><td>output directory for extracted assets (default: assets/)</td></tr>
-<tr><td>snap-asset component &lt;file&gt;</td><td>render and capture component in headless isolation</td></tr>
-<tr><td>snap-asset batch</td><td>run all captures defined in snap-asset.config.json</td></tr>
+<table>
+<tr><th style="width:40%">FLAG</th><th>DESCRIPTION</th></tr>
+<tr><td>-n, --name &lt;name&gt;</td><td>output filename (without extension)</td></tr>
+<tr><td>-s, --selector &lt;css&gt;</td><td>capture element matching CSS selector</td></tr>
+<tr><td>-w, --width &lt;px&gt;</td><td>viewport width (default 1280)</td></tr>
+<tr><td>-h, --height &lt;px&gt;</td><td>viewport height (default 800)</td></tr>
+<tr><td>--scale &lt;n&gt;</td><td>device scale factor (default 2)</td></tr>
+<tr><td>--resize &lt;WxH&gt;</td><td>resize after capture e.g. 800x600</td></tr>
+<tr><td>--clip &lt;x,y,w,h&gt;</td><td>crop capture to rectangular region</td></tr>
+<tr><td>--wait &lt;ms&gt;</td><td>wait before capture (default 0)</td></tr>
+<tr><td>--dark</td><td>emulate dark color scheme</td></tr>
+<tr><td>--full-page</td><td>capture full scrollable page</td></tr>
+<tr><td>--overwrite</td><td>overwrite existing output files</td></tr>
+<tr><td>--wait-for-lazy</td><td>wait for lazy-loaded images before capture</td></tr>
+<tr><td>--wait-for-selector &lt;s&gt;</td><td>wait for CSS selector before capture</td></tr>
+<tr><td>--before-capture &lt;json&gt;</td><td>JSON array of interaction actions</td></tr>
+<tr><td>--css &lt;code&gt;</td><td>inject CSS into the page</td></tr>
+<tr><td>--retries &lt;n&gt;</td><td>retry count for failed captures (default 2)</td></tr>
+<tr><td>--no-cache</td><td>disable disk cache</td></tr>
+<tr><td>--cookies &lt;path&gt;</td><td>JSON file with cookies array</td></tr>
+<tr><td>--login-script &lt;path&gt;</td><td>JS module exporting default async login(page)</td></tr>
+<tr><td>--batch-file &lt;path&gt;</td><td>file with newline-separated URLs to capture</td></tr>
+<tr><td>--auth &lt;credentials&gt;</td><td>HTTP authentication (username:password)</td></tr>
 </table>
-</div>
 
-<div class="s">===========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================</div>
+<div class="s">================================================================================</div>
 
-<div class="bw sec" style="border-bottom:4px solid #000">
-<pre style="background:#fff;color:#000;line-height:1.15;overflow-x:auto;padding:8px 0 4px 0;font-weight:700">
-HOW IT WORKS -- PIPELINE
+<pre style="background:#000;color:#fff;line-height:1.15;overflow-x:auto;font-weight:700">
+PDF (5)
 </pre>
-<pre style="background:#fff;color:#000;line-height:1.15;overflow-x:auto;padding:0 0 8px 0">
- +--------------------+     +--------------------+     +--------------------+
- |      INPUT         |     |      ENGINE        |     |      OUTPUT        |
- +--------------------+     +--------------------+     +--------------------+
- |                    |     |                    |     |                    |
- |  URL to capture    | --> |  Playwright        | --> |  PNG  (lossless)   |
- |  CSS selector      |     |  headless browser  |     |  WebP (lossy)      |
- |  component file    |     |  Sharp optimizer   |     |  retina 2x assets  |
- |  batch config      |     |  2x retina render  |     |  organized output  |
- |                    |     |                    |     |                    |
- +--------------------+     +--------------------+     +--------------------+
-</pre>
-</div>
+<table>
+<tr><th style="width:40%">FLAG</th><th>DESCRIPTION</th></tr>
+<tr><td>--pdf</td><td>capture as PDF instead of screenshot</td></tr>
+<tr><td>--pdf-format &lt;fmt&gt;</td><td>paper format (A4, Letter, etc.) (default A4)</td></tr>
+<tr><td>--pdf-landscape</td><td>landscape orientation</td></tr>
+<tr><td>--pdf-margin &lt;margin&gt;</td><td>page margin (default 1cm)</td></tr>
+<tr><td>--pdf-scale &lt;n&gt;</td><td>scale factor 0.1-2 (default 1)</td></tr>
+</table>
 
-<div class="s">===========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================</div>
+<div class="s">================================================================================</div>
 
-<div class="bb" style="padding:8px 0">
-<pre style="background:#000;color:#fff;line-height:1.15;overflow-x:auto;margin:0;padding:0;text-align:left">
-LICENSE  :  MIT
-SOURCE   :  https://github.com/Manavarya09/snap-asset
-AUTHOR   :  Manav Arya Singh
+<pre style="background:#000;color:#fff;line-height:1.15;overflow-x:auto;font-weight:700">
+EMULATION (8)
 </pre>
-</div>
+<table>
+<tr><th style="width:40%">FLAG</th><th>DESCRIPTION</th></tr>
+<tr><td>--viewport &lt;name&gt;</td><td>device preset: mobile/tablet/desktop/wide</td></tr>
+<tr><td>--device &lt;name&gt;</td><td>Playwright device (e.g. "iPhone 15")</td></tr>
+<tr><td>--locale &lt;locale&gt;</td><td>browser locale (e.g. en-US)</td></tr>
+<tr><td>--timezone &lt;tz&gt;</td><td>browser timezone (e.g. America/New_York)</td></tr>
+<tr><td>--geolocation &lt;lat,lon&gt;</td><td>geolocation coordinates</td></tr>
+<tr><td>--color-scheme &lt;scheme&gt;</td><td>light, dark, or no-preference</td></tr>
+<tr><td>--user-agent &lt;ua&gt;</td><td>override browser user agent</td></tr>
+<tr><td>--proxy &lt;url&gt;</td><td>HTTP proxy URL</td></tr>
+</table>
+
+<div class="s">================================================================================</div>
+
+<pre style="background:#000;color:#fff;line-height:1.15;overflow-x:auto;font-weight:700">
+INTERACTION (5)
+</pre>
+<table>
+<tr><th style="width:40%">FLAG</th><th>DESCRIPTION</th></tr>
+<tr><td>--network-throttle &lt;p&gt;</td><td>simulate network: fast-3g, slow-3g</td></tr>
+<tr><td>--record-video</td><td>record video of page capture</td></tr>
+<tr><td>--capture-console</td><td>capture console log messages</td></tr>
+<tr><td>--collect-metrics</td><td>collect performance metrics</td></tr>
+<tr><td>--accessibility</td><td>capture accessibility snapshot</td></tr>
+</table>
+
+<div class="s">================================================================================</div>
+
+<pre style="background:#000;color:#fff;line-height:1.15;overflow-x:auto;font-weight:700">
+OUTPUT (8)
+</pre>
+<table>
+<tr><th style="width:40%">FLAG</th><th>DESCRIPTION</th></tr>
+<tr><td>-o, --out &lt;dir&gt;</td><td>output directory (default assets/)</td></tr>
+<tr><td>-f, --format &lt;fmt&gt;</td><td>output format: png/webp/avif/jpg/both</td></tr>
+<tr><td>-q, --quality &lt;n&gt;</td><td>WebP/AVIF quality 1-100 (default 80)</td></tr>
+<tr><td>--watermark-text &lt;t&gt;</td><td>overlay text watermark on captured image</td></tr>
+<tr><td>--webhook-url &lt;url&gt;</td><td>send capture result to webhook URL</td></tr>
+<tr><td>--timestamp</td><td>append timestamp to output filename</td></tr>
+<tr><td>--metadata</td><td>save JSON metadata sidecar file</td></tr>
+<tr><td>--json</td><td>output machine-readable JSON</td></tr>
+</table>
+
+<div class="s">================================================================================</div>
+
+<pre style="background:#000;color:#fff;line-height:1.15;overflow-x:auto;font-weight:700">
+ADVANCED (5)
+</pre>
+<table>
+<tr><th style="width:40%">FLAG</th><th>DESCRIPTION</th></tr>
+<tr><td>--no-sandbox</td><td>disable sandbox for CI environments</td></tr>
+<tr><td>--plugin &lt;path&gt;</td><td>path to plugin JS file (repeatable)</td></tr>
+<tr><td>--verbose</td><td>enable verbose logging</td></tr>
+<tr><td>--quiet</td><td>quiet mode (suppress spinners)</td></tr>
+<tr><td>--debug</td><td>enable debug output with timing and stack traces</td></tr>
+</table>
+
+<div class="s">================================================================================</div>
+
+<pre style="background:#000;color:#fff;line-height:1.15;overflow-x:auto;font-weight:700">
+EXAMPLES
+</pre>
+<pre style="background:#000;color:#fff;line-height:1.15;overflow-x:auto">
+$ snap-asset https://example.com --name homepage
+  saved: assets/homepage.png (1200x800)
+  saved: assets/homepage.webp (1200x800)
+
+$ snap-asset https://example.com --selector ".hero" --name hero --dark
+  saved: assets/hero.png (900x400)
+  saved: assets/hero.webp (900x400)
+
+$ snap-asset extract https://docsite.com --out public/assets
+  manifest: public/assets/manifest.json
+  extracted: 47 assets across 12 pages
+
+$ snap-asset component ./src/Button.tsx --name button --width 200 --height 48
+  saved: assets/button.png (200x48)
+  saved: assets/button.webp (200x48)
+
+$ snap-asset https://example.com --pdf --pdf-format A4 --out pdfs
+  saved: pdfs/example.pdf (42 KB)
+
+$ snap-asset https://example.com --device "iPhone 15" --full-page --format webp
+  saved: assets/example.webp (390x844)
+
+$ snap-asset batch --concurrency 5
+  config: snap-asset.config.json
+  batch complete: 12/12 captures successful
+</pre>
+
+<div class="s">================================================================================</div>
+
+<pre style="background:#000;color:#fff;line-height:1.15;overflow-x:auto">
+LICENSE  MIT  |  AUTHOR  Manav Arya Singh  |  SOURCE  https://github.com/Manavarya09/snap-asset
+</pre>
 
 </body>
 </html>
