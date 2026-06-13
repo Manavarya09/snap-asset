@@ -6,3 +6,5 @@ export { renderComponent } from './component-renderer.js';
 export { compareScreenshots, createComparisonImage } from './diff.js';
 export { applyWatermark } from './watermark.js';
 export { sendWebhook } from './webhook.js';
+export { startServer } from './serve.js';
+export { PluginManager } from './plugin.js';
