@@ -2,13 +2,14 @@ import chalk from 'chalk';
 import ora from 'ora';
 
 const BRAND = chalk.hex('#FF6B35').bold('snap-asset');
-const VERSION = '0.2.0';
+const VERSION = '0.3.0';
 
-/** @type {{ enableColor: boolean, verbose: boolean, quiet: boolean }} */
+/** @type {{ enableColor: boolean, verbose: boolean, quiet: boolean, debug: boolean }} */
 const CONFIG = {
   enableColor: true,
   verbose: false,
   quiet: false,
+  debug: false,
 };
 
 /**
@@ -50,6 +51,13 @@ export function warn(message) {
 /** @param {string} message */
 export function error(message) {
   console.log(`  ${chalk.red(message)}`);
+}
+
+/** @param {string} message */
+export function debug(message) {
+  if (CONFIG.debug) {
+    console.log(`  ${chalk.dim('[debug]')} ${chalk.dim(message)}`);
+  }
 }
 
 /**
