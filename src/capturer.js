@@ -49,6 +49,9 @@ const THROTTLE_PROFILES = {
  * @property {string} [timezone]
  * @property {{latitude:number, longitude:number}} [geolocation]
  * @property {'light'|'dark'|'no-preference'} [colorScheme]
+ * @property {boolean} [captureConsole]
+ * @property {boolean} [collectMetrics]
+ * @property {boolean} [accessibility]
  *
  * @typedef {Object} Asset
  * @property {string} name
@@ -246,6 +249,17 @@ export async function captureUrl(url, options = {}) {
 
         const page = await context.newPage();
 
+        const consoleEntries = [];
+        if (rest.captureConsole) {
+          page.on('console', (msg) => {
+            consoleEntries.push({
+              type: msg.type(),
+              text: msg.text(),
+              timestamp: Date.now(),
+            });
+          });
+        }
+
         if (networkThrottling) {
           try {
             await setNetworkThrottling(page, networkThrottling);
@@ -384,17 +398,52 @@ export async function captureUrl(url, options = {}) {
           buffer = await page.screenshot(screenshotOptions);
         }
 
+        let metrics;
+        if (rest.collectMetrics && !pdf) {
+          try {
+            metrics = await page.evaluate(() => {
+              const nav = performance.getEntriesByType('navigation')[0];
+              if (!nav) return null;
+              const paints = performance.getEntriesByType('paint');
+              return {
+                domContentLoaded: nav.domContentLoadedEventEnd,
+                loadEventStart: nav.loadEventStart,
+                domInteractive: nav.domInteractive,
+                firstPaint: paints.find((p) => p.name === 'first-paint')?.startTime || null,
+              };
+            });
+          } catch {
+            // metrics best-effort
+          }
+        }
+
+        let accessibilitySnapshot;
+        if (rest.accessibility) {
+          try {
+            accessibilitySnapshot = await page.accessibility.snapshot();
+          } catch {
+            // accessibility best-effort
+          }
+        }
+
         if (cache) {
           await cache.set(cacheKey, buffer, { ttl: rest.cacheTTL });
         }
 
+        const extra = {};
+        if (rest.captureConsole) extra.consoleEntries = consoleEntries;
+        if (rest.collectMetrics) extra.metrics = metrics;
+        if (rest.accessibility) extra.accessibility = accessibilitySnapshot;
+
         if (recordVideo) {
           await context.close();
           const videoPath = context.videoPath() || null;
-          return { buffer, videoPath, recorded: true, screenshots };
+          return { buffer, videoPath, recorded: true, screenshots, ...extra };
         }
 
-        return pdf ? { pdf: buffer, screenshots } : { buffer, screenshots };
+        return pdf
+          ? { pdf: buffer, screenshots, ...extra }
+          : { buffer, screenshots, ...extra };
       } finally {
         await browser.close();
       }
