@@ -2,8 +2,46 @@ import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join, basename } from 'path';
 
 /**
- * Auto-detect the best output directory in the project.
- * Checks: public/ > assets/ > static/ > ./screenshots/
+ * @typedef {Object} OutputOptions
+ * @property {boolean} [overwrite]
+ * @property {string} [format]
+ *
+ * @typedef {Object} OutputPaths
+ * @property {string} [pngPath]
+ * @property {string} [webpPath]
+ * @property {string} [avifPath]
+ * @property {string} [jpgPath]
+ * @property {string} [metadataPath]
+ *
+ * @typedef {Object} BuffersMap
+ * @property {Buffer} [png]
+ * @property {Buffer} [webp]
+ * @property {Buffer} [avif]
+ * @property {Buffer} [jpg]
+ *
+ * @typedef {Object} SavedAsset
+ * @property {string} path
+ * @property {number} size
+ *
+ * @typedef {Object} CaptureInfo
+ * @property {string} [url]
+ * @property {number} [width]
+ * @property {number} [height]
+ * @property {number} [scale]
+ * @property {number} [pngSize]
+ * @property {number} [webpSize]
+ * @property {number} [avifSize]
+ * @property {number} [jpgSize]
+ *
+ * @typedef {Object} PictureOptions
+ * @property {string} [alt]
+ * @property {string} [className]
+ * @property {string} [basePath]
+ */
+
+/**
+ * @param {string} [cwd]
+ * @returns {string}
  */
 export function detectOutputDir(cwd = process.cwd()) {
   const candidates = ['public', 'assets', 'static'];
@@ -19,7 +57,8 @@ export function detectOutputDir(cwd = process.cwd()) {
 }
 
 /**
- * Generate a safe filename from a name string.
+ * @param {string} name
+ * @returns {string}
  */
 export function safeName(name) {
   return (
@@ -32,7 +71,8 @@ export function safeName(name) {
 }
 
 /**
- * Derive a name from a URL if no --name is provided.
+ * @param {string} url
+ * @returns {string}
  */
 export function nameFromUrl(url) {
   try {
@@ -48,7 +88,8 @@ export function nameFromUrl(url) {
 }
 
 /**
- * Derive a name from a component file path.
+ * @param {string} filePath
+ * @returns {string}
  */
 export function nameFromComponent(filePath) {
   const base = basename(filePath).replace(/\.(tsx?|jsx?|vue|svelte)$/, '');
@@ -56,8 +97,10 @@ export function nameFromComponent(filePath) {
 }
 
 /**
- * Resolve the output path, avoiding overwrites.
- * Returns { pngPath, webpPath }
+ * @param {string} outDir
+ * @param {string} name
+ * @param {OutputOptions} [options]
+ * @returns {OutputPaths}
  */
 export function resolveOutputPaths(outDir, name, options = {}) {
   const { overwrite = false, format = 'both' } = options;
@@ -85,6 +128,7 @@ export function resolveOutputPaths(outDir, name, options = {}) {
     }
   }
 
+  /** @type {OutputPaths} */
   const result = {};
 
   if (format === 'both' || format === 'png') {
@@ -104,8 +148,9 @@ export function resolveOutputPaths(outDir, name, options = {}) {
 }
 
 /**
- * Generate an HTML <picture> element with WebP and PNG sources.
- * Provides modern format with fallback for older browsers.
+ * @param {string} name
+ * @param {PictureOptions} [options]
+ * @returns {string}
  */
 export function generatePictureHtml(name, options = {}) {
   const { alt = '', className = '', basePath = '' } = options;
@@ -122,7 +167,9 @@ export function generatePictureHtml(name, options = {}) {
 }
 
 /**
- * Save buffers to disk.
+ * @param {OutputPaths} paths
+ * @param {BuffersMap} buffers
+ * @returns {SavedAsset[]}
  */
 export function saveAssets(paths, buffers) {
   const saved = [];
@@ -151,7 +198,8 @@ export function saveAssets(paths, buffers) {
 }
 
 /**
- * Save metadata JSON for the capture.
+ * @param {OutputPaths} paths
+ * @param {CaptureInfo} info
  */
 export function saveMetadata(paths, info) {
   if (!paths.metadataPath) {
