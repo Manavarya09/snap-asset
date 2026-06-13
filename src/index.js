@@ -8,3 +8,4 @@ export { applyWatermark } from './watermark.js';
 export { sendWebhook } from './webhook.js';
 export { startServer } from './serve.js';
 export { PluginManager } from './plugin.js';
+export { sanitizeFilename, truncate, formatBytes } from './commands/sanitize.js';
