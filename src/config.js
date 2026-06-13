@@ -4,14 +4,66 @@ import { join } from 'path';
 const CONFIG_NAME = 'snap-asset.config.json';
 const VALID_FORMATS = ['png', 'webp', 'avif', 'both'];
 
+/**
+ * @typedef {Object} CaptureConfig
+ * @property {string} name
+ * @property {string} [url]
+ * @property {string} [component]
+ * @property {string} [selector]
+ * @property {number} [width]
+ * @property {number} [height]
+ * @property {number} [scale]
+ * @property {string} [format]
+ * @property {number} [quality]
+ * @property {string} [resize]
+ * @property {boolean} [fullPage]
+ * @property {boolean} [dark]
+ * @property {number} [wait]
+ * @property {string} [out]
+ * @property {boolean} [waitForLazy]
+ * @property {string} [networkThrottling]
+ *
+ * @typedef {Object} DefaultsConfig
+ * @property {string} [out]
+ * @property {number} [width]
+ * @property {number} [height]
+ * @property {number} [scale]
+ * @property {string} [format]
+ * @property {number} [quality]
+ *
+ * @typedef {Object} RawConfig
+ * @property {DefaultsConfig} [defaults]
+ * @property {CaptureConfig[]} captures
+ *
+ * @typedef {Object} ResolvedConfig
+ * @property {DefaultsConfig} defaults
+ * @property {CaptureConfig[]} captures
+ *
+ * @typedef {Object} GenerateResult
+ * @property {boolean} created
+ * @property {string} path
+ */
+
+/**
+ * @param {*} value
+ * @returns {value is number}
+ */
 function isPositiveInteger(value) {
   return Number.isInteger(value) && value > 0;
 }
 
+/**
+ * @param {*} value
+ * @returns {value is string}
+ */
 function isResizeString(value) {
   return typeof value === 'string' && /^[1-9]\d*x[1-9]\d*$/.test(value);
 }
 
+/**
+ * @param {CaptureConfig} capture
+ * @param {number} index
+ */
 function validateCapture(capture, index) {
   if (typeof capture !== 'object' || capture === null) {
     throw new Error(`capture[${index}] must be an object`);
@@ -65,6 +117,9 @@ function validateCapture(capture, index) {
   }
 }
 
+/**
+ * @param {RawConfig} raw
+ */
 export function validateConfig(raw) {
   if (typeof raw !== 'object' || raw === null) {
     throw new Error('Invalid configuration format');
@@ -82,8 +137,8 @@ export function validateConfig(raw) {
 }
 
 /**
- * Load snap-asset.config.json from the project root.
- * Returns merged config with defaults applied to each capture.
+ * @param {string} [cwd]
+ * @returns {ResolvedConfig|null}
  */
 export function loadConfig(cwd = process.cwd()) {
   const configPath = join(cwd, CONFIG_NAME);
@@ -105,7 +160,8 @@ export function loadConfig(cwd = process.cwd()) {
 }
 
 /**
- * Generate a starter config file.
+ * @param {string} [cwd]
+ * @returns {GenerateResult}
  */
 export function generateConfig(cwd = process.cwd()) {
   const configPath = join(cwd, CONFIG_NAME);
