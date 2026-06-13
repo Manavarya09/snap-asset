@@ -4,7 +4,19 @@ import { tmpdir } from 'os';
 import { spawn } from 'child_process';
 
 /**
- * Detect the component framework from file extension and content.
+ * @typedef {'react'|'vue'|'svelte'} Framework
+ *
+ * @typedef {Object} ComponentRenderOptions
+ * @property {string} [projectRoot]
+ *
+ * @typedef {Object} ComponentRenderResult
+ * @property {string} url
+ * @property {() => void} cleanup
+ */
+
+/**
+ * @param {string} filePath
+ * @returns {Framework}
  */
 function detectFramework(filePath) {
   const ext = filePath.match(/\.(tsx?|jsx?|vue|svelte)$/)?.[1];
@@ -19,7 +31,6 @@ function detectFramework(filePath) {
     return 'react';
   }
   if (ext === 'ts' || ext === 'js') {
-    // Check file content for framework hints
     try {
       const content = readFileSync(filePath, 'utf-8');
       if (content.includes("from 'react'") || content.includes('from "react"')) {
@@ -34,13 +45,16 @@ function detectFramework(filePath) {
     } catch {
       // If we can't read the file, default to react
     }
-    return 'react'; // Default
+    return 'react';
   }
   return 'react';
 }
 
 /**
- * Generate the entry file content for the isolated render.
+ * @param {Framework} framework
+ * @param {string} componentPath
+ * @param {string} absComponentPath
+ * @returns {string}
  */
 function generateEntryFile(framework, componentPath, absComponentPath) {
   const relPath = absComponentPath.replace(/\\/g, '/');
@@ -83,7 +97,9 @@ new Component({ target: document.getElementById('root') });
 }
 
 /**
- * Generate a minimal Vite config for the temp project.
+ * @param {Framework} framework
+ * @param {string} projectRoot
+ * @returns {string}
  */
 function generateViteConfig(framework, projectRoot) {
   let plugins = '';
@@ -112,15 +128,16 @@ export default defineConfig({
     },
   },
   server: {
-    port: 0,  // Auto-assign port
+    port: 0,
   },
 });
 `;
 }
 
 /**
- * Render a component in isolation using a temporary Vite project.
- * Returns { url, cleanup } where url is the dev server URL.
+ * @param {string} componentPath
+ * @param {ComponentRenderOptions} [options]
+ * @returns {Promise<ComponentRenderResult>}
  */
 export async function renderComponent(componentPath, options = {}) {
   const { projectRoot = process.cwd() } = options;
@@ -134,7 +151,6 @@ export async function renderComponent(componentPath, options = {}) {
   const tempDir = mkdtempSync(join(tmpdir(), 'snap-asset-'));
 
   try {
-    // Create minimal HTML
     writeFileSync(
       join(tempDir, 'index.html'),
       `
@@ -157,26 +173,22 @@ export async function renderComponent(componentPath, options = {}) {
 `,
     );
 
-    // Create entry file
     const entryContent = generateEntryFile(framework, componentPath, absComponentPath);
     const entryExt = framework === 'react' ? 'tsx' : 'js';
     writeFileSync(join(tempDir, `main.${entryExt}`), entryContent);
 
-    // Create vite config
     writeFileSync(join(tempDir, 'vite.config.js'), generateViteConfig(framework, projectRoot));
 
-    // Symlink node_modules from project root
     const nodeModulesPath = join(projectRoot, 'node_modules');
     if (existsSync(nodeModulesPath)) {
       const { symlinkSync } = await import('fs');
       try {
         symlinkSync(nodeModulesPath, join(tempDir, 'node_modules'), 'junction');
       } catch {
-        // Fallback: copy approach would be too slow, just skip
+        // Symlink best-effort
       }
     }
 
-    // Start Vite dev server
     let viteProcess;
     try {
       viteProcess = spawn('npx', ['vite', '--host', '0.0.0.0'], {
@@ -185,8 +197,7 @@ export async function renderComponent(componentPath, options = {}) {
         env: { ...process.env, NODE_ENV: 'development' },
       });
 
-      // Wait for the server URL
-      const url = await new Promise((resolve, reject) => {
+      const url = await new Promise((resolvePromise, reject) => {
         let output = '';
         const timeout = setTimeout(() => {
           reject(new Error('Vite dev server timed out'));
@@ -197,7 +208,7 @@ export async function renderComponent(componentPath, options = {}) {
           const match = output.match(/Local:\s+(https?:\/\/[^\s]+)/);
           if (match) {
             clearTimeout(timeout);
-            resolve(match[1]);
+            resolvePromise(match[1]);
           }
         });
 
@@ -226,7 +237,6 @@ export async function renderComponent(componentPath, options = {}) {
 
       return { url, cleanup };
     } catch (err) {
-      // Ensure vite process is killed if it was started
       if (viteProcess) {
         try {
           viteProcess.kill('SIGTERM');
@@ -237,7 +247,6 @@ export async function renderComponent(componentPath, options = {}) {
       throw err;
     }
   } catch (err) {
-    // Always clean up the temp directory, even on error
     try {
       rmSync(tempDir, { recursive: true, force: true });
     } catch {
