@@ -7,8 +7,8 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const HTML_FORM = readFileSync(join(__dirname, '..', 'website', 'index.html'), 'utf-8');
-
-const VERSION = '0.2.0';
+const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
+const VERSION = pkg.version;
 
 export async function startServer(options = {}) {
   const port = options.port || 3000;
