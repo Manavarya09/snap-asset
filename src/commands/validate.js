@@ -1,3 +1,5 @@
+import { accessSync, constants } from 'fs';
+
 /** @typedef {'png'|'webp'|'avif'|'jpeg'|'jpg'|'both'} ValidFormat */
 
 const VALID_FORMATS = ['png', 'webp', 'avif', 'jpeg', 'jpg', 'both'];
@@ -45,4 +47,20 @@ export function validateClip(clip) {
     width: parts[2],
     height: parts[3],
   };
+}
+
+export function validateFile(path) {
+  try {
+    accessSync(path, constants.R_OK);
+    return path;
+  } catch {
+    throw new Error(`File not found or not readable: ${path}`);
+  }
+}
+
+export function parseUrlList(content) {
+  return content
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith('#'));
 }
