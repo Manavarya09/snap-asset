@@ -587,8 +587,12 @@ program
 
       validateFormat(opts.format);
       spin.text = 'Optimizing...';
+      let targetBuffer = captureResult.buffer;
+      if (opts.watermarkText) {
+        targetBuffer = await applyWatermark(targetBuffer, opts.watermarkText);
+      }
       const tProcess = Date.now();
-      const result = await processScreenshot(captureResult.buffer, { quality: opts.quality });
+      const result = await processScreenshot(targetBuffer, { quality: opts.quality });
       if (debug) log.debug(`processScreenshot: ${Date.now() - tProcess}ms`);
 
       const outDir = opts.out || detectOutputDir();
@@ -625,6 +629,21 @@ program
           jpgSize: result.jpgSize,
         });
       }
+      if (opts.webhookUrl) {
+        const formats = ['png', 'webp', 'avif', 'jpg'].filter((f) => result[f]);
+        sendWebhook(opts.webhookUrl, {
+          url,
+          timestamp: new Date().toISOString(),
+          formats,
+          size: Object.fromEntries(formats.map((f) => [f, result[`${f}Size`]])),
+          metadata: {
+            width: opts.width,
+            height: opts.height,
+            scale: opts.scale,
+          },
+        }).catch(() => {});
+      }
+
       log.divider();
       log.success('Done!');
       log.divider();
