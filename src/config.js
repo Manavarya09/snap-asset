@@ -185,7 +185,12 @@ export function loadConfig(cwd = process.cwd()) {
     return null;
   }
 
-  const raw = JSON.parse(readFileSync(configPath, 'utf-8'));
+  let raw;
+  try {
+    raw = JSON.parse(readFileSync(configPath, 'utf-8'));
+  } catch (parseErr) {
+    throw new Error(`Failed to parse ${CONFIG_NAME}: ${parseErr.message}`);
+  }
   validateConfig(raw);
 
   const defaults = raw.defaults || {};
