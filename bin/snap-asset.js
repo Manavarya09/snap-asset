@@ -37,7 +37,7 @@ import {
 import { loadConfig, generateConfig } from '../src/config.js';
 import { renderComponent } from '../src/component-renderer.js';
 import * as log from '../src/logger.js';
-import { validateFormat, validateResize, validateClip, validateFile, parseUrlList } from '../src/commands/validate.js';
+import { validateFormat, validateResize, validateClip, validateFile, parseUrlList, loadCookies, parseAuth, parseGeolocation } from '../src/commands/validate.js';
 import pLimit from 'p-limit';
 
 const VIEWPORT_PRESETS = {
@@ -168,24 +168,8 @@ program
           log.warn('--selector is ignored in PDF mode. Use --full-page for full-page capture.');
         }
 
-        let cookies = undefined;
-        const cookiesPath = opts.cookies || opts.cookiesFile;
-        if (cookiesPath) {
-          try {
-            const txt = await import('fs').then((m) => m.promises.readFile(cookiesPath, 'utf8'));
-            cookies = JSON.parse(txt);
-          } catch {
-            // If cookies can't be read, proceed without them
-          }
-        }
-
-        let auth = undefined;
-        if (opts.auth) {
-          const colonIdx = opts.auth.indexOf(':');
-          if (colonIdx > 0) {
-            auth = { username: opts.auth.slice(0, colonIdx), password: opts.auth.slice(colonIdx + 1) };
-          }
-        }
+        const cookies = await loadCookies(opts.cookies || opts.cookiesFile);
+        const auth = parseAuth(opts.auth);
 
         spin.text = usePdf ? `Generating PDF for ${url}...` : `Capturing screenshot for ${url}...`;
 
@@ -274,14 +258,7 @@ program
           device: opts.device,
           locale: opts.locale,
           timezone: opts.timezone,
-          geolocation: opts.geolocation
-            ? ((parts) => {
-              if (parts.length !== 2 || parts.some((n) => isNaN(n))) {
-                throw new Error('Invalid geolocation. Expected format: latitude,longitude (e.g. "40.7128,-74.0060")');
-              }
-              return { latitude: parts[0], longitude: parts[1] };
-            })(opts.geolocation.split(',').map(Number))
-            : undefined,
+          geolocation: parseGeolocation(opts.geolocation),
           colorScheme: opts.colorScheme,
           captureConsole: opts.captureConsole,
           collectMetrics: opts.collectMetrics,
@@ -526,15 +503,7 @@ program
       cleanup = cleanupFn;
 
       spin.text = 'Capturing component...';
-      let cookies = undefined;
-      if (opts.cookies) {
-        try {
-          const txt = await import('fs').then((m) => m.promises.readFile(opts.cookies, 'utf8'));
-          cookies = JSON.parse(txt);
-        } catch {
-          // If cookies can't be read, proceed without them
-        }
-      }
+      const cookies = await loadCookies(opts.cookies);
 
       if (debug) {
         log.debug('captureUrl options: ' + JSON.stringify({
@@ -598,14 +567,7 @@ program
         device: opts.device,
         locale: opts.locale,
         timezone: opts.timezone,
-        geolocation: opts.geolocation
-          ? ((parts) => {
-            if (parts.length !== 2 || parts.some((n) => isNaN(n))) {
-              throw new Error('Invalid geolocation. Expected format: latitude,longitude (e.g. "40.7128,-74.0060")');
-            }
-            return { latitude: parts[0], longitude: parts[1] };
-          })(opts.geolocation.split(',').map(Number))
-          : undefined,
+        geolocation: parseGeolocation(opts.geolocation),
         colorScheme: opts.colorScheme,
       });
       if (debug) log.debug(`captureUrl: ${Date.now() - tCapture}ms`);
@@ -693,15 +655,7 @@ program
     const spin = log.spinner('Scanning website...');
 
     try {
-      let cookies = undefined;
-      if (opts.cookies) {
-        try {
-          const txt = await import('fs').then((m) => m.promises.readFile(opts.cookies, 'utf8'));
-          cookies = JSON.parse(txt);
-        } catch {
-          // If cookies can't be read, proceed without them
-        }
-      }
+      const cookies = await loadCookies(opts.cookies);
 
       if (debug) {
         log.debug('extractSiteAssets options: ' + JSON.stringify({
