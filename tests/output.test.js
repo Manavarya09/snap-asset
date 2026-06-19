@@ -60,21 +60,21 @@ test('resolveOutputPaths supports overwrite mode', () => {
   assert.equal(paths2.pngPath, paths1.pngPath);
 });
 
-test('savePdf writes a file', () => {
+test('savePdf writes a file', async () => {
   const pdfPath = join(tempDir, 'test.pdf');
   const pdfContent = Buffer.from('%PDF-1.4 fake pdf');
-  const result = savePdf(pdfContent, pdfPath);
+  const result = await savePdf(pdfContent, pdfPath);
   assert.ok(existsSync(pdfPath));
   assert.equal(result.path, pdfPath);
   assert.equal(result.size, pdfContent.length);
 });
 
-test('cleanup removes a directory', () => {
+test('cleanup removes a directory', async () => {
   const dir = join(tempDir, 'cleanup-test');
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, 'file.txt'), 'content');
   assert.ok(existsSync(dir));
-  cleanup(dir);
+  await cleanup(dir);
   assert.ok(!existsSync(dir));
 });
 
@@ -97,10 +97,10 @@ test('output collision avoidance increments counter', () => {
   assert.ok(paths3.pngPath.includes('collision-2'));
 });
 
-test('saveAssets writes files and returns sizes', () => {
+test('saveAssets writes files and returns sizes', async () => {
   const paths = resolveOutputPaths(tempDir, 'save-test', { overwrite: true, format: 'both' });
   const buffers = { png: Buffer.from('png-data'), webp: Buffer.from('webp-data') };
-  const saved = saveAssets(paths, buffers);
+  const saved = await saveAssets(paths, buffers);
   assert.equal(saved.length, 2);
   assert.ok(existsSync(paths.pngPath));
   assert.ok(existsSync(paths.webpPath));

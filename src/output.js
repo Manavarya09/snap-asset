@@ -1,4 +1,5 @@
-import { existsSync, mkdirSync, writeFileSync, rmSync } from 'fs';
+import { existsSync, mkdirSync } from 'fs';
+import { writeFile, rm } from 'fs/promises';
 import { join, basename } from 'path';
 
 /**
@@ -194,26 +195,26 @@ export function generatePictureHtml(name, options = {}) {
  * @param {BuffersMap} buffers
  * @returns {SavedAsset[]}
  */
-export function saveAssets(paths, buffers) {
+export async function saveAssets(paths, buffers) {
   const saved = [];
 
   if (paths.pngPath && buffers.png) {
-    writeFileSync(paths.pngPath, buffers.png);
+    await writeFile(paths.pngPath, buffers.png);
     saved.push({ path: paths.pngPath, size: buffers.png.length });
   }
 
   if (paths.webpPath && buffers.webp) {
-    writeFileSync(paths.webpPath, buffers.webp);
+    await writeFile(paths.webpPath, buffers.webp);
     saved.push({ path: paths.webpPath, size: buffers.webp.length });
   }
 
   if (paths.avifPath && buffers.avif) {
-    writeFileSync(paths.avifPath, buffers.avif);
+    await writeFile(paths.avifPath, buffers.avif);
     saved.push({ path: paths.avifPath, size: buffers.avif.length });
   }
 
   if (paths.jpgPath && buffers.jpg) {
-    writeFileSync(paths.jpgPath, buffers.jpg);
+    await writeFile(paths.jpgPath, buffers.jpg);
     saved.push({ path: paths.jpgPath, size: buffers.jpg.length });
   }
 
@@ -224,7 +225,7 @@ export function saveAssets(paths, buffers) {
  * @param {OutputPaths} paths
  * @param {CaptureInfo} info
  */
-export function saveMetadata(paths, info) {
+export async function saveMetadata(paths, info) {
   if (!paths.metadataPath) {
     return;
   }
@@ -251,7 +252,7 @@ export function saveMetadata(paths, info) {
     metadata.formats.jpg = { path: basename(paths.jpgPath), size: info.jpgSize };
   }
 
-  writeFileSync(paths.metadataPath, JSON.stringify(metadata, null, 2));
+  await writeFile(paths.metadataPath, JSON.stringify(metadata, null, 2));
 }
 
 /**
@@ -259,8 +260,8 @@ export function saveMetadata(paths, info) {
  * @param {string} filePath
  * @returns {{path: string, size: number}}
  */
-export function savePdf(buffer, filePath) {
-  writeFileSync(filePath, buffer);
+export async function savePdf(buffer, filePath) {
+  await writeFile(filePath, buffer);
   return { path: filePath, size: buffer.length };
 }
 
@@ -268,6 +269,6 @@ export function savePdf(buffer, filePath) {
  * Recursively remove a directory.
  * @param {string} dirPath
  */
-export function cleanup(dirPath) {
-  rmSync(dirPath, { recursive: true, force: true });
+export async function cleanup(dirPath) {
+  await rm(dirPath, { recursive: true, force: true });
 }

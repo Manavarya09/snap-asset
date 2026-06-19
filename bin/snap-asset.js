@@ -330,13 +330,14 @@ program
 
       for (const entry of results) {
         if (entry.pdfBuffer) {
-          const { path, size } = savePdf(entry.pdfBuffer, entry.paths.pdfPath);
+          const { path, size } = await savePdf(entry.pdfBuffer, entry.paths.pdfPath);
           log.saved(path, size / 1024);
           log.info('Captured PDF', entry.url);
           log.divider();
         } else {
           const { paths, result, url } = entry;
-          for (const { path, size } of saveAssets(paths, result)) {
+          const savedAssets = await saveAssets(paths, result);
+          for (const { path, size } of savedAssets) {
             log.saved(path, size / 1024);
           }
           if (result.pngSize && result.webpSize) {
@@ -346,7 +347,7 @@ program
             log.savings('AVIF', result.pngSize / 1024, result.avifSize / 1024);
           }
           if (paths.metadataPath) {
-            saveMetadata(paths, {
+            await saveMetadata(paths, {
               url,
               width: opts.width,
               height: opts.height,
@@ -585,7 +586,7 @@ program
         metadata: opts.metadata,
       });
 
-      const saved = saveAssets(paths, result);
+      const saved = await saveAssets(paths, result);
       spin.stop();
 
       log.divider();
@@ -599,7 +600,7 @@ program
         log.savings('AVIF', result.pngSize / 1024, result.avifSize / 1024);
       }
       if (paths.metadataPath) {
-        saveMetadata(paths, {
+        await saveMetadata(paths, {
           url: url,
           width: opts.width,
           height: opts.height,
@@ -706,7 +707,7 @@ program
             overwrite: opts.overwrite,
             format: 'both',
           });
-          saveAssets(paths, result);
+          await saveAssets(paths, result);
           savedCount++;
         } catch {
           // Skip assets that fail optimization (e.g., SVGs, tiny images)
@@ -841,7 +842,7 @@ program
             format: capture.format || 'both',
           });
 
-          saveAssets(paths, result);
+          await saveAssets(paths, result);
           spin.succeed(`${progress} ${capture.name} saved`);
           completed++;
         } catch (err) {

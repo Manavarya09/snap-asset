@@ -18,7 +18,7 @@ try {
   // Directory may not exist yet
 }
 
-test('saveMetadata writes metadata file with all formats', () => {
+test('saveMetadata writes metadata file with all formats', async () => {
   mkdirSync(tempDir, { recursive: true });
   const paths = {
     metadataPath: join(tempDir, 'meta.json'),
@@ -37,7 +37,7 @@ test('saveMetadata writes metadata file with all formats', () => {
     avifSize: 300,
     jpgSize: 400,
   };
-  saveMetadata(paths, info);
+  await saveMetadata(paths, info);
   const content = JSON.parse(readFileSync(paths.metadataPath, 'utf-8'));
   assert.equal(content.url, 'https://example.com');
   assert.equal(content.width, 800);
@@ -49,18 +49,18 @@ test('saveMetadata writes metadata file with all formats', () => {
   assert.equal(content.formats.jpg.size, 400);
 });
 
-test('saveMetadata does nothing without metadataPath', () => {
+test('saveMetadata does nothing without metadataPath', async () => {
   const info = { url: 'https://example.com' };
-  saveMetadata({ pngPath: join(tempDir, 'x.png') }, info);
+  await saveMetadata({ pngPath: join(tempDir, 'x.png') }, info);
 });
 
-test('saveMetadata handles partial formats', () => {
+test('saveMetadata handles partial formats', async () => {
   const paths = {
     metadataPath: join(tempDir, 'meta-partial.json'),
     pngPath: join(tempDir, 'partial.png'),
   };
   const info = { url: 'https://x.com', pngSize: 50 };
-  saveMetadata(paths, info);
+  await saveMetadata(paths, info);
   const content = JSON.parse(readFileSync(paths.metadataPath, 'utf-8'));
   assert.ok(content.formats.png);
   assert.equal(content.formats.png.size, 50);
