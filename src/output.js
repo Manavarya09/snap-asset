@@ -169,16 +169,22 @@ export function resolveOutputPaths(outDir, name, options = {}) {
  * @param {PictureOptions} [options]
  * @returns {string}
  */
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 export function generatePictureHtml(name, options = {}) {
   const { alt = '', className = '', basePath = '' } = options;
   const prefix = basePath ? `${basePath}/` : '';
-  const classAttr = className ? ` class="${className}"` : '';
+  const safeAlt = escapeHtml(alt);
+  const safeClass = escapeHtml(className);
+  const classAttr = safeClass ? ` class="${safeClass}"` : '';
 
   return [
     '<picture>',
     `  <source srcset="${prefix}${name}.avif" type="image/avif">`,
     `  <source srcset="${prefix}${name}.webp" type="image/webp">`,
-    `  <img src="${prefix}${name}.png" alt="${alt}"${classAttr} loading="lazy">`,
+    `  <img src="${prefix}${name}.png" alt="${safeAlt}"${classAttr} loading="lazy">`,
     '</picture>',
   ].join('\n');
 }
