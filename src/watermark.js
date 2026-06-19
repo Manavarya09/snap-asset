@@ -31,6 +31,10 @@ export async function applyWatermark(buffer, text, options = {}) {
     x = w + g.x;
     y = h + g.y;
     textAnchor = 'end';
+  } else if (gravity === 'northwest') {
+    x = g.x;
+    y = g.y;
+    textAnchor = 'start';
   } else {
     x = g.x;
     y = h + g.y;
@@ -54,5 +58,5 @@ export async function applyWatermark(buffer, text, options = {}) {
 }
 
 function escapeXml(str) {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 }
