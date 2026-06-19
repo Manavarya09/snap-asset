@@ -560,6 +560,7 @@ program
         noSandbox: progOpts.noSandbox,
         headless: progOpts.headless === 'false' ? false : progOpts.headless === 'shell' ? 'shell' : true,
         userAgent: progOpts.userAgent,
+        proxy: progOpts.proxy,
         retries: opts.retries,
         css: opts.css,
         waitForSelector: opts.waitForSelector,
