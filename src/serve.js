@@ -1,14 +1,24 @@
 import { createServer } from 'http';
 import { captureUrl } from './capturer.js';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
-const HTML_FORM = readFileSync(join(__dirname, '..', 'website', 'index.html'), 'utf-8');
 const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
 const VERSION = pkg.version;
+
+let htmlFormCache = null;
+function getHtmlForm() {
+  if (htmlFormCache) return htmlFormCache;
+  const htmlPath = join(__dirname, '..', 'website', 'index.html');
+  if (existsSync(htmlPath)) {
+    htmlFormCache = readFileSync(htmlPath, 'utf-8');
+  } else {
+    htmlFormCache = '<!DOCTYPE html><html><body><h1>snap-asset</h1><p>UI not found. Install with: npm run build</p></body></html>';
+  }
+  return htmlFormCache;
+}
 
 export async function startServer(options = {}) {
   const port = options.port || 3000;
@@ -18,7 +28,7 @@ export async function startServer(options = {}) {
     try {
       if (req.method === 'GET' && req.url === '/') {
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(HTML_FORM);
+        res.end(getHtmlForm());
         return;
       }
 
