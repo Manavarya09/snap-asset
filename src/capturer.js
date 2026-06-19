@@ -476,8 +476,9 @@ export async function captureUrl(url, options = {}) {
     } catch (err) {
       lastError = err;
       if (attempt < retries) {
-        const delay = Math.pow(2, attempt) * 1000;
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        const baseDelay = Math.pow(2, attempt) * 1000;
+        const jitter = Math.random() * 500;
+        await new Promise((resolve) => setTimeout(resolve, baseDelay + jitter));
       }
     }
   }
