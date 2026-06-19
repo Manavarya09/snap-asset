@@ -59,6 +59,12 @@ export async function startServer(options = {}) {
       }
 
       if (req.method === 'POST' && req.url === '/capture') {
+        if (req.headers['content-type'] && req.headers['content-type'] !== 'application/json') {
+          res.writeHead(415, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Content-Type must be application/json' }));
+          return;
+        }
+
         let body = '';
         const MAX_BODY_SIZE = 1024 * 100; // 100KB
         req.on('data', (chunk) => {
