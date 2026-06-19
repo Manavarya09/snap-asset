@@ -64,8 +64,9 @@ function generateEntryFile(framework, componentPath, absComponentPath) {
       return `
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import Component from '${relPath}';
+import ComponentMod from '${relPath}';
 
+const Component = ComponentMod.default || ComponentMod;
 const root = createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
@@ -79,15 +80,17 @@ root.render(
     case 'vue':
       return `
 import { createApp } from 'vue';
-import Component from '${relPath}';
+import ComponentMod from '${relPath}';
 
+const Component = ComponentMod.default || ComponentMod;
 createApp(Component).mount('#root');
 `;
 
     case 'svelte':
       return `
-import Component from '${relPath}';
+import ComponentMod from '${relPath}';
 
+const Component = ComponentMod.default || ComponentMod;
 new Component({ target: document.getElementById('root') });
 `;
 
