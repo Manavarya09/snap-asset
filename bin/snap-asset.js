@@ -40,8 +40,6 @@ import * as log from '../src/logger.js';
 import { validateFormat, validateResize, validateClip, validateFile, parseUrlList } from '../src/commands/validate.js';
 import pLimit from 'p-limit';
 
-export { validateClip, validateFormat, validateResize };
-
 const VIEWPORT_PRESETS = {
   mobile: { width: 375, height: 812 },
   tablet: { width: 768, height: 1024 },
