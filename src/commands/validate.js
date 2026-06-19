@@ -64,3 +64,32 @@ export function parseUrlList(content) {
     .map((line) => line.trim())
     .filter((line) => line && !line.startsWith('#'));
 }
+
+export async function loadCookies(cookiesPath) {
+  if (!cookiesPath) return undefined;
+  try {
+    const { readFile } = await import('fs/promises');
+    const txt = await readFile(cookiesPath, 'utf8');
+    return JSON.parse(txt);
+  } catch {
+    return undefined;
+  }
+}
+
+export function parseAuth(authStr) {
+  if (!authStr) return undefined;
+  const colonIdx = authStr.indexOf(':');
+  if (colonIdx > 0) {
+    return { username: authStr.slice(0, colonIdx), password: authStr.slice(colonIdx + 1) };
+  }
+  return undefined;
+}
+
+export function parseGeolocation(geolocationStr) {
+  if (!geolocationStr) return undefined;
+  const parts = geolocationStr.split(',').map(Number);
+  if (parts.length !== 2 || parts.some((n) => isNaN(n))) {
+    throw new Error('Invalid geolocation. Expected format: latitude,longitude (e.g. "40.7128,-74.0060")');
+  }
+  return { latitude: parts[0], longitude: parts[1] };
+}
