@@ -46,7 +46,7 @@ import { join, basename } from 'path';
  * @returns {string}
  */
 export function detectOutputDir(cwd = process.cwd()) {
-  const candidates = ['public', 'assets', 'static'];
+  const candidates = ['public', 'assets', 'static', 'dist', 'build'];
 
   for (const dir of candidates) {
     const fullPath = join(cwd, dir);
