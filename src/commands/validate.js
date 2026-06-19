@@ -58,6 +58,11 @@ export function validateFile(path) {
   }
 }
 
+/**
+ * Parse newline-separated URL list, skipping comments and empty lines.
+ * @param {string} content
+ * @returns {string[]}
+ */
 export function parseUrlList(content) {
   return content
     .split('\n')
@@ -65,6 +70,11 @@ export function parseUrlList(content) {
     .filter((line) => line && !line.startsWith('#'));
 }
 
+/**
+ * Load cookies from a JSON file path.
+ * @param {string} [cookiesPath]
+ * @returns {Promise<Array<{name:string,value:string,domain?:string,path?:string}>|undefined>}
+ */
 export async function loadCookies(cookiesPath) {
   if (!cookiesPath) return undefined;
   try {
@@ -76,6 +86,11 @@ export async function loadCookies(cookiesPath) {
   }
 }
 
+/**
+ * Parse a "username:password" auth string.
+ * @param {string} [authStr]
+ * @returns {{username:string,password:string}|undefined}
+ */
 export function parseAuth(authStr) {
   if (!authStr) return undefined;
   const colonIdx = authStr.indexOf(':');
@@ -85,6 +100,11 @@ export function parseAuth(authStr) {
   return undefined;
 }
 
+/**
+ * Parse a "latitude,longitude" geolocation string.
+ * @param {string} [geolocationStr]
+ * @returns {{latitude:number,longitude:number}|undefined}
+ */
 export function parseGeolocation(geolocationStr) {
   if (!geolocationStr) return undefined;
   const parts = geolocationStr.split(',').map(Number);
