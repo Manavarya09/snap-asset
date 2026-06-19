@@ -1,8 +1,14 @@
 import chalk from 'chalk';
 import ora from 'ora';
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
 
 const BRAND = chalk.hex('#FF6B35').bold('snap-asset');
-const VERSION = '0.3.0';
+const VERSION = pkg.version;
 
 /** @type {{ enableColor: boolean, verbose: boolean, quiet: boolean, debug: boolean }} */
 const CONFIG = {
