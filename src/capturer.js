@@ -98,13 +98,14 @@ export async function waitForLazyImages(page) {
     await Promise.all(
       images.map((img) => {
         return new Promise((resolve) => {
-          if (img.dataset.src || img.dataset.lazySrc) {
-            img.src = img.dataset.src || img.dataset.lazySrc;
-          }
           img.onload = () => resolve();
           img.onerror = () => resolve();
           if (img.complete) {
             resolve();
+            return;
+          }
+          if (img.dataset.src || img.dataset.lazySrc) {
+            img.src = img.dataset.src || img.dataset.lazySrc;
           }
         });
       }),
