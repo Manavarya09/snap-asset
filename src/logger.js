@@ -97,3 +97,14 @@ export function spinner(text) {
 export function divider() {
   console.log();
 }
+
+/** Simple async timer for debug timing. Returns elapsed ms. */
+export function startTimer() {
+  const start = Date.now();
+  return (label) => {
+    if (CONFIG.debug) {
+      debug(`${label}: ${Date.now() - start}ms`);
+    }
+    return Date.now() - start;
+  };
+}
