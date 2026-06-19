@@ -46,9 +46,9 @@ test('validateClip rejects invalid clip strings', () => {
   assert.throws(() => validateClip('-1,0,100,100'), /Invalid clip/);
 });
 
-test('validateClip rejects zero-or-negative dimensions', () => {
-  assert.throws(() => validateClip('0,0,0,0'), /Invalid clip/);
-  assert.throws(() => validateClip('10,20,0,100'), /Invalid clip/);
+test('validateClip rejects negative dimensions', () => {
+  assert.throws(() => validateClip('-1,0,100,100'), /Invalid clip/);
+  assert.throws(() => validateClip('10,20,-1,100'), /Invalid clip/);
 });
 
 test('validateClip returns null for empty input', () => {

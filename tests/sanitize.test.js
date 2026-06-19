@@ -13,7 +13,7 @@ test('sanitizeFilename removes special characters', () => {
 test('sanitizeFilename handles empty and edge inputs', () => {
   assert.equal(sanitizeFilename(''), '');
   assert.equal(sanitizeFilename('   '), '');
-  assert.equal(sanitizeFilename('___'), '');
+  assert.equal(sanitizeFilename('!@#$%'), '');
 });
 
 test('truncate returns short strings unchanged', () => {
