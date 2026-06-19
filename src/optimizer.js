@@ -90,7 +90,7 @@ export async function toWebp(buffer, options = {}) {
  * @returns {Promise<Buffer>}
  */
 export async function toAvif(buffer, options = {}) {
-  const { quality = 50, resize = null } = options;
+  const { quality = OPTIMIZER_DEFAULTS.avifQuality, resize = null } = options;
   const dims = parseResize(resize);
 
   let pipeline = sharp(buffer).avif({ quality });
