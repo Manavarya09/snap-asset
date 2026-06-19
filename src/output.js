@@ -151,7 +151,9 @@ export function resolveOutputPaths(outDir, name, options = {}) {
   if (format === 'both' || format === 'avif') {
     result.avifPath = join(outDir, `${finalName}.avif`);
   }
-  if (format === 'jpeg' || format === 'jpg') {
+  if (format === 'jpeg') {
+    result.jpgPath = join(outDir, `${finalName}.jpeg`);
+  } else if (format === 'jpg') {
     result.jpgPath = join(outDir, `${finalName}.jpg`);
   }
   if (format === 'pdf') {
