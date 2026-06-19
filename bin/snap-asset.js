@@ -488,6 +488,8 @@ program
   .option('--timezone <timezone>', 'browser timezone (e.g. America/New_York)')
   .option('--geolocation <lat,lon>', 'geolocation coordinates (e.g. "40.7128,-74.0060")')
   .option('--color-scheme <scheme>', 'color scheme: light, dark, no-preference')
+  .option('--watermark-text <text>', 'overlay text watermark on captured image')
+  .option('--webhook-url <url>', 'send capture result to webhook URL')
   .action(async (componentPath, opts) => {
     const progOpts = program.opts();
     const debug = !!progOpts.debug;
