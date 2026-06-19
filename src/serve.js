@@ -40,13 +40,20 @@ export async function startServer(options = {}) {
           return;
         }
 
-        const { buffer } = await captureUrl(url, captureOpts || {});
+        const result = await captureUrl(url, captureOpts || {});
+        const outputBuffer = result.pdf || result.buffer;
+
+        if (!outputBuffer) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'No capture result returned' }));
+          return;
+        }
 
         const formatMap = { png: 'image/png', webp: 'image/webp', avif: 'image/avif', jpg: 'image/jpeg', jpeg: 'image/jpeg' };
-        const contentType = formatMap[format] || 'image/png';
+        const contentType = result.pdf ? 'application/pdf' : (formatMap[format] || 'image/png');
 
         res.writeHead(200, { 'Content-Type': contentType });
-        res.end(buffer);
+        res.end(outputBuffer);
         return;
       }
 
