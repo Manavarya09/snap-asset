@@ -300,6 +300,9 @@ export async function captureUrl(url, options = {}) {
 
         if (loginScript) {
           try {
+            if (typeof loginScript !== 'string' || loginScript.includes('..')) {
+              throw new Error('Invalid loginScript path');
+            }
             const scriptPath = resolvePath(process.cwd(), loginScript);
             const mod = await import(scriptPath);
             if (typeof mod.default === 'function') {
