@@ -260,7 +260,19 @@ program
           recordVideo: opts.recordVideo,
           css: opts.css,
           waitForSelector: opts.waitForSelector,
-          beforeCapture: opts.beforeCapture ? JSON.parse(opts.beforeCapture) : undefined,
+          beforeCapture: opts.beforeCapture
+            ? (() => {
+              try {
+                const parsed = JSON.parse(opts.beforeCapture);
+                if (!Array.isArray(parsed)) {
+                  throw new Error('beforeCapture must be a JSON array');
+                }
+                return parsed;
+              } catch (e) {
+                throw new Error(`Invalid --before-capture JSON: ${e.message}`);
+              }
+            })()
+            : undefined,
           device: opts.device,
           locale: opts.locale,
           timezone: opts.timezone,
@@ -572,7 +584,19 @@ program
         retries: opts.retries,
         css: opts.css,
         waitForSelector: opts.waitForSelector,
-        beforeCapture: opts.beforeCapture ? JSON.parse(opts.beforeCapture) : undefined,
+        beforeCapture: opts.beforeCapture
+          ? (() => {
+            try {
+              const parsed = JSON.parse(opts.beforeCapture);
+              if (!Array.isArray(parsed)) {
+                throw new Error('beforeCapture must be a JSON array');
+              }
+              return parsed;
+            } catch (e) {
+              throw new Error(`Invalid --before-capture JSON: ${e.message}`);
+            }
+          })()
+          : undefined,
         device: opts.device,
         locale: opts.locale,
         timezone: opts.timezone,
