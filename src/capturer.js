@@ -115,6 +115,35 @@ export async function waitForLazyImages(page) {
 }
 
 /**
+ * Build shared context options for Playwright browser contexts.
+ * @param {Object} opts
+ * @returns {Object}
+ */
+function buildContextOptions(opts) {
+  const { width = 1280, height = 800, scale = 2, dark = false, colorScheme, device,
+    userAgent, locale, timezone, geolocation } = opts;
+  const contextOptions = {};
+
+  if (device && devices[device]) {
+    Object.assign(contextOptions, devices[device]);
+  }
+
+  contextOptions.viewport = { width, height };
+  contextOptions.deviceScaleFactor = scale;
+  contextOptions.colorScheme = colorScheme || (dark ? 'dark' : 'light');
+
+  if (userAgent) contextOptions.userAgent = userAgent;
+  if (locale) contextOptions.locale = locale;
+  if (timezone) contextOptions.timezoneId = timezone;
+  if (geolocation) {
+    contextOptions.geolocation = geolocation;
+    contextOptions.permissions = ['geolocation'];
+  }
+
+  return contextOptions;
+}
+
+/**
  * @param {string} url
  * @param {CaptureOptions & {retries?: number}} [options]
  * @returns {Promise<{buffer: Buffer, screenshots: Buffer[]}>}
@@ -218,29 +247,10 @@ export async function captureUrl(url, options = {}) {
       const browser = await chromium.launch(launchOptions);
 
       try {
-        const contextOptions = {};
-
-        if (device && devices[device]) {
-          Object.assign(contextOptions, devices[device]);
-        }
-
-        contextOptions.viewport = { width, height };
-        contextOptions.deviceScaleFactor = scale;
-        contextOptions.colorScheme = colorScheme || (dark ? 'dark' : 'light');
-
-        if (userAgent) {
-          contextOptions.userAgent = userAgent;
-        }
-        if (locale) {
-          contextOptions.locale = locale;
-        }
-        if (timezone) {
-          contextOptions.timezoneId = timezone;
-        }
-        if (geolocation) {
-          contextOptions.geolocation = geolocation;
-          contextOptions.permissions = ['geolocation'];
-        }
+        const contextOptions = buildContextOptions({
+          width, height, scale, dark, colorScheme, device,
+          userAgent, locale, timezone, geolocation,
+        });
 
         if (recordVideo) {
           contextOptions.recordVideo = { dir: 'videos/' };
@@ -501,11 +511,9 @@ export async function captureResponsive(url, widths = [375, 768, 1024, 1280, 192
 
   try {
     for (const width of widths) {
-      const context = await browser.newContext({
-        viewport: { width, height },
-        deviceScaleFactor: scale,
-        colorScheme: dark ? 'dark' : 'light',
-      });
+      const context = await browser.newContext(buildContextOptions({
+        ...options, width, height, scale, dark, device: undefined,
+      }));
 
       const page = await context.newPage();
       await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
