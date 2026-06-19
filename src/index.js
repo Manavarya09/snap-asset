@@ -9,3 +9,4 @@ export { sendWebhook } from './webhook.js';
 export { startServer } from './serve.js';
 export { PluginManager } from './plugin.js';
 export { sanitizeFilename, truncate, formatBytes } from './commands/sanitize.js';
+export { loadCookies, parseAuth, parseGeolocation, validateFormat, validateResize, validateClip, validateFile, parseUrlList } from './commands/validate.js';
