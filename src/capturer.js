@@ -120,13 +120,16 @@ export async function waitForLazyImages(page) {
 export async function captureUrl(url, options = {}) {
   const { retries = 2, ...rest } = options;
 
+  const cacheTTL = typeof rest.cacheTTL === 'number' ? rest.cacheTTL
+    : process.env.SNAP_ASSET_CACHE_TTL ? Number(process.env.SNAP_ASSET_CACHE_TTL)
+    : 3600;
+
   const cache =
     rest.cache === false
       ? null
       : new DiskCache(process.cwd(), {
           maxEntries: rest.cacheMaxEntries || 200,
-          defaultTTL:
-            rest.cacheTTL || process.env.SNAP_ASSET_CACHE_TTL ? Number(process.env.SNAP_ASSET_CACHE_TTL) : 3600,
+          defaultTTL: cacheTTL,
         });
 
   const captureKeyFields = {
