@@ -126,23 +126,22 @@ export async function toJpeg(buffer, options = {}) {
  * @returns {Promise<ProcessResult>}
  */
 export async function processScreenshot(buffer, options = {}) {
+  const { format } = options;
+  const wantsAll = !format || format === 'both';
+
   const [png, webp, avif, jpg] = await Promise.all([
-    optimizePng(buffer, options),
-    toWebp(buffer, options),
-    toAvif(buffer, options),
-    toJpeg(buffer, options),
+    wantsAll || format === 'png' ? optimizePng(buffer, options) : undefined,
+    wantsAll || format === 'webp' ? toWebp(buffer, options) : undefined,
+    wantsAll || format === 'avif' ? toAvif(buffer, options) : undefined,
+    wantsAll || format === 'jpeg' || format === 'jpg' ? toJpeg(buffer, options) : undefined,
   ]);
 
-  return {
-    png,
-    webp,
-    avif,
-    jpg,
-    pngSize: png.length,
-    webpSize: webp.length,
-    avifSize: avif.length,
-    jpgSize: jpg.length,
-  };
+  const result = {};
+  if (png) { result.png = png; result.pngSize = png.length; }
+  if (webp) { result.webp = webp; result.webpSize = webp.length; }
+  if (avif) { result.avif = avif; result.avifSize = avif.length; }
+  if (jpg) { result.jpg = jpg; result.jpgSize = jpg.length; }
+  return result;
 }
 
 /**
