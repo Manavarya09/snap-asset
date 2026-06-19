@@ -656,6 +656,8 @@ program
   .option('--no-sections', 'skip section screenshots')
   .option('--no-images', 'skip image extraction')
   .option('--overwrite', 'overwrite existing files')
+  .option('--cookies <path>', 'Path to JSON file with cookies array')
+  .option('--login-script <path>', 'Path to JS module that exports a default async login function (page)')
   .action(async (url, opts) => {
     const progOpts = program.opts();
     const debug = !!progOpts.debug;
