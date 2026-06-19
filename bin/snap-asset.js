@@ -262,7 +262,12 @@ program
           locale: opts.locale,
           timezone: opts.timezone,
           geolocation: opts.geolocation
-            ? ((parts) => ({ latitude: parts[0], longitude: parts[1] }))(opts.geolocation.split(',').map(Number))
+            ? ((parts) => {
+              if (parts.length !== 2 || parts.some((n) => isNaN(n))) {
+                throw new Error('Invalid geolocation. Expected format: latitude,longitude (e.g. "40.7128,-74.0060")');
+              }
+              return { latitude: parts[0], longitude: parts[1] };
+            })(opts.geolocation.split(',').map(Number))
             : undefined,
           colorScheme: opts.colorScheme,
           captureConsole: opts.captureConsole,
@@ -569,7 +574,12 @@ program
         locale: opts.locale,
         timezone: opts.timezone,
         geolocation: opts.geolocation
-          ? ((parts) => ({ latitude: parts[0], longitude: parts[1] }))(opts.geolocation.split(',').map(Number))
+          ? ((parts) => {
+            if (parts.length !== 2 || parts.some((n) => isNaN(n))) {
+              throw new Error('Invalid geolocation. Expected format: latitude,longitude (e.g. "40.7128,-74.0060")');
+            }
+            return { latitude: parts[0], longitude: parts[1] };
+          })(opts.geolocation.split(',').map(Number))
           : undefined,
         colorScheme: opts.colorScheme,
       });
