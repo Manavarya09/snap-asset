@@ -30,6 +30,7 @@ const THROTTLE_PROFILES = {
  * @property {number} [cacheMaxEntries]
  * @property {number} [cacheTTL]
  * @property {boolean} [noSandbox]
+ * @property {boolean} [headless]
  * @property {string} [userAgent]
  * @property {number} [retries]
  * @property {boolean} [pdf]
@@ -202,7 +203,7 @@ export async function captureUrl(url, options = {}) {
     colorScheme = undefined,
   } = rest;
 
-  const launchOptions = { headless: true };
+  const launchOptions = { headless: rest.headless !== false };
   if (noSandbox) {
     launchOptions.args = ['--no-sandbox'];
   }
