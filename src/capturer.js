@@ -257,6 +257,16 @@ export async function captureUrl(url, options = {}) {
 
         const page = await context.newPage();
 
+        let pageCrashed = false;
+        page.on('crash', () => {
+          pageCrashed = true;
+        });
+        page.on('pageerror', (err) => {
+          if (rest.captureConsole) {
+            consoleEntries.push({ type: 'error', text: err.message, timestamp: Date.now() });
+          }
+        });
+
         const consoleEntries = [];
         if (rest.captureConsole) {
           page.on('console', (msg) => {
@@ -302,6 +312,10 @@ export async function captureUrl(url, options = {}) {
           waitUntil: 'networkidle',
           timeout,
         });
+
+        if (pageCrashed) {
+          throw new Error('Page crashed during navigation');
+        }
 
         if (rest.cookies && Array.isArray(rest.cookies)) {
           try {
