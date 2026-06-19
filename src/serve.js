@@ -4,6 +4,16 @@ import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
+function isPrivateHost(hostname) {
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return true;
+  if (/^10\./.test(hostname)) return true;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) return true;
+  if (/^192\.168\./.test(hostname)) return true;
+  if (/^169\.254\./.test(hostname)) return true;
+  if (/^\[?fd[0-9a-f]{2}:/.test(hostname)) return true;
+  return false;
+}
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
 const VERSION = pkg.version;
@@ -65,6 +75,20 @@ export async function startServer(options = {}) {
         if (!url) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'url is required' }));
+          return;
+        }
+
+        let parsedCaptureUrl;
+        try {
+          parsedCaptureUrl = new URL(url);
+          if (isPrivateHost(parsedCaptureUrl.hostname)) {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Access to private/internal network addresses is not allowed' }));
+            return;
+          }
+        } catch {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid URL format' }));
           return;
         }
 
