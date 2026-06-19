@@ -163,6 +163,10 @@ program
       async function captureOne(url, index) {
         const usePdf = opts.pdf;
 
+        if (usePdf && opts.selector) {
+          log.warn('--selector is ignored in PDF mode. Use --full-page for full-page capture.');
+        }
+
         let cookies = undefined;
         const cookiesPath = opts.cookies || opts.cookiesFile;
         if (cookiesPath) {
