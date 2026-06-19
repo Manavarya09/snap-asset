@@ -203,7 +203,7 @@ export async function renderComponent(componentPath, options = {}) {
       const url = await new Promise((resolvePromise, reject) => {
         let output = '';
         const timeout = setTimeout(() => {
-          reject(new Error('Vite dev server timed out'));
+          reject(new Error(`Vite dev server timed out after 30s. Output: ${output.slice(0, 500)}`));
         }, 30000);
 
         viteProcess.stdout.on('data', (data) => {
@@ -222,6 +222,11 @@ export async function renderComponent(componentPath, options = {}) {
         viteProcess.on('error', (err) => {
           clearTimeout(timeout);
           reject(err);
+        });
+
+        viteProcess.on('exit', (code) => {
+          clearTimeout(timeout);
+          reject(new Error(`Vite process exited with code ${code}. Output: ${output.slice(0, 500)}`));
         });
       });
 
