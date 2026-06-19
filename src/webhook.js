@@ -34,8 +34,13 @@ export async function sendWebhook(url, payload, options = {}) {
           data += chunk;
         });
         res.on('end', () => {
+          if (res.statusCode < 200 || res.statusCode >= 300) {
+            reject(new Error(`Webhook responded with status ${res.statusCode}: ${data.slice(0, 200)}`));
+            return;
+          }
           resolve(data);
         });
+        res.on('error', reject);
       },
     );
 
