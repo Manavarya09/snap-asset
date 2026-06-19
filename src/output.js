@@ -117,18 +117,20 @@ export function resolveOutputPaths(outDir, name, options = {}) {
   }
 
   if (!overwrite) {
+    const formatExtensions = [];
+    if (format === 'both' || format === 'png') formatExtensions.push('png');
+    if (format === 'both' || format === 'webp') formatExtensions.push('webp');
+    if (format === 'both' || format === 'avif') formatExtensions.push('avif');
+    if (format === 'jpeg' || format === 'jpg') formatExtensions.push('jpg', 'jpeg');
+    if (format === 'pdf') formatExtensions.push('pdf');
+
     let counter = 0;
     while (true) {
       const suffix = counter === 0 ? '' : `-${counter}`;
       const testName = `${name}${suffix}`;
-      const pngExists = existsSync(join(outDir, `${testName}.png`));
-      const webpExists = existsSync(join(outDir, `${testName}.webp`));
-      const avifExists = existsSync(join(outDir, `${testName}.avif`));
-      const jpgExists = existsSync(join(outDir, `${testName}.jpg`));
-      const jpegExists = existsSync(join(outDir, `${testName}.jpeg`));
-      const pdfExists = existsSync(join(outDir, `${testName}.pdf`));
+      const anyExists = formatExtensions.some((ext) => existsSync(join(outDir, `${testName}.${ext}`)));
 
-      if (!pngExists && !webpExists && !avifExists && !jpgExists && !jpegExists && !pdfExists) {
+      if (!anyExists) {
         finalName = testName;
         break;
       }
