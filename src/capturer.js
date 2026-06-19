@@ -30,9 +30,10 @@ const THROTTLE_PROFILES = {
  * @property {number} [cacheMaxEntries]
  * @property {number} [cacheTTL]
  * @property {boolean} [noSandbox]
- * @property {boolean} [headless]
+ * @property {boolean|'shell'} [headless]
  * @property {string} [userAgent]
  * @property {number} [retries]
+ * @property {'load'|'domcontentloaded'|'networkidle'|'commit'} [waitUntil]
  * @property {boolean} [pdf]
  * @property {string} [pdfFormat]
  * @property {boolean} [pdfLandscape]
@@ -320,7 +321,7 @@ export async function captureUrl(url, options = {}) {
         }
 
         await page.goto(url, {
-          waitUntil: 'networkidle',
+          waitUntil: rest.waitUntil || 'networkidle',
           timeout,
         });
 
@@ -516,7 +517,7 @@ export async function captureResponsive(url, widths = [375, 768, 1024, 1280, 192
       }));
 
       const page = await context.newPage();
-      await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+      await page.goto(url, { waitUntil: options.waitUntil || 'networkidle', timeout: options.timeout || 30000 });
 
       if (wait > 0) {
         await page.waitForTimeout(wait);
@@ -556,8 +557,8 @@ export async function extractSiteAssets(url, options = {}) {
     const page = await context.newPage();
 
     await page.goto(url, {
-      waitUntil: 'networkidle',
-      timeout: 30000,
+      waitUntil: options.waitUntil || 'networkidle',
+      timeout: options.timeout || 30000,
     });
 
     const fullPageBuffer = await page.screenshot({ type: 'png', fullPage: true });
