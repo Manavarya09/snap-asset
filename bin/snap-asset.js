@@ -160,6 +160,9 @@ program
       }
 
       validateFormat(opts.format);
+      if (opts.quality !== undefined && (isNaN(opts.quality) || opts.quality < 1 || opts.quality > 100)) {
+        throw new Error('Quality must be an integer between 1 and 100');
+      }
       async function captureOne(url, index) {
         const usePdf = opts.pdf;
 
