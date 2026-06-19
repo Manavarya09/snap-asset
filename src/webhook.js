@@ -30,8 +30,14 @@ export async function sendWebhook(url, payload, options = {}) {
       },
       (res) => {
         let data = '';
+        const MAX_RESPONSE_SIZE = 1024 * 10; // 10KB
         res.on('data', (chunk) => {
-          data += chunk;
+          if (data.length < MAX_RESPONSE_SIZE) {
+            data += chunk;
+            if (data.length > MAX_RESPONSE_SIZE) {
+              data = data.slice(0, MAX_RESPONSE_SIZE);
+            }
+          }
         });
         res.on('end', () => {
           if (res.statusCode < 200 || res.statusCode >= 300) {
