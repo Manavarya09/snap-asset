@@ -40,8 +40,17 @@ export async function startServer(options = {}) {
 
       if (req.method === 'POST' && req.url === '/capture') {
         let body = '';
-        req.on('data', (chunk) => (body += chunk));
-        await new Promise((resolve) => req.on('end', resolve));
+        const MAX_BODY_SIZE = 1024 * 100; // 100KB
+        req.on('data', (chunk) => {
+          body += chunk;
+          if (body.length > MAX_BODY_SIZE) {
+            req.destroy(new Error('Request body too large'));
+          }
+        });
+        await new Promise((resolve, reject) => {
+          req.on('end', resolve);
+          req.on('error', reject);
+        });
         const { url, format, options: captureOpts } = JSON.parse(body);
 
         if (!url) {
