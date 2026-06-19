@@ -51,7 +51,16 @@ export async function startServer(options = {}) {
           req.on('end', resolve);
           req.on('error', reject);
         });
-        const { url, format, options: captureOpts } = JSON.parse(body);
+        let parsedBody;
+        try {
+          parsedBody = JSON.parse(body);
+        } catch {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid JSON in request body' }));
+          return;
+        }
+
+        const { url, format, options: captureOpts } = parsedBody;
 
         if (!url) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
