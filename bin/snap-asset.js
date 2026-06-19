@@ -51,6 +51,12 @@ function collectPlugins(value, previous) {
   return previous.concat([value]);
 }
 
+function parsePositiveInt(value) {
+  const n = parseInt(value, 10);
+  if (isNaN(n) || n <= 0) throw new Error(`Expected a positive integer, got '${value}'`);
+  return n;
+}
+
 const program = new Command();
 
 program
@@ -64,6 +70,7 @@ program
   .option('--verbose', 'Enable verbose logging')
   .option('--quiet', 'Quiet mode (suppress spinners)')
   .option('--no-sandbox', 'disable sandbox for CI environments')
+  .option('--headless <mode>', 'browser headless mode: true, false, shell')
   .option('--user-agent <string>', 'override browser user agent')
   .option('--timestamp', 'append timestamp to output filename')
   .option('--viewport <name>', 'device preset: mobile (375x812), tablet (768x1024), desktop (1280x800), wide (1920x1080)')
@@ -190,6 +197,7 @@ program
             waitForLazy: opts.waitForLazy,
             cache: opts.cache,
             noSandbox: progOpts.noSandbox,
+            headless: progOpts.headless === 'false' ? false : progOpts.headless === 'shell' ? 'shell' : true,
             userAgent: progOpts.userAgent,
             retries: opts.retries,
             pdf: usePdf,
@@ -230,6 +238,7 @@ program
           waitForLazy: opts.waitForLazy,
           cache: opts.cache,
           noSandbox: progOpts.noSandbox,
+          headless: progOpts.headless === 'false' ? false : progOpts.headless === 'shell' ? 'shell' : true,
           userAgent: progOpts.userAgent,
           retries: opts.retries,
           pdf: usePdf,
@@ -457,9 +466,9 @@ program
   .description('Capture a component rendered in isolation')
   .option('-n, --name <name>', 'output filename')
   .option('-o, --out <dir>', 'output directory')
-  .option('-w, --width <px>', 'viewport width', parseInt, 800)
-  .option('-h, --height <px>', 'viewport height', parseInt, 600)
-  .option('--scale <n>', 'device scale factor', parseInt, 2)
+  .option('-w, --width <px>', 'viewport width', parsePositiveInt, 800)
+  .option('-h, --height <px>', 'viewport height', parsePositiveInt, 600)
+  .option('--scale <n>', 'device scale factor', parsePositiveInt, 2)
   .option('--clip <x,y,width,height>', 'crop capture to a rectangular region')
   .option('-f, --format <fmt>', 'output format: png, webp, avif, both', 'both')
   .option('-q, --quality <n>', 'WebP/AVIF quality', parseInt, 80)
@@ -547,6 +556,7 @@ program
         waitForLazy: opts.waitForLazy,
         cache: opts.cache,
         noSandbox: progOpts.noSandbox,
+        headless: progOpts.headless === 'false' ? false : progOpts.headless === 'shell' ? 'shell' : true,
         userAgent: progOpts.userAgent,
         retries: opts.retries,
         css: opts.css,
@@ -636,9 +646,9 @@ program
   .command('extract <url>')
   .description('Extract screenshots, sections, images & components from a website')
   .option('-o, --out <dir>', 'output directory')
-  .option('-w, --width <px>', 'viewport width', parseInt, 1280)
-  .option('-h, --height <px>', 'viewport height', parseInt, 800)
-  .option('--scale <n>', 'device scale factor', parseInt, 2)
+  .option('-w, --width <px>', 'viewport width', parsePositiveInt, 1280)
+  .option('-h, --height <px>', 'viewport height', parsePositiveInt, 800)
+  .option('--scale <n>', 'device scale factor', parsePositiveInt, 2)
   .option('-q, --quality <n>', 'WebP quality', parseInt, 80)
   .option('--dark', 'emulate dark color scheme')
   .option('--no-sections', 'skip section screenshots')
@@ -785,6 +795,7 @@ program
                 networkThrottling: capture.networkThrottling,
                 waitForLazy: capture.waitForLazy,
                 noSandbox: progOpts.noSandbox,
+                headless: progOpts.headless === 'false' ? false : progOpts.headless === 'shell' ? 'shell' : true,
                 userAgent: progOpts.userAgent,
                 proxy: progOpts.proxy,
                 retries: opts.retries,
@@ -812,6 +823,7 @@ program
               networkThrottling: capture.networkThrottling,
               waitForLazy: capture.waitForLazy,
               noSandbox: progOpts.noSandbox,
+              headless: progOpts.headless === 'false' ? false : progOpts.headless === 'shell' ? 'shell' : true,
               userAgent: progOpts.userAgent,
               proxy: progOpts.proxy,
               retries: opts.retries,
