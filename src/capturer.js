@@ -121,6 +121,10 @@ export async function waitForLazyImages(page) {
 export async function captureUrl(url, options = {}) {
   const { retries = 2, ...rest } = options;
 
+  if (typeof url !== 'string' || (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('file://'))) {
+    throw new Error(`Invalid URL: "${url}". Must start with http://, https://, or file://`);
+  }
+
   const cacheTTL = typeof rest.cacheTTL === 'number' ? rest.cacheTTL
     : process.env.SNAP_ASSET_CACHE_TTL ? Number(process.env.SNAP_ASSET_CACHE_TTL)
     : 3600;
