@@ -51,7 +51,7 @@ export async function optimizePng(buffer, options = {}) {
   const dims = parseResize(resize);
 
   let pipeline = sharp(buffer).png({
-    compressionLevel: 9,
+    compressionLevel: OPTIMIZER_DEFAULTS.pngCompressionLevel,
     adaptiveFiltering: true,
   });
 
@@ -108,13 +108,13 @@ export async function toAvif(buffer, options = {}) {
  * @returns {Promise<Buffer>}
  */
 export async function toJpeg(buffer, options = {}) {
-  const { quality = 85, resize = null } = options;
+  const { quality = OPTIMIZER_DEFAULTS.jpegQuality, resize = null } = options;
+  const dims = parseResize(resize);
 
   let pipeline = sharp(buffer).jpeg({ quality, mozjpeg: true });
 
-  if (resize) {
-    const [w, h] = resize.split('x').map(Number);
-    pipeline = pipeline.resize(w, h, { fit: 'inside', withoutEnlargement: true });
+  if (dims) {
+    pipeline = pipeline.resize(dims, { fit: 'inside', withoutEnlargement: true });
   }
 
   return pipeline.toBuffer();
