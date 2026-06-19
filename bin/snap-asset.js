@@ -104,7 +104,7 @@ program
   .option('--watermark-text <text>', 'overlay text watermark on captured image')
   .option('--webhook-url <url>', 'send capture result to webhook URL')
   .option('--batch-file <path>', 'file with newline-separated URLs to capture')
-  .option('--cookies-file <path>', 'Path to JSON file with cookies array')
+  .option('--cookies-file <path>', '[deprecated: use --cookies] Path to JSON file with cookies array')
   .option('--auth <credentials>', 'HTTP authentication (username:password)')
   .option('--pdf', 'capture as PDF instead of screenshot')
   .option('--pdf-format <format>', 'PDF paper format (A4, Letter, etc.)', 'A4')
