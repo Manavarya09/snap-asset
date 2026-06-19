@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { existsSync, rmSync, readFileSync, mkdirSync } from 'fs';
+import { rmSync, readFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import {
   safeName,
@@ -134,7 +134,7 @@ test('resolveOutputPaths with format avif', () => {
 test('resolveOutputPaths with format jpeg', () => {
   const paths = resolveOutputPaths(tempDir, 'test-jpeg', { overwrite: true, format: 'jpeg' });
   assert.ok(paths.jpgPath);
-  assert.ok(paths.jpgPath.endsWith('test-jpeg.jpg'));
+  assert.ok(paths.jpgPath.endsWith('test-jpeg.jpeg'));
   assert.equal(paths.pngPath, undefined);
   assert.equal(paths.webpPath, undefined);
   assert.equal(paths.avifPath, undefined);

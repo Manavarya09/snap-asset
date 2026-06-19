@@ -14,7 +14,7 @@ test('/health endpoint returns status ok', async () => {
   const { startServer } = await import('../src/serve.js');
   const { server, close } = await startServer({ port: 0, host: '127.0.0.1' });
   const addr = server.address();
-  const res = await new Promise((resolve, reject) => {
+  const res = await new Promise((resolve, _reject) => {
     request(`http://127.0.0.1:${addr.port}/health`, (res) => {
       let data = '';
       res.on('data', (c) => (data += c));
@@ -32,7 +32,7 @@ test('unknown route returns 404', async () => {
   const { startServer } = await import('../src/serve.js');
   const { server, close } = await startServer({ port: 0, host: '127.0.0.1' });
   const addr = server.address();
-  const res = await new Promise((resolve, reject) => {
+  const res = await new Promise((resolve, _reject) => {
     request(`http://127.0.0.1:${addr.port}/nonexistent`, (res) => {
       let data = '';
       res.on('data', (c) => (data += c));

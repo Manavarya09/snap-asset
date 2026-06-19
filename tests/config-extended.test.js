@@ -1,11 +1,11 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { writeFileSync, rmSync, mkdirSync } from 'fs';
+import { rmSync } from 'fs';
 import { join } from 'path';
 import { validateConfig, generateConfig } from '../src/config.js';
 
 const tempDir = join(process.cwd(), 'tests', 'temp-config-ext');
-try { rmSync(tempDir, { recursive: true, force: true }); } catch {}
+try { rmSync(tempDir, { recursive: true, force: true }); } catch { /* cleanup */ }
 
 test('validateConfig accepts batch concurrency', () => {
   const cfg = {
@@ -85,4 +85,4 @@ test('generateConfig creates valid starter config', () => {
   assert.equal(loaded.defaults.format, 'both');
 });
 
-try { rmSync(tempDir, { recursive: true, force: true }); } catch {}
+try { rmSync(tempDir, { recursive: true, force: true }); } catch { /* cleanup */ }

@@ -1,11 +1,11 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { rmSync, existsSync, readdirSync } from 'fs';
+import { rmSync } from 'fs';
 import { join } from 'path';
 import DiskCache from '../src/cache.js';
 
 const cacheRoot = join(process.cwd(), 'tests', 'temp-cache-ext');
-try { rmSync(cacheRoot, { recursive: true, force: true }); } catch {}
+try { rmSync(cacheRoot, { recursive: true, force: true }); } catch { /* cleanup */ }
 
 test('DiskCache stores and retrieves large data', async () => {
   const cache = new DiskCache(cacheRoot);
@@ -52,4 +52,4 @@ test('DiskCache handles sequential set and get on same key', async () => {
   }
 });
 
-try { rmSync(cacheRoot, { recursive: true, force: true }); } catch {}
+try { rmSync(cacheRoot, { recursive: true, force: true }); } catch { /* cleanup */ }

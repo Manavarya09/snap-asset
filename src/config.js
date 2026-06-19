@@ -189,7 +189,7 @@ export function loadConfig(cwd = process.cwd()) {
   try {
     raw = JSON.parse(readFileSync(configPath, 'utf-8'));
   } catch (parseErr) {
-    throw new Error(`Failed to parse ${CONFIG_NAME}: ${parseErr.message}`);
+    throw new Error(`Failed to parse ${CONFIG_NAME}: ${parseErr.message}`, { cause: parseErr });
   }
   validateConfig(raw);
 

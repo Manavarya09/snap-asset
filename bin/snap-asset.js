@@ -2,7 +2,6 @@
 
 import { Command } from 'commander';
 import { resolve } from 'path';
-import chalk from 'chalk';
 import { readFileSync } from 'fs';
 const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 
@@ -260,7 +259,7 @@ program
                 }
                 return parsed;
               } catch (e) {
-                throw new Error(`Invalid --before-capture JSON: ${e.message}`);
+                throw new Error(`Invalid --before-capture JSON: ${e.message}`, { cause: e });
               }
             })()
             : undefined,
@@ -439,7 +438,7 @@ program
 
     try {
       const tStart = Date.now();
-      const { server, close } = await startServer({ port: opts.port, host: opts.host });
+      const { close } = await startServer({ port: opts.port, host: opts.host });
       if (debug) log.debug(`server startup: ${Date.now() - tStart}ms`);
       log.success(`Server listening on http://${opts.host}:${opts.port}`);
 
@@ -573,7 +572,7 @@ program
               }
               return parsed;
             } catch (e) {
-              throw new Error(`Invalid --before-capture JSON: ${e.message}`);
+              throw new Error(`Invalid --before-capture JSON: ${e.message}`, { cause: e });
             }
           })()
           : undefined,

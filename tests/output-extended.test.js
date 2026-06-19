@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { existsSync, rmSync } from 'fs';
+import { rmSync } from 'fs';
 import { join } from 'path';
 import {
   safeName,
@@ -13,7 +13,7 @@ import {
 } from '../src/output.js';
 
 const tempDir = join(process.cwd(), 'tests', 'temp-output-ext');
-try { rmSync(tempDir, { recursive: true, force: true }); } catch {}
+try { rmSync(tempDir, { recursive: true, force: true }); } catch { /* cleanup */ }
 
 test('safeName handles strings with only special chars', () => {
   assert.equal(safeName('___...___'), 'screenshot');
@@ -83,4 +83,4 @@ test('saveMetadata handles null info gracefully', async () => {
   assert.equal(content.url, undefined);
 });
 
-try { rmSync(tempDir, { recursive: true, force: true }); } catch {}
+try { rmSync(tempDir, { recursive: true, force: true }); } catch { /* cleanup */ }
