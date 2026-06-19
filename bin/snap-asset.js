@@ -809,6 +809,11 @@ program
                 timezone: capture.timezone,
                 geolocation: capture.geolocation,
                 colorScheme: capture.colorScheme,
+                pdf: capture.pdf,
+                pdfFormat: capture.pdfFormat,
+                pdfLandscape: capture.pdfLandscape,
+                pdfMargin: capture.pdfMargin,
+                pdfScale: capture.pdfScale,
               });
             } finally {
               cleanup();
@@ -837,6 +842,11 @@ program
               timezone: capture.timezone,
               geolocation: capture.geolocation,
               colorScheme: capture.colorScheme,
+              pdf: capture.pdf,
+              pdfFormat: capture.pdfFormat,
+              pdfLandscape: capture.pdfLandscape,
+              pdfMargin: capture.pdfMargin,
+              pdfScale: capture.pdfScale,
             });
           }
 
