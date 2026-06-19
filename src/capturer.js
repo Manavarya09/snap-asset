@@ -431,7 +431,11 @@ export async function captureUrl(url, options = {}) {
         }
 
         if (cache) {
-          await cache.set(cacheKey, buffer, { ttl: rest.cacheTTL });
+          try {
+            await cache.set(cacheKey, buffer, { ttl: rest.cacheTTL });
+          } catch {
+            // Cache write best-effort
+          }
         }
 
         const extra = {};
