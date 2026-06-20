@@ -104,6 +104,7 @@ export default class DiskCache {
       const buf = await fs.readFile(join(this.dir, id));
       meta.lastAccess = now;
       idx[id] = meta;
+      await this._saveIndex();
       return buf;
     } catch {
       delete idx[id];
