@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { rmSync } from 'fs';
-import { join } from 'path';
+import { rmSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { validateConfig, generateConfig } from '../src/config.js';
 
 const tempDir = join(process.cwd(), 'tests', 'temp-config-ext');
@@ -79,7 +79,7 @@ test('validateConfig accepts all valid colorSchemes', () => {
 test('generateConfig creates valid starter config', () => {
   const result = generateConfig(tempDir);
   assert.equal(result.created, true);
-  const loaded = JSON.parse(require('fs').readFileSync(join(tempDir, 'snap-asset.config.json'), 'utf-8'));
+  const loaded = JSON.parse(readFileSync(join(tempDir, 'snap-asset.config.json'), 'utf-8'));
   assert.ok(Array.isArray(loaded.captures));
   assert.ok(loaded.defaults);
   assert.equal(loaded.defaults.format, 'both');

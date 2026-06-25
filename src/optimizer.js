@@ -47,6 +47,9 @@ function parseResize(resize) {
  * @returns {Promise<Buffer>}
  */
 export async function optimizePng(buffer, options = {}) {
+  if (!Buffer.isBuffer(buffer)) {
+    throw new Error('optimizePng requires a valid Buffer');
+  }
   const { resize = null } = options;
   const dims = parseResize(resize);
 
@@ -68,6 +71,9 @@ export async function optimizePng(buffer, options = {}) {
  * @returns {Promise<Buffer>}
  */
 export async function toWebp(buffer, options = {}) {
+  if (!Buffer.isBuffer(buffer)) {
+    throw new Error('toWebp requires a valid Buffer');
+  }
   const {
     quality = OPTIMIZER_DEFAULTS.webpQuality,
     resize = null,
@@ -90,6 +96,9 @@ export async function toWebp(buffer, options = {}) {
  * @returns {Promise<Buffer>}
  */
 export async function toAvif(buffer, options = {}) {
+  if (!Buffer.isBuffer(buffer)) {
+    throw new Error('toAvif requires a valid Buffer');
+  }
   const { quality = OPTIMIZER_DEFAULTS.avifQuality, resize = null } = options;
   const dims = parseResize(resize);
 
@@ -108,6 +117,9 @@ export async function toAvif(buffer, options = {}) {
  * @returns {Promise<Buffer>}
  */
 export async function toJpeg(buffer, options = {}) {
+  if (!Buffer.isBuffer(buffer)) {
+    throw new Error('toJpeg requires a valid Buffer');
+  }
   const { quality = OPTIMIZER_DEFAULTS.jpegQuality, resize = null } = options;
   const dims = parseResize(resize);
 
@@ -126,6 +138,9 @@ export async function toJpeg(buffer, options = {}) {
  * @returns {Promise<ProcessResult>}
  */
 export async function processScreenshot(buffer, options = {}) {
+  if (!Buffer.isBuffer(buffer)) {
+    throw new Error('processScreenshot requires a valid Buffer');
+  }
   const { format } = options;
   const wantsAll = !format || format === 'both';
 
@@ -149,5 +164,8 @@ export async function processScreenshot(buffer, options = {}) {
  * @returns {Promise<sharp.Metadata>}
  */
 export async function getMetadata(buffer) {
+  if (!Buffer.isBuffer(buffer)) {
+    throw new Error('getMetadata requires a valid Buffer');
+  }
   return sharp(buffer).metadata();
 }

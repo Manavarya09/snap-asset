@@ -2,7 +2,7 @@
 
 import { chromium, devices } from 'playwright';
 import DiskCache from './cache.js';
-import { resolve as resolvePath } from 'path';
+import { resolve as resolvePath } from 'node:path';
 
 /** @type {Object<string, {latency: number, downloadThroughput: number, uploadThroughput: number}>} */
 const THROTTLE_PROFILES = {
@@ -269,7 +269,9 @@ export async function captureUrl(url, options = {}) {
 
         const page = await context.newPage();
 
+        const consoleEntries = [];
         let pageCrashed = false;
+
         page.on('crash', () => {
           pageCrashed = true;
         });
@@ -279,7 +281,6 @@ export async function captureUrl(url, options = {}) {
           }
         });
 
-        const consoleEntries = [];
         if (rest.captureConsole) {
           page.on('console', (msg) => {
             consoleEntries.push({
@@ -300,10 +301,14 @@ export async function captureUrl(url, options = {}) {
 
         if (loginScript) {
           try {
-            if (typeof loginScript !== 'string' || loginScript.includes('..')) {
+            if (typeof loginScript !== 'string') {
               throw new Error('Invalid loginScript path');
             }
+            const cwd = process.cwd() + '/';
             const scriptPath = resolvePath(process.cwd(), loginScript);
+            if (!scriptPath.startsWith(cwd)) {
+              throw new Error('Invalid loginScript path');
+            }
             const mod = await import(scriptPath);
             if (typeof mod.default === 'function') {
               await mod.default({ page, context, playwright: { chromium } });

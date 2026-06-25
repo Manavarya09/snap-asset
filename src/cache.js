@@ -1,6 +1,6 @@
-import { promises as fs } from 'fs';
-import { join } from 'path';
-import crypto from 'crypto';
+import { promises as fs } from 'node:fs';
+import { join } from 'node:path';
+import crypto from 'node:crypto';
 
 const CACHE_DIR = '.snap-asset-cache';
 const INDEX_FILE = 'index.json';

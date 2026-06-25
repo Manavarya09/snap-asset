@@ -1,5 +1,5 @@
-import { promises as fs } from 'fs';
-import { resolve } from 'path';
+import { promises as fs } from 'node:fs';
+import { resolve, join } from 'node:path';
 
 /**
  * @typedef {Object} UploadInput
@@ -22,7 +22,7 @@ import { resolve } from 'path';
  * @returns {Promise<Uploader>}
  */
 async function createLocalUploader(opts = {}) {
-  const dir = resolve(opts.dir || process.cwd() + '/uploads');
+  const dir = resolve(opts.dir || join(process.cwd(), 'uploads'));
   await fs.mkdir(dir, { recursive: true });
   return {
     /**

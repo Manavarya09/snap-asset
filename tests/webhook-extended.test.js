@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { createServer } from 'http';
+import { createServer } from 'node:http';
 import { sendWebhook } from '../src/webhook.js';
 
 let server;

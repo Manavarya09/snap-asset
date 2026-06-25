@@ -1,8 +1,8 @@
 import chalk from 'chalk';
 import ora from 'ora';
-import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
@@ -81,7 +81,7 @@ export function saved(filePath, sizeKb) {
  * @param {number} fmtKb
  */
 export function savings(format, pngKb, fmtKb) {
-  const pct = Math.round((1 - fmtKb / pngKb) * 100);
+  const pct = pngKb > 0 ? Math.round((1 - fmtKb / pngKb) * 100) : 0;
   console.log(`  ${chalk.dim(`${format} saved ${pct}% vs PNG`)}`);
 }
 

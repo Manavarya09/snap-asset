@@ -9,6 +9,9 @@ const GRAVITY_MAP = {
 };
 
 export async function applyWatermark(buffer, text, options = {}) {
+  if (typeof text !== 'string') {
+    throw new Error('Watermark text must be a string');
+  }
   const {
     gravity = 'southeast',
     opacity = 0.5,

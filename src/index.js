@@ -1,5 +1,5 @@
 export { captureUrl, captureResponsive, extractSiteAssets, setNetworkThrottling, waitForLazyImages } from './capturer.js';
-export { processScreenshot, optimizePng, toWebp, toAvif, getMetadata } from './optimizer.js';
+export { processScreenshot, optimizePng, toWebp, toAvif, toJpeg, getMetadata } from './optimizer.js';
 export { detectOutputDir, resolveOutputPaths, saveAssets, savePdf, safeName, nameFromUrl, nameFromComponent } from './output.js';
 export { loadConfig, generateConfig } from './config.js';
 export { renderComponent } from './component-renderer.js';

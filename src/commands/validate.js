@@ -1,4 +1,4 @@
-import { accessSync, constants } from 'fs';
+import { accessSync, constants } from 'node:fs';
 
 /** @typedef {'png'|'webp'|'avif'|'jpeg'|'jpg'|'both'} ValidFormat */
 
@@ -78,7 +78,7 @@ export function parseUrlList(content) {
 export async function loadCookies(cookiesPath) {
   if (!cookiesPath) return undefined;
   try {
-    const { readFile } = await import('fs/promises');
+    const { readFile } = await import('node:fs/promises');
     const txt = await readFile(cookiesPath, 'utf8');
     return JSON.parse(txt);
   } catch {

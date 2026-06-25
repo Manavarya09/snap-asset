@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { request } from 'http';
+import { request } from 'node:http';
 
 test('startServer creates a server with close method', async () => {
   const { startServer } = await import('../src/serve.js');

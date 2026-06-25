@@ -1,10 +1,10 @@
 import { strict as assert } from 'node:assert';
 import { test, after } from 'node:test';
-import { request } from 'http';
+import { request } from 'node:http';
 import { startServer } from '../src/serve.js';
-import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));

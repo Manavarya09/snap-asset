@@ -1,8 +1,8 @@
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 
 const CONFIG_NAME = 'snap-asset.config.json';
-const VALID_FORMATS = ['png', 'webp', 'avif', 'both'];
+const VALID_FORMATS = ['png', 'webp', 'avif', 'jpeg', 'jpg', 'both'];
 
 /**
  * @typedef {Object} CaptureConfig
@@ -193,7 +193,7 @@ export function loadConfig(cwd = process.cwd()) {
   }
   validateConfig(raw);
 
-  const defaults = raw.defaults || {};
+  const defaults = { ...(raw.defaults || {}) };
   const captures = (raw.captures || []).map((capture) => ({
     ...defaults,
     ...capture,

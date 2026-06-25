@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
-import { access, readFile, stat } from 'fs/promises';
-import { resolve } from 'path';
+import { access, readFile, stat } from 'node:fs/promises';
+import { resolve } from 'node:path';
 
 const ROOT = process.cwd();
 const EXPECTED_SRC_FILES = [

@@ -7,11 +7,14 @@ import sharp from 'sharp';
  * @returns {Promise<Buffer>}
  */
 export async function compareScreenshots(buffer1, buffer2) {
+  if (!Buffer.isBuffer(buffer1) || !Buffer.isBuffer(buffer2)) {
+    throw new Error('compareScreenshots requires valid Buffers');
+  }
   const meta1 = await sharp(buffer1).metadata();
   const meta2 = await sharp(buffer2).metadata();
 
-  const maxWidth = Math.max(meta1.width, meta2.width);
-  const maxHeight = Math.max(meta1.height, meta2.height);
+  const maxWidth = Math.max(meta1.width || 0, meta2.width || 0);
+  const maxHeight = Math.max(meta1.height || 0, meta2.height || 0);
 
   const resized1 = await sharp(buffer1)
     .resize(maxWidth, maxHeight, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
@@ -53,8 +56,8 @@ export async function createComparisonImage(buffers, layout = {}) {
   const { columns = 2, gap = 2 } = layout;
 
   const metadatas = await Promise.all(buffers.map((b) => sharp(b).metadata()));
-  const cellWidth = Math.max(...metadatas.map((m) => m.width));
-  const cellHeight = Math.max(...metadatas.map((m) => m.height));
+  const cellWidth = Math.max(...metadatas.map((m) => m.width || 0));
+  const cellHeight = Math.max(...metadatas.map((m) => m.height || 0));
 
   const rows = Math.ceil(buffers.length / columns);
   const totalWidth = columns * cellWidth + (columns - 1) * gap;

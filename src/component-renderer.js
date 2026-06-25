@@ -1,7 +1,7 @@
-import { mkdtempSync, writeFileSync, rmSync, existsSync, readFileSync } from 'fs';
-import { join, resolve } from 'path';
-import { tmpdir } from 'os';
-import { spawn } from 'child_process';
+import { mkdtempSync, writeFileSync, rmSync, existsSync, readFileSync, statSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
+import { spawn } from 'node:child_process';
 
 /**
  * @typedef {'react'|'vue'|'svelte'} Framework
@@ -149,6 +149,9 @@ export async function renderComponent(componentPath, options = {}) {
   if (!existsSync(absComponentPath)) {
     throw new Error(`Component not found: ${absComponentPath}`);
   }
+  if (!statSync(absComponentPath).isFile()) {
+    throw new Error(`Component not found: ${absComponentPath}`);
+  }
 
   const framework = detectFramework(absComponentPath);
   const tempDir = mkdtempSync(join(tmpdir(), 'snap-asset-'));
@@ -208,7 +211,7 @@ export async function renderComponent(componentPath, options = {}) {
 
         viteProcess.stdout.on('data', (data) => {
           output += data.toString();
-          const match = output.match(/Local:\s+(https?:\/\/[^\s]+)/);
+          const match = output.match(/Local\s*:\s*(https?:\/\/[^\s]+)/);
           if (match) {
             clearTimeout(timeout);
             resolvePromise(match[1]);

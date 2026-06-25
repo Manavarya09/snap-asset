@@ -1,8 +1,8 @@
-import { createServer } from 'http';
+import { createServer } from 'node:http';
 import { captureUrl } from './capturer.js';
-import { readFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readFileSync, existsSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 function isPrivateHost(hostname) {
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return true;
@@ -31,7 +31,7 @@ function getHtmlForm() {
 }
 
 export async function startServer(options = {}) {
-  const port = options.port || 3000;
+  const port = options.port ?? 3000;
   const host = options.host || '0.0.0.0';
 
   const server = createServer(async (req, res) => {
@@ -59,24 +59,31 @@ export async function startServer(options = {}) {
       }
 
       if (req.method === 'POST' && req.url === '/capture') {
-        if (req.headers['content-type'] && req.headers['content-type'] !== 'application/json') {
+        if (req.headers['content-type'] && !req.headers['content-type'].startsWith('application/json')) {
           res.writeHead(415, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Content-Type must be application/json' }));
           return;
         }
 
         let body = '';
+        let bodyTooLarge = false;
         const MAX_BODY_SIZE = 1024 * 100; // 100KB
         req.on('data', (chunk) => {
           body += chunk;
           if (body.length > MAX_BODY_SIZE) {
+            bodyTooLarge = true;
             req.destroy(new Error('Request body too large'));
           }
         });
         await new Promise((resolve, reject) => {
-          req.on('end', resolve);
+          req.on('end', () => { if (!bodyTooLarge) resolve(); });
           req.on('error', reject);
         });
+        if (bodyTooLarge) {
+          res.writeHead(413, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Request body too large' }));
+          return;
+        }
         let parsedBody;
         try {
           parsedBody = JSON.parse(body);

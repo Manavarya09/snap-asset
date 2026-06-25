@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { rmSync } from 'fs';
-import { join } from 'path';
+import { rmSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   safeName,
   nameFromUrl,
@@ -78,7 +78,7 @@ test('resolveOutputPaths with metadata option', () => {
 test('saveMetadata handles null info gracefully', async () => {
   const paths = { metadataPath: join(tempDir, 'null-meta.json') };
   await saveMetadata(paths, {});
-  const content = JSON.parse(require('fs').readFileSync(paths.metadataPath, 'utf-8'));
+  const content = JSON.parse(readFileSync(paths.metadataPath, 'utf-8'));
   assert.ok(content.captured);
   assert.equal(content.url, undefined);
 });

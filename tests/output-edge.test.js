@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { rmSync, readFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { rmSync, readFileSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   safeName,
   nameFromUrl,

@@ -1,6 +1,6 @@
-import { existsSync, mkdirSync } from 'fs';
-import { writeFile, rm } from 'fs/promises';
-import { join, basename } from 'path';
+import { existsSync, mkdirSync } from 'node:fs';
+import { writeFile, rm } from 'node:fs/promises';
+import { join, basename } from 'node:path';
 
 /**
  * @typedef {Object} OutputOptions

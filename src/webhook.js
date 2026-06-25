@@ -1,5 +1,5 @@
-import { request } from 'http';
-import { request as httpsRequest } from 'https';
+import { request } from 'node:http';
+import { request as httpsRequest } from 'node:https';
 
 export async function sendWebhook(url, payload, options = {}) {
   const {

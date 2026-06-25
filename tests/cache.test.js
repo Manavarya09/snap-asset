@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { rmSync } from 'fs';
-import { join } from 'path';
+import { rmSync } from 'node:fs';
+import { join } from 'node:path';
 import DiskCache from '../src/cache.js';
 
 const cacheRoot = join(process.cwd(), 'tests', 'temp-cache');

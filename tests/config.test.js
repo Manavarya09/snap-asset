@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { writeFileSync, rmSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { writeFileSync, rmSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { loadConfig, validateConfig, generateConfig } from '../src/config.js';
 
 const tempDir = join(process.cwd(), 'tests', 'temp-config');

@@ -1,10 +1,11 @@
 import assert from 'node:assert';
-import { promises as fs } from 'fs';
-import { resolve } from 'path';
+import { test } from 'node:test';
+import { promises as fs } from 'node:fs';
+import { resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { access } from 'node:fs/promises';
 
-// Resolve `src/uploader.js` robustly across CI checkout layouts
-import { fileURLToPath, pathToFileURL } from 'url';
-import { access } from 'fs/promises';
+const RUN = process.env.RUN_UPLOADER_INTEGRATION === '1' || process.env.RUN_UPLOADER_INTEGRATION === 'true';
 
 const candidates = [
   fileURLToPath(new URL('../src/uploader.js', import.meta.url)),
@@ -13,42 +14,32 @@ const candidates = [
   resolve(process.cwd(), './snap-asset/src/uploader.js'),
 ];
 
-let uploaderModule = null;
-for (const p of candidates) {
-  try {
-    await access(p);
-    uploaderModule = await import(pathToFileURL(p).href);
-    break;
-  } catch {
-    // try next
+test('uploader integration', { skip: !RUN }, async () => {
+  let uploaderModule = null;
+  for (const p of candidates) {
+    try {
+      await access(p);
+      uploaderModule = await import(pathToFileURL(p).href);
+      break;
+    } catch {
+      // try next
+    }
   }
-}
 
-if (!uploaderModule) {
-  throw new Error('Could not resolve src/uploader.js from any candidate path: ' + candidates.join(', '));
-}
+  if (!uploaderModule) {
+    throw new Error('Could not resolve src/uploader.js from any candidate path: ' + candidates.join(', '));
+  }
 
-const { getUploader } = uploaderModule;
+  const { getUploader } = uploaderModule;
 
-const RUN = process.env.RUN_UPLOADER_INTEGRATION === '1' || process.env.RUN_UPLOADER_INTEGRATION === 'true';
-
-if (!RUN) {
-  console.log('Skipping uploader integration tests (RUN_UPLOADER_INTEGRATION not set)');
-  process.exit(0);
-}
-
-(async () => {
-  // Test local uploader
   const local = await getUploader({ type: 'local', dir: './tmp-uploads' });
   const key = `test-${Date.now()}.bin`;
   const buf = Buffer.from('hello world');
   const res = await local.upload({ buffer: buf, key });
   assert.ok(res.url && res.url.startsWith('file://'));
 
-  // Attempt to instantiate optional uploaders; skip if SDKs are missing
   try {
     const s3 = await getUploader({ type: 's3' });
-    // If S3 config is present, try upload (may throw without secrets)
     try {
       const r = await s3.upload({ buffer: buf, key });
       console.log('S3 upload result:', r.url);
@@ -71,7 +62,6 @@ if (!RUN) {
     console.log('Skipping GCS uploader test:', err.message);
   }
 
-  // cleanup local file
   try {
     const p = resolve('./tmp-uploads', key);
     await fs.unlink(p);
@@ -83,6 +73,4 @@ if (!RUN) {
   } catch {
     // Directory may not exist
   }
-
-  console.log('Uploader integration tests complete');
-})();
+});

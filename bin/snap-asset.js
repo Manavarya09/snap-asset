@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { resolve } from 'path';
-import { readFileSync } from 'fs';
+import { resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
 const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 
 let captureUrl, extractSiteAssets;
@@ -56,6 +56,13 @@ function parsePositiveInt(value) {
   return n;
 }
 
+function parseHeadless(value) {
+  if (value === 'false') return false;
+  if (value === 'shell') return 'shell';
+  if (value === 'true') return true;
+  throw new Error(`Invalid headless mode '${value}'. Expected 'true', 'false', or 'shell'.`);
+}
+
 const program = new Command();
 
 program
@@ -69,7 +76,7 @@ program
   .option('--verbose', 'Enable verbose logging')
   .option('--quiet', 'Quiet mode (suppress spinners)')
   .option('--no-sandbox', 'disable sandbox for CI environments')
-  .option('--headless <mode>', 'browser headless mode: true, false, shell')
+  .option('--headless <mode>', 'browser headless mode: true, false, shell (default: true)', parseHeadless, true)
   .option('--user-agent <string>', 'override browser user agent')
   .option('--timestamp', 'append timestamp to output filename')
   .option('--viewport <name>', 'device preset: mobile (375x812), tablet (768x1024), desktop (1280x800), wide (1920x1080)')
@@ -132,7 +139,7 @@ program
   .action(async (urls, opts) => {
     if (opts.batchFile) {
       const content = validateFile(opts.batchFile);
-      const fileContent = await import('fs').then((m) => m.promises.readFile(content, 'utf8'));
+      const fileContent = await import('node:fs').then((m) => m.promises.readFile(content, 'utf8'));
       urls = parseUrlList(fileContent);
     }
 
@@ -174,6 +181,10 @@ program
           log.warn('--selector is ignored in PDF mode. Use --full-page for full-page capture.');
         }
 
+        if (opts.cookiesFile) {
+          log.warn('--cookies-file is deprecated, use --cookies instead');
+        }
+
         const cookies = await loadCookies(opts.cookies || opts.cookiesFile);
         const auth = parseAuth(opts.auth);
 
@@ -196,7 +207,7 @@ program
             waitForLazy: opts.waitForLazy,
             cache: opts.cache,
             noSandbox: progOpts.noSandbox,
-            headless: progOpts.headless === 'false' ? false : progOpts.headless === 'shell' ? 'shell' : true,
+            headless: progOpts.headless,
             userAgent: progOpts.userAgent,
             retries: opts.retries,
             pdf: usePdf,
@@ -442,16 +453,12 @@ program
       if (debug) log.debug(`server startup: ${Date.now() - tStart}ms`);
       log.success(`Server listening on http://${opts.host}:${opts.port}`);
 
-      process.on('SIGINT', async () => {
+      const shutdown = () => {
         log.info('Shutting down...');
-        await close();
-        process.exit(0);
-      });
-      process.on('SIGTERM', async () => {
-        log.info('Shutting down...');
-        await close();
-        process.exit(0);
-      });
+        close().then(() => process.exit(0)).catch(() => process.exit(1));
+      };
+      process.on('SIGINT', shutdown);
+      process.on('SIGTERM', shutdown);
     } catch (err) {
       if (debug) log.debug(err.stack);
       log.error(err.message);
@@ -482,6 +489,14 @@ program
   .option('--css <code>', 'inject CSS into the page')
   .option('--wait-for-selector <selector>', 'wait for a CSS selector before capture')
   .option('--before-capture <json>', 'JSON array of interaction actions before capture')
+  .option('--resize <WxH>', 'resize after capture (e.g. 800x600)')
+  .option('--auth <credentials>', 'HTTP authentication (username:password)')
+  .option('--record-video', 'record a video of the page capture')
+  .option('--pdf', 'capture as PDF instead of screenshot')
+  .option('--pdf-format <format>', 'PDF paper format (A4, Letter, etc.)', 'A4')
+  .option('--pdf-landscape', 'PDF landscape orientation')
+  .option('--pdf-margin <margin>', 'PDF margin (e.g. 1cm)', '1cm')
+  .option('--pdf-scale <n>', 'PDF scale factor (0.1-2)', parseFloat, 1)
   .option('--device <name>', 'Playwright device name (e.g. "iPhone 15", "Pixel 7")')
   .option('--locale <locale>', 'browser locale (e.g. en-US, fr-FR)')
   .option('--timezone <timezone>', 'browser timezone (e.g. America/New_York)')
@@ -489,6 +504,11 @@ program
   .option('--color-scheme <scheme>', 'color scheme: light, dark, no-preference')
   .option('--watermark-text <text>', 'overlay text watermark on captured image')
   .option('--webhook-url <url>', 'send capture result to webhook URL')
+  .option('--cookies <path>', 'Path to JSON file with cookies array to add')
+  .option('--login-script <path>', 'Path to JS module that exports a default async login function (page)')
+  .option('--capture-console', 'capture console log messages')
+  .option('--collect-metrics', 'collect performance metrics')
+  .option('--accessibility', 'capture accessibility snapshot')
   .action(async (componentPath, opts) => {
     const progOpts = program.opts();
     const debug = !!progOpts.debug;
@@ -526,6 +546,7 @@ program
           dark: opts.dark,
           selector: '#root > *',
           cookies: cookies ? '<set>' : undefined,
+          loginScript: opts.loginScript,
           networkThrottling: opts.networkThrottle,
           waitForLazy: opts.waitForLazy,
           noSandbox: progOpts.noSandbox,
@@ -539,6 +560,12 @@ program
           timezone: opts.timezone,
           geolocation: opts.geolocation,
           colorScheme: opts.colorScheme,
+          captureConsole: opts.captureConsole,
+          collectMetrics: opts.collectMetrics,
+          accessibility: opts.accessibility,
+          auth: parseAuth(opts.auth) ? '<set>' : undefined,
+          recordVideo: opts.recordVideo,
+          resize: opts.resize,
         }, null, 2));
       }
 
@@ -581,17 +608,48 @@ program
         timezone: opts.timezone,
         geolocation: parseGeolocation(opts.geolocation),
         colorScheme: opts.colorScheme,
+        captureConsole: opts.captureConsole,
+        collectMetrics: opts.collectMetrics,
+        accessibility: opts.accessibility,
+        pdf: opts.pdf,
+        pdfFormat: opts.pdfFormat,
+        pdfLandscape: opts.pdfLandscape,
+        pdfMargin: opts.pdfMargin,
+        pdfScale: opts.pdfScale,
+        recordVideo: opts.recordVideo,
+        auth: parseAuth(opts.auth),
       });
       if (debug) log.debug(`captureUrl: ${Date.now() - tCapture}ms`);
 
       validateFormat(opts.format);
+      const usePdf = opts.pdf;
+
+      if (usePdf) {
+        spin.stop();
+        const outDir = opts.out || detectOutputDir();
+        const name = safeName(opts.name || nameFromComponent(componentPath));
+        const pdfPaths = resolveOutputPaths(outDir, name, {
+          overwrite: opts.overwrite,
+          format: 'pdf',
+          timestamp: progOpts.timestamp,
+        });
+        const { path, size } = await savePdf(captureResult.pdf, pdfPaths.pdfPath);
+        log.divider();
+        log.saved(path, size / 1024);
+        log.info('Captured PDF component', componentPath);
+        log.divider();
+        log.success('Done!');
+        log.divider();
+        return;
+      }
+
       spin.text = 'Optimizing...';
       let targetBuffer = captureResult.buffer;
       if (opts.watermarkText) {
         targetBuffer = await applyWatermark(targetBuffer, opts.watermarkText);
       }
       const tProcess = Date.now();
-      const result = await processScreenshot(targetBuffer, { quality: opts.quality });
+      const result = await processScreenshot(targetBuffer, { quality: opts.quality, resize: validateResize(opts.resize) });
       if (debug) log.debug(`processScreenshot: ${Date.now() - tProcess}ms`);
 
       const outDir = opts.out || detectOutputDir();
@@ -789,7 +847,10 @@ program
     log.divider();
 
     // Concurrency: limit concurrent captures to avoid resource exhaustion.
-    const concurrency = (config.batch && config.batch.concurrency) || Number(process.env.SNAP_ASSET_CONCURRENCY) || 3;
+    const envConcurrency = process.env.SNAP_ASSET_CONCURRENCY;
+    const concurrency = (config.batch && config.batch.concurrency)
+      ?? (envConcurrency ? Number(envConcurrency) : null)
+      ?? 3;
     const limit = pLimit(concurrency);
 
     let completed = 0;
@@ -818,7 +879,7 @@ program
                 networkThrottling: capture.networkThrottling,
                 waitForLazy: capture.waitForLazy,
                 noSandbox: progOpts.noSandbox,
-                headless: progOpts.headless === 'false' ? false : progOpts.headless === 'shell' ? 'shell' : true,
+                headless: progOpts.headless,
                 userAgent: progOpts.userAgent,
                 proxy: progOpts.proxy,
                 retries: opts.retries,
@@ -851,7 +912,7 @@ program
               networkThrottling: capture.networkThrottling,
               waitForLazy: capture.waitForLazy,
               noSandbox: progOpts.noSandbox,
-              headless: progOpts.headless === 'false' ? false : progOpts.headless === 'shell' ? 'shell' : true,
+              headless: progOpts.headless,
               userAgent: progOpts.userAgent,
               proxy: progOpts.proxy,
               retries: opts.retries,
@@ -869,6 +930,18 @@ program
               pdfMargin: capture.pdfMargin,
               pdfScale: capture.pdfScale,
             });
+          }
+
+          if (captureResult.pdf) {
+            const outDir = capture.out || detectOutputDir();
+            const paths = resolveOutputPaths(outDir, safeName(capture.name), {
+              overwrite: true,
+              format: 'pdf',
+            });
+            await savePdf(captureResult.pdf, paths.pdfPath);
+            spin.succeed(`${progress} ${capture.name} saved (PDF)`);
+            completed++;
+            return;
           }
 
           const result = await processScreenshot(captureResult.buffer, {

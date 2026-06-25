@@ -4,8 +4,8 @@ import {
   safeName, nameFromUrl, nameFromComponent, resolveOutputPaths,
   detectOutputDir, generatePictureHtml, saveAssets, savePdf, cleanup,
 } from '../src/output.js';
-import { existsSync, rmSync, writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { existsSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 
 const tempDir = join(process.cwd(), 'tests', 'temp-output');
 
